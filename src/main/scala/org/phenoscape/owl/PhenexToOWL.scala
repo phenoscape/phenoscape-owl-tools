@@ -1,6 +1,6 @@
 package org.phenoscape.owl
 
-object PhenexToOWL2 {
+object PhenexToOWL {
 
   def main(args: Array[String]): Unit = {}
 

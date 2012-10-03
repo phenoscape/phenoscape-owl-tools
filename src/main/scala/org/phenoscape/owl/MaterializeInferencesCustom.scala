@@ -4,7 +4,6 @@ import java.io.File
 
 import scala.collection.JavaConversions._
 
-import org.semanticweb.HermiT.Reasoner.ReasonerFactory
 import org.semanticweb.elk.owlapi.ElkReasonerFactory
 import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model.IRI
@@ -65,7 +64,7 @@ object MaterializeInferencesCustom extends OWLTask {
 			if (System.getProperties().containsKey(REASONER)) {
 				val reasoner = System.getProperty(REASONER);
 				reasoner match {
-				case "hermit" => new ReasonerFactory().createReasoner(ontology);
+				//case "hermit" => new ReasonerFactory().createReasoner(ontology);
 				case "fact++" => new FaCTPlusPlusReasonerFactory().createReasoner(ontology);
 				case "pellet" => new PelletReasonerFactory().createReasoner(ontology);
 				case "elk" => new ElkReasonerFactory().createReasoner(ontology);

@@ -26,7 +26,7 @@ object AbsenceClassGenerator extends OWLTask {
 			val factory = manager.getOWLDataFactory();
 			val newIRI = getAbsenceOntologyIRI(ontology);
 			val absenceOntology = manager.createOntology(newIRI);
-			manager.applyChange(new AddImport(absenceOntology, factory.getOWLImportsDeclaration(ontology.getOntologyID().getOntologyIRI())));
+			//manager.applyChange(new AddImport(absenceOntology, factory.getOWLImportsDeclaration(ontology.getOntologyID().getOntologyIRI())));
 			ontology.getClassesInSignature(false).map(createAbsenceClassAxiom(_)).foreach(manager.addAxiom(absenceOntology, _));
 			return absenceOntology;
 	}
@@ -44,7 +44,7 @@ object AbsenceClassGenerator extends OWLTask {
 	}
 
 	def getAbsenceIRI(classIRI: IRI): IRI = {
-			return IRI.create("http://phenoscape.org/not_has_part/" + classIRI.toString());
+			return NegationClassGenerator.getNegationIRI(NamedRestrictionGenerator.getRestrictionIRI(hasPart.getIRI(), classIRI));
 	}
 
 	def getAbsenceOntologyIRI(ontology: OWLOntology): IRI = {

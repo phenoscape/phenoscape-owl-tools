@@ -6,6 +6,7 @@ import org.semanticweb.owlapi.model.IRI
 import org.semanticweb.owlapi.model.OWLOntology
 import org.semanticweb.owlapi.util.OWLEntityRenamer
 import org.semanticweb.owlapi.model.AddImport
+import org.semanticweb.owlapi.io.RDFXMLOntologyFormat
 
 object PropertyNormalizer extends OWLTask {
 
@@ -33,16 +34,16 @@ object PropertyNormalizer extends OWLTask {
 			val ontology = manager.loadOntologyFromOntologyDocument(new File(args(0)));
 			normalize(ontology);
 			if (args.size > 1) {
-				manager.saveOntology(ontology, IRI.create(new File(args(1))));
+				manager.saveOntology(ontology, new RDFXMLOntologyFormat(), IRI.create(new File(args(1))));
 			} else {
-				manager.saveOntology(ontology);  
+				manager.saveOntology(ontology, new RDFXMLOntologyFormat());  
 			}
 	}
 
 	def normalize(ontology: OWLOntology): Unit = {
-	  val manager = ontology.getOWLOntologyManager();
-	  val factory = manager.getOWLDataFactory();
-	  manager.applyChange(new AddImport(ontology, factory.getOWLImportsDeclaration(IRI.create("http://purl.obolibrary.org/obo/ro.owl"))));
+			val manager = ontology.getOWLOntologyManager();
+			val factory = manager.getOWLDataFactory();
+			manager.applyChange(new AddImport(ontology, factory.getOWLImportsDeclaration(IRI.create("http://purl.obolibrary.org/obo/ro.owl"))));
 			val renamer = new OWLEntityRenamer(ontology.getOWLOntologyManager(), Set(ontology));
 			for ((key, value) <- properties) {
 				ontology.getOWLOntologyManager().applyChanges(renamer.changeIRI(key, value));

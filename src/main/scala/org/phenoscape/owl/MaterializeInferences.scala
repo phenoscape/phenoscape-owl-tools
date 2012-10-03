@@ -16,7 +16,6 @@ import org.semanticweb.owlapi.util.OWLEntityRemover
 import com.clarkparsia.pellet.owlapiv3.PelletReasonerFactory
 import eu.trowl.owlapi3.rel.reasoner.dl.RELReasonerFactory
 import uk.ac.manchester.cs.factplusplus.owlapiv3.FaCTPlusPlusReasonerFactory
-import org.semanticweb.HermiT.Reasoner.ReasonerFactory
 
 object MaterializeInferences extends OWLTask {
 
@@ -47,6 +46,10 @@ object MaterializeInferences extends OWLTask {
 			} else {
 				createReasoner(ontology);
 			}
+			materializeInferences(ontology, reasoner);
+	}
+
+	def materializeInferences(ontology: OWLOntology, reasoner: OWLReasoner): Unit = {
 			reasoner.precomputeInferences(InferenceType.CLASS_HIERARCHY); // this must be called first for ELK
 			val axiomGenerators = List(
 					new InferredClassAssertionAxiomGenerator(),
@@ -61,15 +64,19 @@ object MaterializeInferences extends OWLTask {
 	def createReasoner(ontology: OWLOntology): OWLReasoner = {
 			if (System.getProperties().containsKey(REASONER)) {
 				val reasoner = System.getProperty(REASONER);
-				reasoner match {
-				case "hermit" => new ReasonerFactory().createReasoner(ontology);
-				case "fact++" => new FaCTPlusPlusReasonerFactory().createReasoner(ontology);
-				case "pellet" => new PelletReasonerFactory().createReasoner(ontology);
-				case "elk" => new ElkReasonerFactory().createReasoner(ontology);
-				case "trowl" => new RELReasonerFactory().createReasoner(ontology);
-				}
+				createReasoner(ontology, reasoner);
 			} else {
 				new FaCTPlusPlusReasonerFactory().createReasoner(ontology);
+			}
+	}
+
+	def createReasoner(ontology: OWLOntology, kind: String): OWLReasoner = {
+			kind match {
+			//case "hermit" => new ReasonerFactory().createReasoner(ontology);
+			case "fact++" => new FaCTPlusPlusReasonerFactory().createReasoner(ontology);
+			case "pellet" => new PelletReasonerFactory().createReasoner(ontology);
+			case "elk" => new ElkReasonerFactory().createReasoner(ontology);
+			case "trowl" => new RELReasonerFactory().createReasoner(ontology);
 			}
 	}
 
