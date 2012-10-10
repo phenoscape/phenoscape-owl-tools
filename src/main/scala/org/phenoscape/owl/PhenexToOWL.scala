@@ -31,6 +31,7 @@ import org.semanticweb.owlapi.model.OWLObjectProperty
 object PhenexToOWL extends OWLTask {
 
 	val dcTermsNS = Namespace.getNamespace("http://purl.org/dc/terms/");
+	val dwcNS = Namespace.getNamespace("http://rs.tdwg.org/dwc/terms/");
 	val nexmlNS = Namespace.getNamespace("http://www.nexml.org/2009");
 	val phenoNS = Namespace.getNamespace("http://www.bioontologies.org/obd/schema/pheno");
 	val rdfsNS = Namespace.getNamespace("http://www.w3.org/2000/01/rdf-schema#");
@@ -44,7 +45,6 @@ object PhenexToOWL extends OWLTask {
 	val factory = OWLManager.getOWLDataFactory();
 	var ontology = manager.createOntology();
 	var nexml: Element = null;
-
 
 	def main(args: Array[String]): Unit = {
 			val builder = new SAXBuilder();
@@ -63,8 +63,44 @@ object PhenexToOWL extends OWLTask {
 				val comment = factory.getOWLLiteral(note);
 				addAnnotation(OWLRDFVocabulary.RDFS_COMMENT.getIRI(), matrix.getIRI(), comment);
 			});
+			val otus = nexml.getChild("otus", nexmlNS).getChildren("otu", nexmlNS);
+			otus.foreach(translateOTU(_, matrix));
 			val chars = nexml.getChild("characters", nexmlNS).getChild("format", nexmlNS).getChildren("char", nexmlNS);
 			chars.foreach(translateCharacter(_, matrix));
+	}
+
+	def translateOTU(otu: Element, matrix: OWLNamedIndividual): Unit = {
+			val owlOTU = nextIndividual();
+			val otuID = otu.getAttributeValue("id");
+			taxonOTUToOWLMap.put(otuID, owlOTU);
+			addPropertyAssertion(Vocab.HAS_TU, matrix, owlOTU);
+			addClass(owlOTU, factory.getOWLClass(Vocab.TU));
+			val label = otu.getAttributeValue("label");
+			if (StringUtils.isNotBlank(label)) {
+				addAnnotation(OWLRDFVocabulary.RDFS_LABEL.getIRI(), owlOTU.getIRI(), factory.getOWLLiteral(label));
+			}
+			val validTaxa = getResourceMetaValues(otu, "taxonID", dwcNS);
+			validTaxa.foreach(t => addPropertyAssertion(Vocab.HAS_EXTERNAL_REFERENCE, owlOTU, factory.getOWLNamedIndividual(t)));
+			val comments = getLiteralMetaValues(otu, "comment", rdfsNS);
+			comments.foreach(c => addAnnotation(OWLRDFVocabulary.RDFS_COMMENT.getIRI(), owlOTU.getIRI(), factory.getOWLLiteral(c)));
+			val specimenMetas = getResourceMetasForProperty(otu, "individualID", dwcNS); 
+			specimenMetas.foreach(translateSpecimen(_, owlOTU));
+
+
+	}
+
+	def translateSpecimen(specimen: Element, owlOTU: OWLNamedIndividual): Unit = {
+			//		if (specimen.getCollectionCode() != null) {
+			//			final OWLIndividual collection = this.factory.getOWLNamedIndividual(this.convertOBOIRI(specimen.getCollectionCode().getID()));
+			//			this.addPropertyAssertion(IRI.create(DWC.SPECIMEN_TO_COLLECTION), owlSpecimen, collection);
+			//		}
+			//		if (StringUtils.isNotBlank(specimen.getCatalogID())) {
+			//			final OWLDataProperty property = this.factory.getOWLDataProperty(IRI.create(DWC.SPECIMEN_TO_CATALOG_ID));
+			//			this.ontologyManager.addAxiom(this.ontology, this.factory.getOWLDataPropertyAssertionAxiom(property, owlSpecimen, specimen.getCatalogID()));
+			//		}
+			val owlSpecimen = factory.getOWLAnonymousIndividual();
+			addPropertyAssertion(Vocab.INDIVIDUAL_ID, owlOTU, owlSpecimen);
+			addClass(owlSpecimen, factory.getOWLClass(Vocab.SPECIMEN));
 	}
 
 	def translateCharacter(character: Element, matrix: OWLNamedIndividual): Unit = {
@@ -78,7 +114,7 @@ object PhenexToOWL extends OWLTask {
 				addAnnotation(OWLRDFVocabulary.RDFS_LABEL.getIRI(), owlCharacter.getIRI(), factory.getOWLLiteral(label));
 			}
 			val comments = getLiteralMetaValues(character, "comment", rdfsNS);
-			comments.map(c => addAnnotation(OWLRDFVocabulary.RDFS_COMMENT.getIRI(), owlCharacter.getIRI(), factory.getOWLLiteral(c)));
+			comments.foreach(c => addAnnotation(OWLRDFVocabulary.RDFS_COMMENT.getIRI(), owlCharacter.getIRI(), factory.getOWLLiteral(c)));
 			val statesBlockID = character.getAttributeValue("states");
 			val statesBlock = getElementByID(statesBlockID);
 			val states = statesBlock.getChildren("state", nexmlNS);
@@ -256,14 +292,26 @@ object PhenexToOWL extends OWLTask {
 			return prefix.getOrElse("");
 	}
 
+
+
 	def getLiteralMetaValues(element: Element, property: String, namespace: Namespace): Iterable[String] = {
 			val allMetas = element.getChildren("meta", nexmlNS);
 			val matchingMetas = allMetas.filter(meta => (meta.getAttributeValue("property") == (prefixForNamespace(meta, namespace) + property)));
-			(matchingMetas.map(_.getValue()) ++ matchingMetas.map(_.getAttributeValue("content"))).filter(StringUtils.isNotBlank(_));
+			return (matchingMetas.map(_.getValue()) ++ matchingMetas.map(_.getAttributeValue("content"))).filter(StringUtils.isNotBlank(_));
+	}
+
+	def getResourceMetasForProperty(element: Element, property: String, propertyNamespace: Namespace): Iterable[Element] = {
+			val allMetas = element.getChildren("meta", nexmlNS);
+			return allMetas.filter(meta => (meta.getAttributeValue("rel") == (prefixForNamespace(meta, propertyNamespace) + property)));
+	}
+
+	def getResourceMetaValues(element: Element, property: String, namespace: Namespace): Iterable[IRI] = {
+			val matchingMetas = getResourceMetasForProperty(element, property, namespace);
+			return matchingMetas.map(_.getAttributeValue("href")).filter(StringUtils.isNotBlank(_)).map(IRI.create(_));
 	}
 
 	def getElementByID(id: String): Element = {
-			nexml.getDescendants(new ElementFilter()).iterator().filter(id == _.getAttributeValue("id")).next();
+			return nexml.getDescendants(new ElementFilter()).iterator().filter(id == _.getAttributeValue("id")).next();
 	}
 
 	def instantiateClassAssertion(individual: OWLIndividual, aClass: OWLClassExpression, expandNamedClass: Boolean): Unit = {

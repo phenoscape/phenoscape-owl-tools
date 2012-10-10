@@ -13,9 +13,15 @@ object Vocab {
 	val TAXON = IRI.create("http://rs.tdwg.org/dwc/terms/Taxon");
 	val CHARACTER_STATE_DATA_MATRIX = IRI.create("http://purl.obolibrary.org/obo/CDAO_0000056");
 	val HAS_CHARACTER = IRI.create("http://purl.obolibrary.org/obo/CDAO_0000142");
+	val HAS_TU = IRI.create("http://purl.obolibrary.org/obo/CDAO_0000208");
 	val STANDARD_CHARACTER = IRI.create("http://purl.obolibrary.org/obo/CDAO_0000075");
 	val STANDARD_STATE = IRI.create("http://purl.obolibrary.org/obo/CDAO_0000045");
+	val TU = IRI.create("http://purl.obolibrary.org/obo/CDAO_0000138");
+	val HAS_EXTERNAL_REFERENCE = IRI.create("http://purl.obolibrary.org/obo/CDAO_0000164");
 	val DENOTES = IRI.create("http://purl.obolibrary.org/obo/IAO_0000219");
 	val DENOTES_EXEMPLAR = IRI.create("http://vocab.phenoscape.org/denotes_exemplar");
 	val TOWARDS = IRI.create("http://purl.obolibrary.org/obo/pato#towards");
+	val INDIVIDUAL_ID = IRI.create("http://rs.tdwg.org/dwc/terms/individualID");
+	val SPECIMEN = IRI.create("http://purl.org/dsw/Specimen");
+
 }
