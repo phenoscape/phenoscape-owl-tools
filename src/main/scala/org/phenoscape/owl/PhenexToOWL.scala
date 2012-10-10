@@ -1,5 +1,6 @@
 package org.phenoscape.owl
 
+import scala.collection.mutable
 import java.io.File
 import java.util.UUID
 import scala.collection.JavaConversions._
@@ -26,6 +27,7 @@ import org.semanticweb.owlapi.model.OWLQuantifiedObjectRestriction
 import org.semanticweb.owlapi.model.OWLObjectIntersectionOf
 import org.semanticweb.owlapi.model.OWLObjectProperty
 
+//TODO connect characters to states
 object PhenexToOWL extends OWLTask {
 
 	val dcTermsNS = Namespace.getNamespace("http://purl.org/dc/terms/");
@@ -34,10 +36,10 @@ object PhenexToOWL extends OWLTask {
 	val rdfsNS = Namespace.getNamespace("http://www.w3.org/2000/01/rdf-schema#");
 	var uuid: String = UUID.randomUUID().toString();
 	var nodeIncrementer: Int = 0;
-	val characterToOWLMap = Map[String, OWLNamedIndividual]();
-	val stateToOWLMap = Map[String, OWLNamedIndividual]();
-	val taxonOTUToOWLMap = Map[String, OWLNamedIndividual]();
-	val phenotypeToOWLMap = Map[Element, OWLClass]();
+	val characterToOWLMap = mutable.Map[String, OWLNamedIndividual]();
+	val stateToOWLMap = mutable.Map[String, OWLNamedIndividual]();
+	val taxonOTUToOWLMap = mutable.Map[String, OWLNamedIndividual]();
+	val phenotypeToOWLMap = mutable.Map[Element, OWLClass]();
 	var manager = OWLManager.createOWLOntologyManager();
 	val factory = OWLManager.getOWLDataFactory();
 	var ontology = manager.createOntology();
@@ -59,12 +61,10 @@ object PhenexToOWL extends OWLTask {
 			val publicationNotes = getLiteralMetaValues(nexml, "description", dcTermsNS);
 			publicationNotes.map(note => {
 				val comment = factory.getOWLLiteral(note);
-				println(comment);
 				addAnnotation(OWLRDFVocabulary.RDFS_COMMENT.getIRI(), matrix.getIRI(), comment);
 			});
-			val chars = nexml.getChild("format", nexmlNS).getChildren("char", nexmlNS);
+			val chars = nexml.getChild("characters", nexmlNS).getChild("format", nexmlNS).getChildren("char", nexmlNS);
 			chars.foreach(translateCharacter(_, matrix));
-
 	}
 
 	def translateCharacter(character: Element, matrix: OWLNamedIndividual): Unit = {
@@ -181,7 +181,7 @@ object PhenexToOWL extends OWLTask {
 			if (qualifiers.isEmpty()) {
 				return genus
 			} else {
-				val operands: Set[OWLClassExpression] = mutable.Set(genus);
+				val operands: mutable.Set[OWLClassExpression] = mutable.Set(genus);
 			operands.addAll(qualifiers.map(restrictionFromQualifier(_)));
 			return factory.getOWLObjectIntersectionOf(operands);
 			}
@@ -259,7 +259,7 @@ object PhenexToOWL extends OWLTask {
 	def getLiteralMetaValues(element: Element, property: String, namespace: Namespace): Iterable[String] = {
 			val allMetas = element.getChildren("meta", nexmlNS);
 			val matchingMetas = allMetas.filter(meta => (meta.getAttributeValue("property") == (prefixForNamespace(meta, namespace) + property)));
-			matchingMetas.map(_.getValue()) ++ matchingMetas.map(_.getAttributeValue("content")).filterNot(StringUtils.isNotBlank(_));
+			(matchingMetas.map(_.getValue()) ++ matchingMetas.map(_.getAttributeValue("content"))).filter(StringUtils.isNotBlank(_));
 	}
 
 	def getElementByID(id: String): Element = {
