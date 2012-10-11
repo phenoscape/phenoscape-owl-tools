@@ -9,6 +9,7 @@ object Vocab {
 	val BEARER_OF = IRI.create("http://purl.obolibrary.org/obo/BFO_0000053");
 	val DEVELOPS_FROM = IRI.create("http://purl.obolibrary.org/obo/RO_0002202");
 	val NEGATES = IRI.create("http://vocab.phenoscape.org/negation_of_class");
+	val MAY_HAVE_STATE_VALUE = IRI.create("http://vocab.phenoscape.org/may_have_state_value");
 	val SUBCLADE_OF = IRI.create("http://vocab.phenoscape.org/subclade_of");
 	val HAS_MEMBER = IRI.create("http://vocab.phenoscape.org/has_member");
 	val TAXON = IRI.create("http://rs.tdwg.org/dwc/terms/Taxon");
