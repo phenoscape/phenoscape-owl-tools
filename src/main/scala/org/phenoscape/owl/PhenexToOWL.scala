@@ -1,11 +1,11 @@
 package org.phenoscape.owl
 
-import scala.collection.mutable
 import java.io.File
 import java.util.UUID
+
 import scala.collection.JavaConversions._
 import scala.collection.mutable
-import scala.collection.Set
+
 import org.apache.commons.lang3.StringUtils
 import org.jdom2.filter.ElementFilter
 import org.jdom2.input.SAXBuilder
@@ -15,17 +15,16 @@ import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model.IRI
 import org.semanticweb.owlapi.model.OWLAnnotationSubject
 import org.semanticweb.owlapi.model.OWLAnnotationValue
+import org.semanticweb.owlapi.model.OWLClass
 import org.semanticweb.owlapi.model.OWLClassExpression
 import org.semanticweb.owlapi.model.OWLIndividual
 import org.semanticweb.owlapi.model.OWLNamedIndividual
+import org.semanticweb.owlapi.model.OWLObjectIntersectionOf
 import org.semanticweb.owlapi.model.OWLObjectPropertyExpression
-import org.semanticweb.owlapi.vocab.OWLRDFVocabulary
-import org.semanticweb.owlapi.vocab.DublinCoreVocabulary
-import org.semanticweb.owlapi.model.OWLClass
 import org.semanticweb.owlapi.model.OWLObjectSomeValuesFrom
 import org.semanticweb.owlapi.model.OWLQuantifiedObjectRestriction
-import org.semanticweb.owlapi.model.OWLObjectIntersectionOf
-import org.semanticweb.owlapi.model.OWLObjectProperty
+import org.semanticweb.owlapi.vocab.DublinCoreVocabulary
+import org.semanticweb.owlapi.vocab.OWLRDFVocabulary
 
 //TODO connect characters to states
 object PhenexToOWL extends OWLTask {
@@ -40,6 +39,7 @@ object PhenexToOWL extends OWLTask {
 	val characterToOWLMap = mutable.Map[String, OWLNamedIndividual]();
 	val stateToOWLMap = mutable.Map[String, OWLNamedIndividual]();
 	val taxonOTUToOWLMap = mutable.Map[String, OWLNamedIndividual]();
+	val taxonOTUToValidTaxonMap = mutable.Map[String, OWLNamedIndividual]();
 	val phenotypeToOWLMap = mutable.Map[Element, OWLClass]();
 	var manager = OWLManager.createOWLOntologyManager();
 	val factory = OWLManager.getOWLDataFactory();
@@ -67,6 +67,8 @@ object PhenexToOWL extends OWLTask {
 			otus.foreach(translateOTU(_, matrix));
 			val chars = nexml.getChild("characters", nexmlNS).getChild("format", nexmlNS).getChildren("char", nexmlNS);
 			chars.foreach(translateCharacter(_, matrix));
+			val matrixRows = nexml.getChild("characters", nexmlNS).getChild("matrix", nexmlNS).getChildren("row", nexmlNS);
+			matrixRows.foreach(translateMatrixRow(_));
 	}
 
 	def translateOTU(otu: Element, matrix: OWLNamedIndividual): Unit = {
@@ -79,28 +81,30 @@ object PhenexToOWL extends OWLTask {
 			if (StringUtils.isNotBlank(label)) {
 				addAnnotation(OWLRDFVocabulary.RDFS_LABEL.getIRI(), owlOTU.getIRI(), factory.getOWLLiteral(label));
 			}
-			val validTaxa = getResourceMetaValues(otu, "taxonID", dwcNS);
-			validTaxa.foreach(t => addPropertyAssertion(Vocab.HAS_EXTERNAL_REFERENCE, owlOTU, factory.getOWLNamedIndividual(t)));
+			val validTaxon = getResourceMetaValues(otu, "taxonID", dwcNS).headOption;
+			validTaxon.foreach(taxon => {
+				val owlTaxon = factory.getOWLNamedIndividual(taxon);
+				addPropertyAssertion(Vocab.HAS_EXTERNAL_REFERENCE, owlOTU, owlTaxon);
+				taxonOTUToValidTaxonMap.put(otuID, owlTaxon);
+			});
 			val comments = getLiteralMetaValues(otu, "comment", rdfsNS);
 			comments.foreach(c => addAnnotation(OWLRDFVocabulary.RDFS_COMMENT.getIRI(), owlOTU.getIRI(), factory.getOWLLiteral(c)));
 			val specimenMetas = getResourceMetasForProperty(otu, "individualID", dwcNS); 
 			specimenMetas.foreach(translateSpecimen(_, owlOTU));
-
-
 	}
 
 	def translateSpecimen(specimen: Element, owlOTU: OWLNamedIndividual): Unit = {
-			//		if (specimen.getCollectionCode() != null) {
-			//			final OWLIndividual collection = this.factory.getOWLNamedIndividual(this.convertOBOIRI(specimen.getCollectionCode().getID()));
-			//			this.addPropertyAssertion(IRI.create(DWC.SPECIMEN_TO_COLLECTION), owlSpecimen, collection);
-			//		}
-			//		if (StringUtils.isNotBlank(specimen.getCatalogID())) {
-			//			final OWLDataProperty property = this.factory.getOWLDataProperty(IRI.create(DWC.SPECIMEN_TO_CATALOG_ID));
-			//			this.ontologyManager.addAxiom(this.ontology, this.factory.getOWLDataPropertyAssertionAxiom(property, owlSpecimen, specimen.getCatalogID()));
-			//		}
 			val owlSpecimen = factory.getOWLAnonymousIndividual();
 			addPropertyAssertion(Vocab.INDIVIDUAL_ID, owlOTU, owlSpecimen);
 			addClass(owlSpecimen, factory.getOWLClass(Vocab.SPECIMEN));
+			val collectionIRI = getResourceMetaValues(specimen, "collectionID", dwcNS).headOption;
+			collectionIRI.foreach(iri => addPropertyAssertion(Vocab.SPECIMEN_TO_COLLECTION, owlSpecimen, factory.getOWLNamedIndividual(iri)));
+			val catalogNumber = getLiteralMetaValues(specimen, "catalogNumber", dwcNS).headOption;
+			catalogNumber.foreach(num => {
+				val property = factory.getOWLDataProperty(Vocab.SPECIMEN_TO_CATALOG_ID);
+				val axiom = factory.getOWLDataPropertyAssertionAxiom(property, owlSpecimen, num);
+				manager.addAxiom(ontology, axiom);
+			});
 	}
 
 	def translateCharacter(character: Element, matrix: OWLNamedIndividual): Unit = {
@@ -200,6 +204,42 @@ object PhenexToOWL extends OWLTask {
 			val hasPartSomeEQ = factory.getOWLObjectSomeValuesFrom(hasPart, eq);
 			manager.addAxiom(ontology, factory.getOWLSubClassOfAxiom(owlPhenotype, hasPartSomeEQ));
 			eq.getClassesInSignature().foreach(createRestrictions(_));
+	}
+
+	def translateMatrixRow(row: Element): Unit = {
+			val otuID = row.getAttributeValue("otu");
+			val owlOTU = taxonOTUToOWLMap(otuID);
+			val cells = row.getChildren("cell", nexmlNS);
+			cells.foreach(translateMatrixCell(_, otuID, owlOTU));
+	}
+
+	def translateMatrixCell(cell: Element, otuID: String, owlOTU: OWLNamedIndividual): Unit = {
+			//		if (taxon.getValidName() != null) {
+			//			final IRI taxonIRI = this.convertOBOIRI(taxon.getValidName().getID());
+			//			final OWLNamedIndividual taxonIndividual = this.factory.getOWLNamedIndividual(taxonIRI);
+			//			for (Phenotype phenotype : state.getPhenotypes()) {
+			//				final OWLClass owlPhenotype = this.phenotypeToOWLMap.get(phenotype);
+			//				final OWLIndividual organism = nextIndividual();
+			//				this.ontologyManager.addAxiom(this.ontology, this.factory.getOWLClassAssertionAxiom(owlPhenotype, organism));
+			//				this.ontologyManager.addAxiom(this.ontology, this.factory.getOWLObjectPropertyAssertionAxiom(hasMember, taxonIndividual, organism));
+			//				this.instantiateClassAssertion(organism, owlPhenotype, true);
+			//			}
+			//		}
+			val owlCell = nextIndividual();
+			addClass(owlCell, factory.getOWLClass(Vocab.STANDARD_CELL));
+			val characterID = cell.getAttributeValue("char");
+			val owlCharacter = characterToOWLMap(characterID);
+			val stateID = cell.getAttributeValue("state");
+			val owlState = stateToOWLMap(stateID);
+			addPropertyAssertion(Vocab.BELONGS_TO_CHARACTER, owlCell, owlCharacter);
+			addPropertyAssertion(Vocab.BELONGS_TO_TU, owlCell, owlOTU);
+			addPropertyAssertion(Vocab.HAS_STATE, owlCell, owlState);
+			taxonOTUToValidTaxonMap.get("sfs").foreach(owlTaxon => {
+				val organism = nextIndividual();
+				addPropertyAssertion(Vocab.HAS_MEMBER, owlTaxon, organism);
+				//TODO
+			});
+
 	}
 
 	def createRestrictions(aClass: OWLClass): Unit = {
