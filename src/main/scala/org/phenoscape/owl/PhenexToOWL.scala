@@ -48,10 +48,9 @@ object PhenexToOWL extends OWLTask {
 
 	def main(args: Array[String]): Unit = {
 			val builder = new SAXBuilder();
-			//val nexml = builder.build(new File(args(0)));
-			val root = builder.build(new File("/Users/jim/Dropbox/Phenoscape-data/phenex-files/Characiformes/Buckup_1998.xml")).getRootElement();
-			convert(root);
-			//manager.saveOntology(ontology, IRI.create(new File(args(1))));
+			val nexml = builder.build(new File(args(0)));
+			convert(nexml.getRootElement());
+			manager.saveOntology(ontology, IRI.create(new File(args(1))));
 	}
 
 	def convert(root: Element): Unit = {
@@ -136,7 +135,7 @@ object PhenexToOWL extends OWLTask {
 				descBuffer.append(characterLabel + ": ");
 			}
 			val label = state.getAttributeValue("label");
-			if (StringUtils.isNotBlank(characterLabel)) {
+			if (StringUtils.isNotBlank(label)) {
 				descBuffer.append(label);
 				addAnnotation(OWLRDFVocabulary.RDFS_LABEL.getIRI(), owlState.getIRI(), factory.getOWLLiteral(label));
 			}
@@ -195,7 +194,7 @@ object PhenexToOWL extends OWLTask {
 			if (entityClass == null) {
 				return;
 			}
-			val eq = if (qualityClass != null) {
+			val eq = if (qualityClass == null) {
 				entityClass;
 			} else {
 				val bearerOf = factory.getOWLObjectProperty(Vocab.BEARER_OF);
@@ -220,21 +219,19 @@ object PhenexToOWL extends OWLTask {
 			val characterID = cell.getAttributeValue("char");
 			val owlCharacter = characterToOWLMap(characterID);
 			val stateID = cell.getAttributeValue("state");
-			val owlState = stateToOWLMap(stateID);
-			addPropertyAssertion(Vocab.BELONGS_TO_CHARACTER, owlCell, owlCharacter);
-			addPropertyAssertion(Vocab.BELONGS_TO_TU, owlCell, owlOTU);
-			addPropertyAssertion(Vocab.HAS_STATE, owlCell, owlState);
-			taxonOTUToValidTaxonMap.get(otuID).foreach(owlTaxon => {
-				val organism = nextIndividual();
-				addPropertyAssertion(Vocab.HAS_MEMBER, owlTaxon, organism);
-				stateToOWLPhenotypeMap.get(stateID).flatten.foreach(owlPhenotype => {
-					val organism = nextIndividual();
-					addClass(organism, owlPhenotype);
-					addPropertyAssertion(Vocab.HAS_MEMBER, owlTaxon, organism);
-					instantiateClassAssertion(organism, owlPhenotype, true);
+			stateToOWLMap.get(stateID).foreach(owlState => { //FIXME missing stateIDs in the map refer to polymorphisms: these are being skipped
+				addPropertyAssertion(Vocab.BELONGS_TO_CHARACTER, owlCell, owlCharacter);
+				addPropertyAssertion(Vocab.BELONGS_TO_TU, owlCell, owlOTU);
+				addPropertyAssertion(Vocab.HAS_STATE, owlCell, owlState);
+				taxonOTUToValidTaxonMap.get(otuID).foreach(owlTaxon => {
+					stateToOWLPhenotypeMap.get(stateID).flatten.foreach(owlPhenotype => {
+						val organism = nextIndividual();
+						addClass(organism, owlPhenotype);
+						addPropertyAssertion(Vocab.HAS_MEMBER, owlTaxon, organism);
+						instantiateClassAssertion(organism, owlPhenotype, true);
+					});
 				});
 			});
-
 	}
 
 	def createRestrictions(aClass: OWLClass): Unit = {
@@ -353,11 +350,14 @@ object PhenexToOWL extends OWLTask {
 	def instantiateClassAssertion(individual: OWLIndividual, aClass: OWLClassExpression, expandNamedClass: Boolean): Unit = {
 			if (aClass.isInstanceOf[OWLClass]) {
 				if (expandNamedClass) {
-					for (axiom <- this.ontology.getEquivalentClassesAxioms(aClass.asOWLClass())) {
-						for (expression <- axiom.getClassExpressionsMinus(aClass)) {
-							if (expression.isInstanceOf[OWLObjectSomeValuesFrom]) {
-								instantiateClassAssertion(individual, expression, false);
-							}
+					val relatedClasses = mutable.Set[OWLClassExpression]();
+					val equivClasses = ontology.getEquivalentClassesAxioms(aClass.asOWLClass()).map(_.getClassExpressionsMinus(aClass)).flatten;
+					relatedClasses.addAll(equivClasses);
+					val superClasses = ontology.getSubClassAxiomsForSubClass(aClass.asOWLClass()).map(_.getSuperClass());
+					relatedClasses.addAll(superClasses);
+					for (expression <- relatedClasses) {
+						if (expression.isInstanceOf[OWLObjectSomeValuesFrom]) {
+							instantiateClassAssertion(individual, expression, false);
 						}
 					}
 				} else {
