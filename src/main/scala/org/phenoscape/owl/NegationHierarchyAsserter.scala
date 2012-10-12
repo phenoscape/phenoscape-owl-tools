@@ -1,16 +1,18 @@
 package org.phenoscape.owl
 
 import java.io.File
-
 import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import scala.collection.Set
-
+import scala.collection.Map
+import scala.collection.mutable
 import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model.AxiomType
 import org.semanticweb.owlapi.model.IRI
 import org.semanticweb.owlapi.model.OWLClass
 import org.semanticweb.owlapi.model.OWLOntology
 import org.semanticweb.owlapi.model.OWLSubClassOfAxiom
+import org.semanticweb.owlapi.model.OWLAxiom
 
 object NegationHierarchyAsserter extends OWLTask {
 
@@ -29,26 +31,25 @@ object NegationHierarchyAsserter extends OWLTask {
 
 	def assertNegationHierarchy(ontology: OWLOntology): Unit = {
 			val manager = ontology.getOWLOntologyManager();
+			val factory = manager.getOWLDataFactory();
 			val ontologies = ontology.getImportsClosure();
 			val allClasses = ontology.getClassesInSignature(true);
-			val axioms = allClasses.par.map(createSubclassOfAxioms(_, ontologies));
-			axioms.seq.foreach(manager.addAxioms(ontology, _));
+			val negatesIndex: mutable.Map[IRI, mutable.Set[IRI]] = mutable.Map();
+			val negatedByIndex: mutable.Map[IRI, mutable.Set[IRI]] = mutable.Map();
+			ontologies.foreach(ont => {
+				val annotations = ont.getAxioms(AxiomType.ANNOTATION_ASSERTION, false).filter(_.getProperty() == negates);
+				annotations.foreach(annot => {
+					negatesIndex.getOrElseUpdate(annot.getSubject().asInstanceOf[IRI], mutable.Set()).add(annot.getValue().asInstanceOf[IRI]);
+					negatedByIndex.getOrElseUpdate(annot.getValue().asInstanceOf[IRI], mutable.Set()).add(annot.getSubject().asInstanceOf[IRI]);
+				});
+			});
+			val axioms = allClasses.map(createSubclassOfAxioms(_, negatesIndex, negatedByIndex, ontologies));
+			axioms.foreach(setOfAxioms => manager.addAxioms(ontology, setOfAxioms.toSet[OWLAxiom]));
 	}
 
-	def getNegatedClasses(ontClass: OWLClass, ontologies: Set[OWLOntology]): Set[OWLClass] = {
+	def createSubclassOfAxioms(ontClass: OWLClass, negatesIndex: Map[IRI, Set[IRI]], negatedByIndex: Map[IRI, Set[IRI]], ontologies: Set[OWLOntology]): Iterable[OWLSubClassOfAxiom] = {
 			val factory = OWLManager.getOWLDataFactory();
-			return ontologies.map(ont => ontClass.getAnnotations(ont, negates).map(_.getValue()).filter(_.isInstanceOf[IRI]).map(_.asInstanceOf[IRI]).map(factory.getOWLClass(_))).flatten;
-	}
-
-	def getNegatingClasses(ontClass: OWLClass, ontologies: Set[OWLOntology]): Set[OWLClass] = {
-			val factory = OWLManager.getOWLDataFactory();
-			val annotation = factory.getOWLAnnotation(negates, ontClass.getIRI());
-			return ontologies.map(_.getAxioms(AxiomType.ANNOTATION_ASSERTION, false).filter(_.getAnnotation() == annotation).map(_.getSubject()).filter(_.isInstanceOf[IRI]).map(iri => factory.getOWLClass(iri.asInstanceOf[IRI]))).flatten;			
-	}
-
-	def createSubclassOfAxioms(ontClass: OWLClass, ontologies: Set[OWLOntology]): Set[OWLSubClassOfAxiom] = {
-			val factory = OWLManager.getOWLDataFactory();
-			val superClasses = getNegatedClasses(ontClass, ontologies).map(_.getSubClasses(ontologies).filter(!_.isAnonymous()).map(_.asOWLClass())).flatten.map(getNegatingClasses(_, ontologies)).flatten;
+			val superClasses = negatesIndex.get(ontClass.getIRI()).flatten.map(factory.getOWLClass(_)).map(_.getSubClasses(ontologies).filter(!_.isAnonymous()).map(_.asOWLClass())).flatten.map(c => negatedByIndex.get(c.getIRI()).flatten.map(factory.getOWLClass(_))).flatten;
 			superClasses.map(factory.getOWLSubClassOfAxiom(ontClass, _));
 	}
 

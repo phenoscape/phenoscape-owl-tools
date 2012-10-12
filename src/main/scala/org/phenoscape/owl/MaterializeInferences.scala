@@ -31,6 +31,7 @@ object MaterializeInferences extends OWLTask {
 			} else {
 				manager.saveOntology(ontology);  
 			}
+			System.exit(0); //for some reason this is required for execution to terminate when using Elk
 	}
 
 	def materializeInferences(ontology: OWLOntology): Unit = {
