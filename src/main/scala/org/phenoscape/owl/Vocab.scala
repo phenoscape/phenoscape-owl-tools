@@ -31,5 +31,6 @@ object Vocab {
 	val SPECIMEN = IRI.create("http://purl.org/dsw/Specimen");
 	val SPECIMEN_TO_COLLECTION = IRI.create("http://rs.tdwg.org/dwc/terms/collectionID");
 	val SPECIMEN_TO_CATALOG_ID = IRI.create("http://rs.tdwg.org/dwc/terms/catalogNumber");
+	val ABSENT = IRI.create("http://purl.obolibrary.org/obo/PATO_0000462");
 
 }

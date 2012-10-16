@@ -194,15 +194,16 @@ object PhenexToOWL extends OWLTask {
 			if (entityClass == null) {
 				return;
 			}
+			val hasPart = factory.getOWLObjectProperty(Vocab.HAS_PART);
 			val eq = if (qualityClass == null) {
-				entityClass;
+				factory.getOWLObjectSomeValuesFrom(hasPart, entityClass);
+			} else if (!qualityClass.isAnonymous() && qualityClass.asOWLClass().getIRI() == Vocab.ABSENT) { //TODO also handle lacks_all_parts_of_type
+				factory.getOWLObjectComplementOf(factory.getOWLObjectSomeValuesFrom(hasPart, entityClass));
 			} else {
 				val bearerOf = factory.getOWLObjectProperty(Vocab.BEARER_OF);
-				factory.getOWLObjectIntersectionOf(entityClass, factory.getOWLObjectSomeValuesFrom(bearerOf, qualityClass));
+				factory.getOWLObjectSomeValuesFrom(hasPart, factory.getOWLObjectIntersectionOf(entityClass, factory.getOWLObjectSomeValuesFrom(bearerOf, qualityClass)));
 			}
-			val hasPart = factory.getOWLObjectProperty(Vocab.HAS_PART);
-			val hasPartSomeEQ = factory.getOWLObjectSomeValuesFrom(hasPart, eq);
-			manager.addAxiom(ontology, factory.getOWLSubClassOfAxiom(owlPhenotype, hasPartSomeEQ));
+			manager.addAxiom(ontology, factory.getOWLSubClassOfAxiom(owlPhenotype, eq));
 			eq.getClassesInSignature().foreach(createRestrictions(_));
 	}
 
