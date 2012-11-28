@@ -32,5 +32,11 @@ object Vocab {
 	val SPECIMEN_TO_COLLECTION = IRI.create("http://rs.tdwg.org/dwc/terms/collectionID");
 	val SPECIMEN_TO_CATALOG_ID = IRI.create("http://rs.tdwg.org/dwc/terms/catalogNumber");
 	val ABSENT = IRI.create("http://purl.obolibrary.org/obo/PATO_0000462");
-
+	val INVOLVES = IRI.create("http://vocab.phenoscape.org/involves");
+	val GENE_EXPRESSION = IRI.create("http://purl.obolibrary.org/obo/GO_0010467");
+	val PHENOTYPE_ANNOTATION = IRI.create("http://vocab.phenoscape.org/PhenotypeAnnotation");
+	val OCCURS_IN = IRI.create("http://purl.obolibrary.org/obo/BFO_0000066");
+	val GENE = IRI.create("http://purl.obolibrary.org/obo/SO_0000704");
+	val ANNOTATED_GENE = IRI.create("http://vocab.phenoscape.org/annotated_gene");
+	
 }

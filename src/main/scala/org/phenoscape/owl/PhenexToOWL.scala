@@ -2,11 +2,9 @@ package org.phenoscape.owl
 
 import java.io.File
 import java.util.UUID
-
 import scala.Option.option2Iterable
 import scala.collection.JavaConversions._
 import scala.collection.mutable
-
 import org.apache.commons.lang3.StringUtils
 import org.jdom2.filter.ElementFilter
 import org.jdom2.input.SAXBuilder
@@ -26,6 +24,7 @@ import org.semanticweb.owlapi.model.OWLObjectSomeValuesFrom
 import org.semanticweb.owlapi.model.OWLQuantifiedObjectRestriction
 import org.semanticweb.owlapi.vocab.DublinCoreVocabulary
 import org.semanticweb.owlapi.vocab.OWLRDFVocabulary
+import org.phenoscape.owl.util.OBOUtil
 
 object PhenexToOWL extends OWLTask {
 
@@ -34,15 +33,12 @@ object PhenexToOWL extends OWLTask {
 	val nexmlNS = Namespace.getNamespace("http://www.nexml.org/2009");
 	val phenoNS = Namespace.getNamespace("http://www.bioontologies.org/obd/schema/pheno");
 	val rdfsNS = Namespace.getNamespace("http://www.w3.org/2000/01/rdf-schema#");
-	var uuid: String = UUID.randomUUID().toString();
-	var nodeIncrementer: Int = 0;
 	val characterToOWLMap = mutable.Map[String, OWLNamedIndividual]();
 	val stateToOWLMap = mutable.Map[String, OWLNamedIndividual]();
 	val taxonOTUToOWLMap = mutable.Map[String, OWLNamedIndividual]();
 	val taxonOTUToValidTaxonMap = mutable.Map[String, OWLNamedIndividual]();
 	val stateToOWLPhenotypeMap = mutable.Map[String, mutable.Set[OWLClass]]();
 	var manager = OWLManager.createOWLOntologyManager();
-	val factory = OWLManager.getOWLDataFactory();
 	var ontology = manager.createOntology();
 	var nexml: Element = null;
 
@@ -152,7 +148,7 @@ object PhenexToOWL extends OWLTask {
 	def translatePhenotype(phenotype: Element, stateID: String, owlState: OWLNamedIndividual): Unit = {
 			val owlPhenotype = nextClass();
 			stateToOWLPhenotypeMap.getOrElseUpdate(stateID, mutable.Set()).add(owlPhenotype);
-			translatePhenotypeSemantics(phenotype, owlPhenotype);
+			translatePhenotypeSemantics(phenotype, owlPhenotype, owlState);
 			val denotes = factory.getOWLObjectProperty(Vocab.DENOTES);
 			val denotesExemplar = factory.getOWLObjectProperty(Vocab.DENOTES_EXEMPLAR);
 			val denotesOnlyPhenotype = factory.getOWLObjectAllValuesFrom(denotes, owlPhenotype);
@@ -163,7 +159,9 @@ object PhenexToOWL extends OWLTask {
 			instantiateClassAssertion(exemplar, owlPhenotype, true);
 	}
 
-	def translatePhenotypeSemantics(phenotype: Element, owlPhenotype: OWLClass): Unit = {
+	def translatePhenotypeSemantics(phenotype: Element, owlPhenotype: OWLClass, owlState: OWLNamedIndividual): Unit = {
+			val involves = factory.getOWLObjectProperty(Vocab.INVOLVES);
+			val involved = mutable.Set[OWLClass]();
 			val bearer = phenotype.getChild("bearer", phenoNS);
 			val entityClass = if (bearer != null) {
 				val bearerType = bearer.getChild("typeref", phenoNS);
@@ -198,13 +196,16 @@ object PhenexToOWL extends OWLTask {
 			val eq = if (qualityClass == null) {
 				factory.getOWLObjectSomeValuesFrom(hasPart, entityClass);
 			} else if (!qualityClass.isAnonymous() && qualityClass.asOWLClass().getIRI() == Vocab.ABSENT) { //TODO also handle lacks_all_parts_of_type
+				involved.add(qualityClass.asOWLClass());
 				factory.getOWLObjectComplementOf(factory.getOWLObjectSomeValuesFrom(hasPart, entityClass));
 			} else {
 				val bearerOf = factory.getOWLObjectProperty(Vocab.BEARER_OF);
 				factory.getOWLObjectSomeValuesFrom(hasPart, factory.getOWLObjectIntersectionOf(entityClass, factory.getOWLObjectSomeValuesFrom(bearerOf, qualityClass)));
 			}
 			manager.addAxiom(ontology, factory.getOWLSubClassOfAxiom(owlPhenotype, eq));
-			eq.getClassesInSignature().foreach(createRestrictions(_));
+			involved.addAll(eq.getClassesInSignature());
+			manager.addAxioms(ontology, involved.map(factory.getOWLObjectSomeValuesFrom(involves, _)).map(factory.getOWLClassAssertionAxiom(_, owlState)));
+			involved.foreach(createRestrictions(_));
 	}
 
 	def translateMatrixRow(row: Element): Unit = {
@@ -240,13 +241,15 @@ object PhenexToOWL extends OWLTask {
 			manager.addAxiom(ontology, NamedRestrictionGenerator.createRestriction(partOf, aClass));
 			val bearerOf = factory.getOWLObjectProperty(Vocab.BEARER_OF);
 			manager.addAxiom(ontology, NamedRestrictionGenerator.createRestriction(bearerOf, aClass));
+			val involves = factory.getOWLObjectProperty(Vocab.INVOLVES);
+			manager.addAxiom(ontology, NamedRestrictionGenerator.createRestriction(involves, aClass));
 			manager.addAxiom(ontology, AbsenceClassGenerator.createAbsenceClassAxiom(aClass));
 	}
 
 	def classFromTyperef(typeref: Element): OWLClassExpression = {
 			val genusID = typeref.getAttributeValue("about");
 			val qualifiers = typeref.getChildren("qualifier", phenoNS);
-			val genus = factory.getOWLClass(iriForTermID(genusID)); 
+			val genus = factory.getOWLClass(OBOUtil.iriForTermID(genusID)); 
 			if (qualifiers.isEmpty()) {
 				return genus
 			} else {
@@ -257,18 +260,10 @@ object PhenexToOWL extends OWLTask {
 	}
 
 	def restrictionFromQualifier(qualifier: Element): OWLObjectSomeValuesFrom = {
-			val propertyIRI = iriForTermID(qualifier.getAttributeValue("relation"));
+			val propertyIRI = OBOUtil.iriForTermID(qualifier.getAttributeValue("relation"));
 			val property = factory.getOWLObjectProperty(propertyIRI);
 			val filler = classFromTyperef(qualifier.getChild("holds_in_relation_to", phenoNS).getChild("typeref", phenoNS));
 			return factory.getOWLObjectSomeValuesFrom(property, filler);
-	}
-
-	def iriForTermID(id: String): IRI = {
-			return if (id.startsWith("http://")) {
-				IRI.create(id);
-			} else {
-				IRI.create("http://purl.obolibrary.org/obo/" + id.replaceAll(":", "_"));
-			}
 	}
 
 	private
@@ -282,21 +277,6 @@ object PhenexToOWL extends OWLTask {
 			stateToOWLPhenotypeMap.clear();
 			manager = this.getOWLOntologyManager();
 			ontology = manager.createOntology();
-	}
-
-	def nextIndividual(): OWLNamedIndividual = {
-			return factory.getOWLNamedIndividual(nextIRI());
-	}
-
-	def nextClass(): OWLClass = {
-			return factory.getOWLClass(this.nextIRI());
-	}
-
-
-	def nextIRI(): IRI = {
-			this.nodeIncrementer += 1;
-			val id = "http://kb.phenoscape.org/uuid/" + this.uuid + "-" + this.nodeIncrementer;
-			return IRI.create(id);
 	}
 
 	def addClass(individual: OWLIndividual , aClass: OWLClassExpression): Unit = {
