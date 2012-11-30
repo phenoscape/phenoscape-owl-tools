@@ -12,6 +12,7 @@ import org.phenoscape.owl.Vocab
 import org.apache.commons.lang3.StringUtils
 import org.phenoscape.owl.util.OBOUtil
 import org.semanticweb.owlapi.model.IRI
+import org.phenoscape.owl.NamedRestrictionGenerator
 
 object ZFINExpressionToOWL extends OWLTask {
 
@@ -60,9 +61,9 @@ object ZFINExpressionToOWL extends OWLTask {
 				val gene = factory.getOWLNamedIndividual(geneIRI);
 				axioms.add(factory.getOWLDeclarationAxiom(gene));
 				axioms.add(factory.getOWLObjectPropertyAssertionAxiom(annotatedGene, expression, gene));
+				axioms.addAll(structureType.getClassesInSignature().map(NamedRestrictionGenerator.createRestriction(partOf, _)));
 				return axioms;
 			}
-
 	}
 
 }

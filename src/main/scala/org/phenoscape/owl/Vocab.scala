@@ -38,5 +38,7 @@ object Vocab {
 	val OCCURS_IN = IRI.create("http://purl.obolibrary.org/obo/BFO_0000066");
 	val GENE = IRI.create("http://purl.obolibrary.org/obo/SO_0000704");
 	val ANNOTATED_GENE = IRI.create("http://vocab.phenoscape.org/annotated_gene");
+	val HAS_EXACT_SYNONYM = IRI.create("http://www.geneontology.org/formats/oboInOwl#hasExactSynonym");
+	val HAS_RELATED_SYNONYM = IRI.create("http://www.geneontology.org/formats/oboInOwl#hasRelatedSynonym");
 	
 }
