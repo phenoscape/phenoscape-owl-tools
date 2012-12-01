@@ -2,11 +2,13 @@ package org.phenoscape.owl
 
 import java.io.File
 import scala.collection.JavaConversions._
+import scala.collection.mutable.ListBuffer
 import org.semanticweb.elk.owlapi.ElkReasonerFactory
 import org.semanticweb.owlapi.model.IRI
 import org.semanticweb.owlapi.model.OWLOntology
 import org.semanticweb.owlapi.reasoner.InferenceType
 import org.semanticweb.owlapi.reasoner.OWLReasoner
+import org.semanticweb.owlapi.util.InferredAxiomGenerator
 import org.semanticweb.owlapi.util.InferredClassAssertionAxiomGenerator
 import org.semanticweb.owlapi.util.InferredEquivalentClassAxiomGenerator
 import org.semanticweb.owlapi.util.InferredOntologyGenerator
@@ -16,6 +18,7 @@ import org.semanticweb.owlapi.util.OWLEntityRemover
 import com.clarkparsia.pellet.owlapiv3.PelletReasonerFactory
 import eu.trowl.owlapi3.rel.reasoner.dl.RELReasonerFactory
 import uk.ac.manchester.cs.factplusplus.owlapiv3.FaCTPlusPlusReasonerFactory
+import org.semanticweb.owlapi.model.OWLAxiom
 
 object MaterializeInferences extends OWLTask {
 
@@ -43,37 +46,38 @@ object MaterializeInferences extends OWLTask {
 				manager.addAxioms(tempOntology, ontology.getImportsClosure().map(_.getAxioms()).reduce(_ ++ _));
 				tempOntology.getClassesInSignature().foreach(entityRemover.visit(_));
 				manager.applyChanges(entityRemover.getChanges());
-				createReasoner(tempOntology);
+				createReasoner(tempOntology, getReasonerChoice());
 			} else {
-				createReasoner(ontology);
+				createReasoner(ontology, getReasonerChoice());
 			}
 			materializeInferences(ontology, reasoner);
 	}
 
 	def materializeInferences(ontology: OWLOntology, reasoner: OWLReasoner): Unit = {
 			reasoner.precomputeInferences(InferenceType.CLASS_HIERARCHY); // this must be called first for ELK
-			val axiomGenerators = List(
+			val axiomGenerators = ListBuffer[InferredAxiomGenerator[_ <: OWLAxiom]](
 					new InferredClassAssertionAxiomGenerator(),
 					new InferredEquivalentClassAxiomGenerator(),
-					new InferredPropertyAssertionGenerator(),
 					new InferredSubClassAxiomGenerator()
 					);
+			if (getReasonerChoice() != "elk") {
+				axiomGenerators.add(new InferredPropertyAssertionGenerator());
+			}
 			val generator = new InferredOntologyGenerator(reasoner, axiomGenerators);
 			generator.fillOntology(ontology.getOWLOntologyManager(), ontology);
 	}
 
-	def createReasoner(ontology: OWLOntology): OWLReasoner = {
+	def getReasonerChoice(): String = {
 			if (System.getProperties().containsKey(REASONER)) {
-				val reasoner = System.getProperty(REASONER);
-				createReasoner(ontology, reasoner);
+				return System.getProperty(REASONER);
 			} else {
-				new FaCTPlusPlusReasonerFactory().createReasoner(ontology);
+				return "elk";
 			}
 	}
 
 	def createReasoner(ontology: OWLOntology, kind: String): OWLReasoner = {
 			kind match {
-			//case "hermit" => new ReasonerFactory().createReasoner(ontology);
+				//case "hermit" => new ReasonerFactory().createReasoner(ontology);
 			case "fact++" => new FaCTPlusPlusReasonerFactory().createReasoner(ontology);
 			case "pellet" => new PelletReasonerFactory().createReasoner(ontology);
 			case "elk" => new ElkReasonerFactory().createReasoner(ontology);

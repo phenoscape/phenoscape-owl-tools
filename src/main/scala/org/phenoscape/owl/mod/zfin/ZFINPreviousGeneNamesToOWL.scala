@@ -19,7 +19,7 @@ object ZFINPreviousGeneNamesToOWL extends OWLTask {
 	val hasRelatedSynonym = factory.getOWLAnnotationProperty(Vocab.HAS_RELATED_SYNONYM);
 
 	def main(args: Array[String]): Unit = {
-			val file = Source.fromFile(args(0), "utf-8");
+			val file = Source.fromFile(args(0));
 			val ontology = convert(file);
 			file.close();
 			manager.saveOntology(ontology, IRI.create(new File(args(1))));
