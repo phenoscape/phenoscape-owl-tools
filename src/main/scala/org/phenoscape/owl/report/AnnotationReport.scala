@@ -34,7 +34,7 @@ object AnnotationReport {
 	val phenoNS = Namespace.getNamespace("http://www.bioontologies.org/obd/schema/pheno");
 	val factory = OWLManager.getOWLDataFactory();
 	val manager = OWLManager.createOWLOntologyManager();
-	val header = "Character Number\tCharacter Description\tCharacter Comment\tState Number\tState Description\tState Comment\tEntity\tEntity label\tQuality\tQuality label\tCharacter Attribute\tAttribute label\tRelated Entity\tRelated Entity label\tCount\tComment";
+	val header = "File\tCharacter Number\tCharacter Label\tState Symbol\tState Label\tEntity ID\tEntity Label\tQuality ID\tQuality Label\tRelated Entity ID\tRelated Entity Label";
 	val idRenderer = new ManchesterOWLSyntaxOWLObjectRendererImpl();
 	val prefixManager = new DefaultPrefixManager();
 	prefixManager.setPrefix("UBERON:", "http://purl.obolibrary.org/obo/UBERON_");
