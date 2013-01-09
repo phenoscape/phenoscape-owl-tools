@@ -46,7 +46,7 @@ object MGIGeneticMarkersToOWL extends OWLTask {
 				val geneID = StringUtils.stripToNull(items(0));
 				val geneSymbol = StringUtils.stripToNull(items(6));
 				val geneFullName = StringUtils.stripToNull(items(8));
-				val geneIRI = IRI.create("http://www.informatics.jax.org/marker/" + geneID);
+				val geneIRI = getGeneIRI(geneID);
 				val gene = factory.getOWLNamedIndividual(geneIRI);
 				axioms.add(factory.getOWLDeclarationAxiom(gene));
 				axioms.add(factory.getOWLClassAssertionAxiom(geneClass, gene));
@@ -60,6 +60,10 @@ object MGIGeneticMarkersToOWL extends OWLTask {
 				}
 				return axioms;
 			}
+	}
+
+	def getGeneIRI(geneID: String): IRI = {
+			return IRI.create("http://www.informatics.jax.org/marker/" + geneID);
 	}
 
 }
