@@ -19,7 +19,9 @@ object ZFINExpressionToOWL extends OWLTask {
 	val occursIn = factory.getOWLObjectProperty(Vocab.OCCURS_IN);
 	val partOf = factory.getOWLObjectProperty(Vocab.PART_OF);
 	val annotatedGene = factory.getOWLObjectProperty(Vocab.ANNOTATED_GENE);
+	val annotatedTaxon = factory.getOWLObjectProperty(Vocab.ANNOTATED_TAXON);
 	val geneExpression = factory.getOWLClass(Vocab.GENE_EXPRESSION);
+	val zebrafish = factory.getOWLNamedIndividual(Vocab.ZEBRAFISH);
 	val manager = this.getOWLOntologyManager();
 
 	def main(args: Array[String]): Unit = {
@@ -61,6 +63,7 @@ object ZFINExpressionToOWL extends OWLTask {
 				val gene = factory.getOWLNamedIndividual(geneIRI);
 				axioms.add(factory.getOWLDeclarationAxiom(gene));
 				axioms.add(factory.getOWLObjectPropertyAssertionAxiom(annotatedGene, expression, gene));
+				axioms.add(factory.getOWLObjectPropertyAssertionAxiom(annotatedTaxon, expression, zebrafish));
 				axioms.addAll(structureType.getClassesInSignature().map(NamedRestrictionGenerator.createRestriction(partOf, _)));
 				return axioms;
 			}

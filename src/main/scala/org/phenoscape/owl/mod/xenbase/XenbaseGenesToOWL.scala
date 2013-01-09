@@ -43,7 +43,7 @@ object XenbaseGenesToOWL extends OWLTask {
 			val geneID = StringUtils.stripToNull(items(0));
 			val geneSymbol = StringUtils.stripToNull(items(1));
 			val geneFullName = StringUtils.stripToNull(items(2));
-			val geneIRI = IRI.create("http://xenbase.org/" + geneID);
+			val geneIRI = getGeneIRI(geneID);
 			val gene = factory.getOWLNamedIndividual(geneIRI);
 			axioms.add(factory.getOWLDeclarationAxiom(gene));
 			axioms.add(factory.getOWLClassAssertionAxiom(geneClass, gene));
@@ -57,6 +57,10 @@ object XenbaseGenesToOWL extends OWLTask {
 			}
 			return axioms;
 
+	}
+
+	def getGeneIRI(geneID: String): IRI = {
+			return IRI.create("http://xenbase.org/" + geneID);
 	}
 
 }

@@ -38,7 +38,13 @@ object Vocab {
 	val OCCURS_IN = IRI.create("http://purl.obolibrary.org/obo/BFO_0000066");
 	val GENE = IRI.create("http://purl.obolibrary.org/obo/SO_0000704");
 	val ANNOTATED_GENE = IRI.create("http://vocab.phenoscape.org/annotated_gene");
+	val ANNOTATED_ORGANISM = IRI.create("http://vocab.phenoscape.org/annotated_organism");
 	val HAS_EXACT_SYNONYM = IRI.create("http://www.geneontology.org/formats/oboInOwl#hasExactSynonym");
 	val HAS_RELATED_SYNONYM = IRI.create("http://www.geneontology.org/formats/oboInOwl#hasRelatedSynonym");
+	val ANNOTATED_TAXON = IRI.create("http://vocab.phenoscape.org/annotated_taxon");
+	val ZEBRAFISH = IRI.create("http://purl.obolibrary.org/obo/NCBITaxon_7955");
+	val XENOPUS_LAEVIS = IRI.create("http://purl.obolibrary.org/obo/NCBITaxon_8355");
+	val XENOPUS_TROPICALIS = IRI.create("http://purl.obolibrary.org/obo/NCBITaxon_8364");
+	val MOUSE = IRI.create("http://purl.obolibrary.org/obo/NCBITaxon_10090");
 	
 }
