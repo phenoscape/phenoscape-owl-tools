@@ -23,7 +23,6 @@ object MaterializeSubClassOfClosure extends OWLTask {
 			val source = manager.createOntology();
 			args.map(filename => loadOntology(new File(filename))).foreach(ont => manager.addAxioms(source, ont.getAxioms()));
 			val reasoner = new StructuralReasonerFactory().createReasoner(source);
-			//val reasoner = new ElkReasonerFactory().createReasoner(source);
 			val axioms = source.getClassesInSignature().map(createSubClassOfAxioms(_, reasoner)).flatten;
 			val target = manager.createOntology(axioms.asInstanceOf[Set[OWLAxiom]]);
 			manager.saveOntology(target, IRI.create(targetFile));
