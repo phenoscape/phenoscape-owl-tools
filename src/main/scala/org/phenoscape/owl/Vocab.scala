@@ -46,5 +46,6 @@ object Vocab {
 	val XENOPUS_LAEVIS = IRI.create("http://purl.obolibrary.org/obo/NCBITaxon_8355");
 	val XENOPUS_TROPICALIS = IRI.create("http://purl.obolibrary.org/obo/NCBITaxon_8364");
 	val MOUSE = IRI.create("http://purl.obolibrary.org/obo/NCBITaxon_10090");
+	val HUMAN = IRI.create("http://purl.obolibrary.org/obo/NCBITaxon_9606");
 	
 }
