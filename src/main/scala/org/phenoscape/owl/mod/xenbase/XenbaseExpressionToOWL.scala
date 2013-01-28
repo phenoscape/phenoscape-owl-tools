@@ -17,6 +17,7 @@ import org.semanticweb.owlapi.model.OWLAxiom
 import org.semanticweb.owlapi.model.OWLNamedIndividual
 import org.semanticweb.owlapi.model.OWLOntology
 import org.semanticweb.owlapi.vocab.OWLRDFVocabulary
+import org.semanticweb.owlapi.model.AddImport
 
 object XenbaseExpressionToOWL extends OWLTask {
 
@@ -56,11 +57,13 @@ object XenbaseExpressionToOWL extends OWLTask {
 	}
 
 	def convert(expressionData: Source, genepageMappings: Map[String, String], species: OWLNamedIndividual): OWLOntology = {
-			val ontology = manager.createOntology();
+			val id = if (species == laevis) "http://purl.obolibrary.org/obo/phenoscape/xenbase_gene_expression.owl" else "";
+			val ontology = manager.createOntology(IRI.create(id));
 			manager.addAxioms(ontology, expressionData.getLines.map(translate(_, genepageMappings, species)).flatten.toSet[OWLAxiom]);
 			val rdfsLabel = factory.getOWLAnnotationProperty(OWLRDFVocabulary.RDFS_LABEL.getIRI());
 			manager.addAxiom(ontology, factory.getOWLAnnotationAssertionAxiom(rdfsLabel, laevis.getIRI(), factory.getOWLLiteral("Xenopus laevis")));
 			manager.addAxiom(ontology, factory.getOWLAnnotationAssertionAxiom(rdfsLabel, tropicalis.getIRI(), factory.getOWLLiteral("Xenopus tropicalis")));
+			manager.applyChange(new AddImport(ontology, factory.getOWLImportsDeclaration(IRI.create("http://purl.obolibrary.org/obo/phenoscape/tbox.owl"))));
 			return ontology;
 	}
 
@@ -85,7 +88,7 @@ object XenbaseExpressionToOWL extends OWLTask {
 				axioms.add(factory.getOWLDeclarationAxiom(gene));
 				axioms.add(factory.getOWLObjectPropertyAssertionAxiom(annotatedGene, expression, gene));
 				axioms.add(factory.getOWLObjectPropertyAssertionAxiom(annotatedTaxon, expression, species));
-				axioms.addAll(structureType.getClassesInSignature().map(NamedRestrictionGenerator.createRestriction(partOf, _)));
+				//axioms.addAll(structureType.getClassesInSignature().map(NamedRestrictionGenerator.createRestriction(partOf, _)));
 				return axioms;
 			}
 	}

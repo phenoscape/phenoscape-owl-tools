@@ -31,7 +31,7 @@ object ZFINGeneticMarkersToOWL extends OWLTask {
 	}
 
 	def convert(markersData: Source): OWLOntology = {
-			val ontology = manager.createOntology();
+			val ontology = manager.createOntology(IRI.create("http://purl.obolibrary.org/obo/phenoscape/zfin_genes.owl"));
 			manager.addAxioms(ontology, markersData.getLines.map(translate(_)).flatten.toSet[OWLAxiom]);
 			return ontology;
 	}

@@ -1,13 +1,11 @@
 package org.phenoscape.owl.mod.human
 
 import java.io.File
-
 import scala.collection.JavaConversions._
 import scala.collection.TraversableOnce.flattenTraversableOnce
 import scala.collection.Set
 import scala.collection.mutable
 import scala.io.Source
-
 import org.apache.commons.lang3.StringUtils
 import org.phenoscape.owl.util.OBOUtil
 import org.phenoscape.owl.NamedRestrictionGenerator
@@ -17,6 +15,7 @@ import org.semanticweb.owlapi.model.IRI
 import org.semanticweb.owlapi.model.OWLAxiom
 import org.semanticweb.owlapi.model.OWLOntology
 import org.semanticweb.owlapi.vocab.OWLRDFVocabulary
+import org.semanticweb.owlapi.model.AddImport
 
 object HumanPhenotypesToOWL extends OWLTask {
 
@@ -36,8 +35,9 @@ object HumanPhenotypesToOWL extends OWLTask {
 	}
 
 	def convert(phenotypeData: Source): OWLOntology = {
-			val ontology = manager.createOntology();
+			val ontology = manager.createOntology(IRI.create("http://purl.obolibrary.org/obo/phenoscape/human_phenotypes.owl"));
 			manager.addAxioms(ontology, phenotypeData.getLines.drop(1).map(translate(_)).flatten.toSet[OWLAxiom]);
+			manager.applyChange(new AddImport(ontology, factory.getOWLImportsDeclaration(IRI.create("http://purl.obolibrary.org/obo/phenoscape/tbox.owl"))));
 			return ontology;
 	}
 

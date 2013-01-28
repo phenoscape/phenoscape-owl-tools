@@ -1,13 +1,11 @@
 package org.phenoscape.owl.mod.mgi
 
 import java.io.File
-
 import scala.collection.JavaConversions._
 import scala.collection.mutable
 import scala.collection.Map
 import scala.collection.Set
 import scala.io.Source
-
 import org.apache.commons.lang3.StringUtils
 import org.phenoscape.owl.mod.xenbase.XenbaseGenesToOWL
 import org.phenoscape.owl.util.OBOUtil
@@ -19,6 +17,7 @@ import org.semanticweb.owlapi.model.OWLAxiom
 import org.semanticweb.owlapi.model.OWLNamedIndividual
 import org.semanticweb.owlapi.model.OWLOntology
 import org.semanticweb.owlapi.vocab.OWLRDFVocabulary
+import org.semanticweb.owlapi.model.AddImport
 
 object MGIExpressionToOWL extends OWLTask {
 
@@ -38,10 +37,11 @@ object MGIExpressionToOWL extends OWLTask {
 	}
 
 	def convert(expressionData: Source): OWLOntology = {
-			val ontology = manager.createOntology();
+			val ontology = manager.createOntology(IRI.create("http://purl.obolibrary.org/obo/phenoscape/mgi_gene_expression.owl"));
 			manager.addAxioms(ontology, expressionData.getLines.drop(1).map(translate(_)).flatten.toSet[OWLAxiom]);
 			val rdfsLabel = factory.getOWLAnnotationProperty(OWLRDFVocabulary.RDFS_LABEL.getIRI());
 			manager.addAxiom(ontology, factory.getOWLAnnotationAssertionAxiom(rdfsLabel, mouse.getIRI(), factory.getOWLLiteral("Mus musculus")));
+			manager.applyChange(new AddImport(ontology, factory.getOWLImportsDeclaration(IRI.create("http://purl.obolibrary.org/obo/phenoscape/tbox.owl"))));
 			return ontology;
 	}
 

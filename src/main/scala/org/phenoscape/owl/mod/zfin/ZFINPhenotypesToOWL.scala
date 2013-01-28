@@ -15,6 +15,7 @@ import org.semanticweb.owlapi.model.IRI
 import org.phenoscape.owl.NamedRestrictionGenerator
 import org.semanticweb.owlapi.model.OWLClass
 import org.phenoscape.owl.util.ExpressionUtil
+import org.semanticweb.owlapi.model.AddImport
 
 object ZFINPhenotypesToOWL extends OWLTask {
 
@@ -37,8 +38,9 @@ object ZFINPhenotypesToOWL extends OWLTask {
 	}
 
 	def convert(phenotypeData: Source): OWLOntology = {
-			val ontology = manager.createOntology();
+			val ontology = manager.createOntology(IRI.create("http://purl.obolibrary.org/obo/phenoscape/zfin_phenotypes.owl"));
 			manager.addAxioms(ontology, phenotypeData.getLines.map(translate(_)).flatten.toSet[OWLAxiom]);
+			manager.applyChange(new AddImport(ontology, factory.getOWLImportsDeclaration(IRI.create("http://purl.obolibrary.org/obo/phenoscape/tbox.owl"))));
 			return ontology;
 	}
 
@@ -94,12 +96,13 @@ object ZFINPhenotypesToOWL extends OWLTask {
 			axioms.addAll(involved.map(involvee => {
 				factory.getOWLClassAssertionAxiom(factory.getOWLObjectSomeValuesFrom(involves, involvee), phenotypeAnnotation);
 			}));
-			axioms.addAll(structureType.getClassesInSignature().map(NamedRestrictionGenerator.createRestriction(partOf, _)));
-			if (relatedStructureType != null) {
-				axioms.addAll(relatedStructureType.getClassesInSignature().map(NamedRestrictionGenerator.createRestriction(partOf, _)));
-			}
-			axioms.addAll(primaryQualityType.getClassesInSignature().map(NamedRestrictionGenerator.createRestriction(bearerOf, _)));
-			axioms.addAll(involved.map(NamedRestrictionGenerator.createRestriction(involves, _)));
+			//axioms.addAll(structureType.getClassesInSignature().map(NamedRestrictionGenerator.createRestriction(partOf, _)));
+//			if (relatedStructureType != null) {
+//				axioms.addAll(relatedStructureType.getClassesInSignature().map(NamedRestrictionGenerator.createRestriction(partOf, _)));
+//			}
+//			axioms.addAll(primaryQualityType.getClassesInSignature().map(NamedRestrictionGenerator.createRestriction(bearerOf, _)));
+			//FIXME add back absent invves
+//			axioms.addAll(involved.map(NamedRestrictionGenerator.createRestriction(involves, _)));
 			return axioms;
 	}
 

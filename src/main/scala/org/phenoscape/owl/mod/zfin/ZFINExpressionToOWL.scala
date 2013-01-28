@@ -13,6 +13,7 @@ import org.apache.commons.lang3.StringUtils
 import org.phenoscape.owl.util.OBOUtil
 import org.semanticweb.owlapi.model.IRI
 import org.phenoscape.owl.NamedRestrictionGenerator
+import org.semanticweb.owlapi.model.AddImport
 
 object ZFINExpressionToOWL extends OWLTask {
 
@@ -32,8 +33,9 @@ object ZFINExpressionToOWL extends OWLTask {
 	}
 
 	def convert(expressionData: Source): OWLOntology = {
-			val ontology = manager.createOntology();
+			val ontology = manager.createOntology(IRI.create("http://purl.obolibrary.org/obo/phenoscape/zfin_gene_expression.owl"));
 			manager.addAxioms(ontology, expressionData.getLines.map(translate(_)).flatten.toSet[OWLAxiom]);
+			manager.applyChange(new AddImport(ontology, factory.getOWLImportsDeclaration(IRI.create("http://purl.obolibrary.org/obo/phenoscape/tbox.owl"))));
 			return ontology;
 	}
 
@@ -64,7 +66,7 @@ object ZFINExpressionToOWL extends OWLTask {
 				axioms.add(factory.getOWLDeclarationAxiom(gene));
 				axioms.add(factory.getOWLObjectPropertyAssertionAxiom(annotatedGene, expression, gene));
 				axioms.add(factory.getOWLObjectPropertyAssertionAxiom(annotatedTaxon, expression, zebrafish));
-				axioms.addAll(structureType.getClassesInSignature().map(NamedRestrictionGenerator.createRestriction(partOf, _)));
+				//axioms.addAll(structureType.getClassesInSignature().map(NamedRestrictionGenerator.createRestriction(partOf, _)));
 				return axioms;
 			}
 	}

@@ -26,7 +26,7 @@ object ZFINPreviousGeneNamesToOWL extends OWLTask {
 	}
 
 	def convert(data: Source): OWLOntology = {
-			val ontology = manager.createOntology();
+			val ontology = manager.createOntology(IRI.create("http://purl.obolibrary.org/obo/phenoscape/zfin_previous_gene_names.owl"));
 			manager.addAxioms(ontology, data.getLines.map(translate(_)).flatten.toSet[OWLAxiom]);
 			return ontology;
 	}
