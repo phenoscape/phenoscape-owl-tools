@@ -2,14 +2,17 @@ package org.phenoscape.owl
 
 import java.io.File
 import java.util.UUID
+
 import scala.Option.option2Iterable
 import scala.collection.JavaConversions._
 import scala.collection.mutable
+
 import org.apache.commons.lang3.StringUtils
 import org.jdom2.filter.ElementFilter
 import org.jdom2.input.SAXBuilder
 import org.jdom2.Element
 import org.jdom2.Namespace
+import org.phenoscape.owl.util.OBOUtil
 import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model.IRI
 import org.semanticweb.owlapi.model.OWLAnnotationSubject
@@ -24,7 +27,6 @@ import org.semanticweb.owlapi.model.OWLObjectSomeValuesFrom
 import org.semanticweb.owlapi.model.OWLQuantifiedObjectRestriction
 import org.semanticweb.owlapi.vocab.DublinCoreVocabulary
 import org.semanticweb.owlapi.vocab.OWLRDFVocabulary
-import org.phenoscape.owl.util.OBOUtil
 
 object PhenexToOWL extends OWLTask {
 
@@ -44,14 +46,16 @@ object PhenexToOWL extends OWLTask {
 
 	def main(args: Array[String]): Unit = {
 			val builder = new SAXBuilder();
-			val nexml = builder.build(new File(args(0)));
-			convert(nexml.getRootElement());
+			val inputFile = new File(args(0));
+			val nexml = builder.build(inputFile);
+			convert(nexml.getRootElement(), inputFile.getName());
 			manager.saveOntology(ontology, IRI.create(new File(args(1))));
 	}
 
-	def convert(root: Element): Unit = {
+	def convert(root: Element, matrixLabel: String): Unit = {
 			this.nexml = root;
 			val matrix = this.nextIndividual();
+			addAnnotation(OWLRDFVocabulary.RDFS_LABEL.getIRI(), matrix.getIRI(), factory.getOWLLiteral(matrixLabel));
 			this.addClass(matrix, this.factory.getOWLClass(Vocab.CHARACTER_STATE_DATA_MATRIX));
 			val publicationNotes = getLiteralMetaValues(nexml, "description", dcTermsNS);
 			publicationNotes.map(note => {
