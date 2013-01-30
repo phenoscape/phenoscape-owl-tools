@@ -30,7 +30,7 @@ object MGIExpressionToOWL extends OWLTask {
 	val manager = this.getOWLOntologyManager();
 
 	def main(args: Array[String]): Unit = {
-			val mgiExpressionFile = Source.fromFile(args(0));
+			val mgiExpressionFile = Source.fromFile(args(0), "utf-8");
 			val ontology = convert(mgiExpressionFile);
 			mgiExpressionFile.close();
 			manager.saveOntology(ontology, IRI.create(new File(args(1))));
