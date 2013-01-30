@@ -24,7 +24,7 @@ object ZFINGeneticMarkersToOWL extends OWLTask {
 	val geneClass = factory.getOWLClass(Vocab.GENE);
 
 	def main(args: Array[String]): Unit = {
-			val file = Source.fromFile(args(0));
+			val file = Source.fromFile(args(0), "ISO-8859-1");
 			val ontology = convert(file);
 			file.close();
 			manager.saveOntology(ontology, IRI.create(new File(args(1))));

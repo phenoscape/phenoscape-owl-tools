@@ -31,8 +31,8 @@ object XenbaseExpressionToOWL extends OWLTask {
 	val manager = this.getOWLOntologyManager();
 
 	def main(args: Array[String]): Unit = {
-			val genepageMappingsFile = Source.fromFile(args(0));
-			val laevisExpressionFile = Source.fromFile(args(1));
+			val genepageMappingsFile = Source.fromFile(args(0), "utf-8");
+			val laevisExpressionFile = Source.fromFile(args(1), "utf-8");
 			val tropicalisExpressionFile = Source.fromFile(args(2));
 			val mappings = indexGenepageMappings(genepageMappingsFile);
 			val ontology = convert(laevisExpressionFile, mappings, laevis);
