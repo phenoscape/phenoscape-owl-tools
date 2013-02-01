@@ -26,6 +26,7 @@ object MGIPhenotypesToOWL extends OWLTask {
 	val annotatedGene = factory.getOWLObjectProperty(Vocab.ANNOTATED_GENE);
 	val annotatedTaxon = factory.getOWLObjectProperty(Vocab.ANNOTATED_TAXON);
 	val annotatedOrganism = factory.getOWLObjectProperty(Vocab.ANNOTATED_ORGANISM);
+	val annotationClass = factory.getOWLClass(Vocab.PHENOTYPE_ANNOTATION);
 	val mouse = factory.getOWLNamedIndividual(Vocab.MOUSE);
 	val towards = factory.getOWLObjectProperty(Vocab.TOWARDS);
 	val bearerOf = factory.getOWLObjectProperty(Vocab.BEARER_OF);
@@ -50,6 +51,7 @@ object MGIPhenotypesToOWL extends OWLTask {
 			val involved = mutable.Set[OWLClass]();
 			val axioms = mutable.Set[OWLAxiom]();
 			val phenotypeAnnotation = nextIndividual();
+			axioms.add(factory.getOWLClassAssertionAxiom(annotationClass, phenotypeAnnotation));
 			axioms.add(factory.getOWLDeclarationAxiom(phenotypeAnnotation));
 			val structureItem = StringUtils.stripToNull(items(5));
 			if (structureItem != null) {

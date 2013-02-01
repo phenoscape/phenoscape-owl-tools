@@ -25,6 +25,7 @@ object HumanPhenotypesToOWL extends OWLTask {
 	val annotatedTaxon = factory.getOWLObjectProperty(Vocab.ANNOTATED_TAXON);
 	val human = factory.getOWLNamedIndividual(Vocab.HUMAN);
 	val geneClass = factory.getOWLClass(Vocab.GENE);
+	val annotationClass = factory.getOWLClass(Vocab.PHENOTYPE_ANNOTATION);
 	val manager = this.getOWLOntologyManager();
 
 	def main(args: Array[String]): Unit = {
@@ -45,6 +46,7 @@ object HumanPhenotypesToOWL extends OWLTask {
 			val items = expressionLine.split("\t");
 			val axioms = mutable.Set[OWLAxiom]();
 			val phenotypeAnnotation = nextIndividual();
+			axioms.add(factory.getOWLClassAssertionAxiom(annotationClass, phenotypeAnnotation));
 			axioms.add(factory.getOWLDeclarationAxiom(phenotypeAnnotation));
 			val phenotypeID = StringUtils.stripToNull(items(3));
 			val phenotypeClass = factory.getOWLClass(OBOUtil.iriForTermID(phenotypeID));
