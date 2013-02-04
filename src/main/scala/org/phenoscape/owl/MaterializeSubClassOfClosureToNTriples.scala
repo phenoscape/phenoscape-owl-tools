@@ -36,6 +36,8 @@ object MaterializeSubClassOfClosureToNTriples extends OWLTask {
 			println("Total classes: " + classCount);
 			var progress = 0;
 			for (ontClass <- allClasses) {
+				writer.append(String.format("<%s> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <%s> .", ontClass.getIRI(), ontClass.getIRI()));
+				writer.newLine();
 				val superClasses = reasoner.getSuperClasses(ontClass, false).getFlattened();
 				for (superClass <- superClasses) {
 					if (superClass != factory.getOWLThing()) {
