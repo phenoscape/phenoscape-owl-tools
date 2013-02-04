@@ -26,7 +26,8 @@ object PropertyNormalizer extends OWLTask {
 			IRI.create("http://purl.obolibrary.org/obo/TODO_inheres_in") -> IRI.create("http://purl.obolibrary.org/obo/BFO_0000052"),
 			IRI.create("http://purl.obolibrary.org/obo/RO_overlaps") -> IRI.create("http://purl.obolibrary.org/obo/RO_0002131"),
 			IRI.create("http://purl.obolibrary.org/obo/towards") -> IRI.create("http://purl.obolibrary.org/obo/OBO_REL_towards"), //TODO check proper URI
-			IRI.create("http://purl.obolibrary.org/obo/TODO_towards") -> IRI.create("http://purl.obolibrary.org/obo/OBO_REL_towards") //TODO check proper URI
+			IRI.create("http://purl.obolibrary.org/obo/TODO_towards") -> IRI.create("http://purl.obolibrary.org/obo/OBO_REL_towards"), //TODO check proper URI
+			IRI.create("http://purl.obolibrary.org/obo/hp/hp-logical-definitions#involves") -> Vocab.INVOLVES
 			);
 
 	def main(args: Array[String]): Unit = {
