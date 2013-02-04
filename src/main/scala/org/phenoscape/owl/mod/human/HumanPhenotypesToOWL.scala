@@ -1,21 +1,22 @@
 package org.phenoscape.owl.mod.human
 
 import java.io.File
+
 import scala.collection.JavaConversions._
 import scala.collection.TraversableOnce.flattenTraversableOnce
 import scala.collection.Set
 import scala.collection.mutable
 import scala.io.Source
+
 import org.apache.commons.lang3.StringUtils
 import org.phenoscape.owl.util.OBOUtil
-import org.phenoscape.owl.NamedRestrictionGenerator
 import org.phenoscape.owl.OWLTask
 import org.phenoscape.owl.Vocab
+import org.semanticweb.owlapi.model.AddImport
 import org.semanticweb.owlapi.model.IRI
 import org.semanticweb.owlapi.model.OWLAxiom
 import org.semanticweb.owlapi.model.OWLOntology
 import org.semanticweb.owlapi.vocab.OWLRDFVocabulary
-import org.semanticweb.owlapi.model.AddImport
 
 object HumanPhenotypesToOWL extends OWLTask {
 
@@ -50,8 +51,9 @@ object HumanPhenotypesToOWL extends OWLTask {
 			axioms.add(factory.getOWLDeclarationAxiom(phenotypeAnnotation));
 			val phenotypeID = StringUtils.stripToNull(items(3));
 			val phenotypeClass = factory.getOWLClass(OBOUtil.iriForTermID(phenotypeID));
-			val involvesPhenotypeClass = factory.getOWLClass(NamedRestrictionGenerator.getRestrictionIRI(involves.getIRI(), phenotypeClass.getIRI()));
-			axioms.add(factory.getOWLClassAssertionAxiom(involvesPhenotypeClass, phenotypeAnnotation));
+			//val involvesPhenotypeClass = factory.getOWLClass(NamedRestrictionGenerator.getRestrictionIRI(involves.getIRI(), phenotypeClass.getIRI()));
+			//axioms.add(factory.getOWLClassAssertionAxiom(involvesPhenotypeClass, phenotypeAnnotation));
+			axioms.add(factory.getOWLClassAssertionAxiom(factory.getOWLObjectSomeValuesFrom(involves, phenotypeClass), phenotypeAnnotation));
 			val geneIRI = IRI.create("http://www.ncbi.nlm.nih.gov/gene/" + StringUtils.stripToNull(items(0)));
 			val geneSymbol = StringUtils.stripToNull(items(1));
 			axioms.add(factory.getOWLAnnotationAssertionAxiom(rdfsLabel, geneIRI, factory.getOWLLiteral(geneSymbol)));
