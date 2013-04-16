@@ -47,5 +47,10 @@ object Vocab {
 	val XENOPUS_TROPICALIS = IRI.create("http://purl.obolibrary.org/obo/NCBITaxon_8364");
 	val MOUSE = IRI.create("http://purl.obolibrary.org/obo/NCBITaxon_10090");
 	val HUMAN = IRI.create("http://purl.obolibrary.org/obo/NCBITaxon_9606");
+	val CHORDATA = IRI.create("http://purl.obolibrary.org/obo/NCBITAXON_7711");
+	val DEPICTS = IRI.create("http://xmlns.com/foaf/0.1/depicts");
+	val IMAGE = IRI.create("http://xmlns.com/foaf/0.1/Image");
+	val LIMB_FIN = IRI.create("http://purl.obolibrary.org/obo/UBERON_0004708");
+	val HOMOLOGOUS_TO = IRI.create("http://purl.obolibrary.org/obo/RO_0002158");
 	
 }
