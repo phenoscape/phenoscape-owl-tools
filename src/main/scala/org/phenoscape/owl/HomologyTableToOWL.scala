@@ -11,13 +11,16 @@ import org.nescent.strix.OWL._
 import org.semanticweb.owlapi.vocab.OWLRDFVocabulary
 import org.semanticweb.owlapi.vocab.DublinCoreVocabulary
 import org.phenoscape.owl.util.OBOUtil
+import org.semanticweb.owlapi.model.AddOntologyAnnotation
+import org.semanticweb.owlapi.model.AddImport
 
 object HomologyTableToOWL extends OWLTask {
 
     val manager = this.getOWLOntologyManager;
     val homologousTo = ObjectProperty(Vocab.HOMOLOGOUS_TO);
-    val hasEvidence = factory.getOWLAnnotationProperty(IRI.create("http://example.org/has_evidence"));
+    val hasEvidence = factory.getOWLAnnotationProperty(Vocab.EVIDENCE);
     val source = factory.getOWLAnnotationProperty(DublinCoreVocabulary.SOURCE.getIRI());
+    val description = factory.getOWLAnnotationProperty(DublinCoreVocabulary.DESCRIPTION.getIRI());
 
     def main(args: Array[String]): Unit = {
             val input = Source.fromFile(args(0), "utf-8");
@@ -27,7 +30,11 @@ object HomologyTableToOWL extends OWLTask {
 
     def convertFile(file: Source): OWLOntology = {
             val axioms = file.getLines().drop(1).map(processEntry(_)).flatten.toSet;
-            manager.createOntology(axioms);
+            val ontology = manager.createOntology(IRI.create("http://purl.obolibrary.org/obo/uberon/homology.owl"));
+            manager.applyChange(new AddOntologyAnnotation(ontology, factory.getOWLAnnotation(description, factory.getOWLLiteral("Homology Assertions"))));
+            manager.applyChange(new AddImport(ontology, factory.getOWLImportsDeclaration(IRI.create("http://purl.obolibrary.org/obo/uberon/ext.owl"))));
+            manager.addAxioms(ontology, axioms);
+            return ontology;
     }
 
     def processEntry(line: String): Set[OWLAxiom] = {

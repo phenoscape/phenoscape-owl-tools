@@ -52,5 +52,6 @@ object Vocab {
 	val IMAGE = IRI.create("http://xmlns.com/foaf/0.1/Image");
 	val LIMB_FIN = IRI.create("http://purl.obolibrary.org/obo/UBERON_0004708");
 	val HOMOLOGOUS_TO = IRI.create("http://purl.obolibrary.org/obo/RO_0002158");
+	val EVIDENCE = IRI.create("http://www.geneontology.org/formats/oboInOwl#evidence");
 	
 }
