@@ -32,7 +32,7 @@ object MatrixGenerator extends OWLTask {
 	def main(args: Array[String]): Unit = {
 			val dataIRI = IRI.create(new File(args(0)));
 			val dataOntology = manager.loadOntology(dataIRI);
-			val attributesSlim = manager.loadOntology(IRI.create("http://sourceforge.net/p/phenoscape/code/HEAD/tree/trunk/vocab/character_slims.obo?format=raw"));
+			val attributesSlim = manager.loadOntologyFromOntologyDocument(IRI.create("http://sourceforge.net/p/phenoscape/code/HEAD/tree/trunk/vocab/character_slims.obo?format=raw"));
 			val ontology = manager.createOntology();
 			manager.applyChange(new AddImport(ontology, factory.getOWLImportsDeclaration(dataIRI)));
 			val entities = getEntities();
@@ -46,7 +46,7 @@ object MatrixGenerator extends OWLTask {
 			manager.addAxioms(resultOntology, classAssertions);
 			manager.addAxioms(resultOntology, newAxioms);
 			manager.addAxioms(resultOntology,dataOntology.getAxioms(dcDescription));
-			manager.saveOntology(resultOntology, IRI.create(new File("state_groups.owl")));
+			manager.saveOntology(resultOntology, IRI.create(new File(args(1))));
 			
 	}
 	
