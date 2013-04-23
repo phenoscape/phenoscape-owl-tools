@@ -13,6 +13,7 @@ import org.semanticweb.owlapi.vocab.DublinCoreVocabulary
 import org.phenoscape.owl.util.OBOUtil
 import org.semanticweb.owlapi.model.AddOntologyAnnotation
 import org.semanticweb.owlapi.model.AddImport
+import java.util.UUID
 
 object HomologyTableToOWL extends OWLTask {
 
@@ -33,6 +34,7 @@ object HomologyTableToOWL extends OWLTask {
             val ontology = manager.createOntology(IRI.create("http://purl.obolibrary.org/obo/uberon/homology.owl"));
             manager.applyChange(new AddOntologyAnnotation(ontology, factory.getOWLAnnotation(description, factory.getOWLLiteral("Homology Assertions"))));
             manager.applyChange(new AddImport(ontology, factory.getOWLImportsDeclaration(IRI.create("http://purl.obolibrary.org/obo/uberon/ext.owl"))));
+            manager.applyChange(new AddImport(ontology, factory.getOWLImportsDeclaration(IRI.create("http://purl.obolibrary.org/obo/eco.owl"))));
             manager.addAxioms(ontology, axioms);
             return ontology;
     }
@@ -43,7 +45,7 @@ object HomologyTableToOWL extends OWLTask {
                 val structure1 = Class(IRI.create(items(1).trim()));
                 val structure2 = Class(IRI.create(items(6).trim()));
                 val evidenceCode = Class(OBOUtil.iriForTermID(items(10).trim()));
-                val evidence = Individual();
+                val evidence = Individual("http://example.org/" + UUID.randomUUID().toString());
                 val pub = factory.getOWLLiteral(items(11).trim());
                 Set(
                         (structure1 SubClassOf (homologousTo some structure2)) Annotation (hasEvidence, evidence),
