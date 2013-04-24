@@ -45,9 +45,6 @@ object HomologyTableToOWLAsAnnotations extends OWLTask {
 
     def processEntry(line: String): Set[OWLAxiom] = {
             val items = line.split("\t", -1);
-            if (items(4).trim() == "hom to") {
-
-            }
             val annotation = Individual("http://example.org/" + UUID.randomUUID().toString());
             val structure1 = Class(IRI.create(items(1).trim()));
             val structure2 = Class(IRI.create(items(6).trim()));
