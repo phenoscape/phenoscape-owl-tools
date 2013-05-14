@@ -47,7 +47,7 @@ object MatrixGenerator extends OWLTask {
 			manager.addAxioms(resultOntology, newAxioms);
 			manager.addAxioms(resultOntology,dataOntology.getAxioms(dcDescription));
 			manager.saveOntology(resultOntology, IRI.create(new File(args(1))));
-			
+			System.exit(0);
 	}
 	
 	def getEntities(): Set[OWLClass] = {

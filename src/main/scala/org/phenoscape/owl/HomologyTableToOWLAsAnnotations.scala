@@ -46,8 +46,8 @@ object HomologyTableToOWLAsAnnotations extends OWLTask {
     def processEntry(line: String): Set[OWLAxiom] = {
             val items = line.split("\t", -1);
             val annotation = Individual("http://example.org/" + UUID.randomUUID().toString());
-            val structure1 = Class(IRI.create(items(1).trim()));
-            val structure2 = Class(IRI.create(items(6).trim()));
+            val structure1 = Individual(IRI.create(items(1).trim()));
+            val structure2 = Individual(IRI.create(items(6).trim()));
             val evidenceCode = Class(OBOUtil.iriForTermID(items(10).trim()));
             val evidence = Individual("http://example.org/" + UUID.randomUUID().toString());
             val pub = factory.getOWLLiteral(items(11).trim());
@@ -58,8 +58,8 @@ object HomologyTableToOWLAsAnnotations extends OWLTask {
                         annotation Type negativeHomologyAnnotation
                     }
                     ,
-                    annotation Type (aboutStructure some structure1),
-                    annotation Type (aboutStructure some structure2),
+                    annotation Fact (aboutStructure, structure1),
+                    annotation Fact (aboutStructure, structure2),
                     annotation Fact (hasEvidence, evidence),
                     evidence Type evidenceCode,
                     evidence Annotation (source, pub)
