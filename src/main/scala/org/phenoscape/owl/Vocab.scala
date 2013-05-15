@@ -55,5 +55,7 @@ object Vocab {
 	val DERIVED_BY_DESCENT_FROM = IRI.create("http://purl.obolibrary.org/obo/RO_0002156");
 	val HAS_DERIVED_BY_DESCENDANT = IRI.create("http://purl.obolibrary.org/obo/RO_0002157");
 	val EVIDENCE = IRI.create("http://www.geneontology.org/formats/oboInOwl#evidence");
+	val ANATOMICAL_ENTITY = IRI.create("http://purl.obolibrary.org/obo/UBERON_0001062");
+	val QUALITY = IRI.create("http://purl.obolibrary.org/obo/PATO_0000001");
 	
 }
