@@ -3,7 +3,6 @@ package org.phenoscape.owl.build
 import scala.collection.JavaConversions._
 import scala.collection.Set
 import scala.io.Source
-
 import org.nescent.strix.OWL._
 import org.phenoscape.owl.KnowledgeBaseBuilder
 import org.phenoscape.owl.MaterializeInferences
@@ -17,15 +16,18 @@ import org.semanticweb.owlapi.model.IRI
 import org.semanticweb.owlapi.model.OWLAxiom
 import org.semanticweb.owlapi.model.OWLOntology
 import org.semanticweb.owlapi.reasoner.OWLReasoner
+import org.obolibrary.oboformat.parser.OBOFormatParser
+import java.io.StringReader
+import java.io.BufferedReader
+import org.obolibrary.obo2owl.Obo2Owl
+import org.phenoscape.owl.util.NullIRIMapper
 
 object PhenoscapeKB extends KnowledgeBaseBuilder {
-
-    //FIXME all managers need to be no-import or handle imports specially
-    val manager = OWLManager.createOWLOntologyManager();
-
+    
     val uberon = load("http://purl.obolibrary.org/obo/uberon/merged.owl");
+    val uberonReferences = load("http://purl.obolibrary.org/obo/uberon/references/references.owl");
     val ext = load("http://purl.obolibrary.org/obo/uberon/ext.owl");
-    write(combine(uberon, ext), "uberon.owl");
+    write(combine(uberon, ext, uberonReferences), "uberon.owl");
     val pato = load("http://purl.obolibrary.org/obo/pato.owl");
     write(pato, "pato.owl");
     val bspo = load("http://purl.obolibrary.org/obo/bspo.owl");
@@ -38,7 +40,11 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     write(xao, "xao.owl");
     val hp = load("http://purl.obolibrary.org/obo/hp.owl");
     write(hp, "hp.owl");
-    //val hpEQ = ... //TODO
+    
+    val hpEQOBO = Source.fromURL("http://purl.obolibrary.org/obo/hp/hp-equivalence-axioms.obo", "utf-8").mkString;
+    val hpEQOBOInvolves = hpEQOBO.replaceFirst("ontology: hp/hp-logical-definitions", "ontology: hp/hp-logical-definitions\nlogical-definition-view-relation: involves")
+    val hpEQ = new Obo2Owl().convert(new OBOFormatParser().parse(new BufferedReader(new StringReader(hpEQOBOInvolves))));
+    write(hpEQ, "hp-logical-definitions.owl");
 
     
     val zfaToUberon = load("http://purl.obolibrary.org/obo/uberon/bridge/uberon-ext-bridge-to-zfa.owl");
@@ -63,7 +69,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
 
     //TODO get class axioms from data files to add to tbox
     val allTBox = List(uberon, ext, pato, bspo, go, zfa, xao, hp, 
-        zfaToUberon, xaoToUberon, fmaToUberon, parts, bearers, involvers);
+        hpEQ, zfaToUberon, xaoToUberon, fmaToUberon, parts, bearers, involvers);
     val tboxReasoner = reasoner(allTBox);
     val inferredAxioms = manager.createOntology();
     MaterializeInferences.materializeInferences(inferredAxioms, tboxReasoner);
