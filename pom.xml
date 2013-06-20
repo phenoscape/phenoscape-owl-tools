@@ -180,7 +180,7 @@
 				<configuration>
                     <archive>
                         <manifest>
-                            <mainClass>org.phenoscape.owl.MatrixGenerator</mainClass>
+                            <mainClass>org.phenoscape.owl.EQCreator</mainClass>
                         </manifest>
                     </archive>
                 </configuration>

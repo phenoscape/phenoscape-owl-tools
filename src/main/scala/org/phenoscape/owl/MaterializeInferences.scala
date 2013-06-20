@@ -51,6 +51,7 @@ object MaterializeInferences extends OWLTask {
 				createReasoner(ontology, getReasonerChoice());
 			}
 			materializeInferences(ontology, reasoner);
+			reasoner.dispose();
 	}
 
 	def materializeInferences(ontology: OWLOntology, reasoner: OWLReasoner): Unit = {
