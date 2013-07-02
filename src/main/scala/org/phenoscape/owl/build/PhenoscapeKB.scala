@@ -21,9 +21,19 @@ import java.io.StringReader
 import java.io.BufferedReader
 import org.obolibrary.obo2owl.Obo2Owl
 import org.phenoscape.owl.util.NullIRIMapper
+import org.phenoscape.owl.TaxonomyConverter
+import eu.trowl.owlapi3.rel.reasoner.dl.RELReasonerFactory
+import org.phenoscape.owl.mod.zfin.ZFINExpressionToOWL
+import org.phenoscape.owl.mod.zfin.ZFINPhenotypesToOWL
+import org.phenoscape.owl.mod.mgi.MGIGeneticMarkersToOWL
+import org.phenoscape.owl.mod.mgi.MGIExpressionToOWL
+import org.phenoscape.owl.mod.mgi.MGIPhenotypesToOWL
+import org.phenoscape.owl.mod.xenbase.XenbaseGenesToOWL
+import org.phenoscape.owl.mod.xenbase.XenbaseExpressionToOWL
+import org.phenoscape.owl.mod.human.HumanPhenotypesToOWL
 
 object PhenoscapeKB extends KnowledgeBaseBuilder {
-    
+
     val uberon = load("http://purl.obolibrary.org/obo/uberon/merged.owl");
     val uberonReferences = load("http://purl.obolibrary.org/obo/uberon/references/references.owl");
     val ext = load("http://purl.obolibrary.org/obo/uberon/ext.owl");
@@ -34,19 +44,20 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     write(bspo, "bspo.owl");
     val go = load("http://purl.obolibrary.org/obo/go.owl");
     write(go, "go.owl");
+    val vto = load("http://purl.obolibrary.org/obo/vto.owl");
+    write(vto, "vto.owl");
     val zfa = load("http://purl.obolibrary.org/obo/zfa.owl");
     write(zfa, "zfa.owl");
     val xao = load("http://purl.obolibrary.org/obo/xao.owl");
     write(xao, "xao.owl");
     val hp = load("http://purl.obolibrary.org/obo/hp.owl");
     write(hp, "hp.owl");
-    
+
     val hpEQOBO = Source.fromURL("http://purl.obolibrary.org/obo/hp/hp-equivalence-axioms.obo", "utf-8").mkString;
     val hpEQOBOInvolves = hpEQOBO.replaceFirst("ontology: hp/hp-logical-definitions", "ontology: hp/hp-logical-definitions\nlogical-definition-view-relation: involves")
-    val hpEQ = new Obo2Owl().convert(new OBOFormatParser().parse(new BufferedReader(new StringReader(hpEQOBOInvolves))));
+            val hpEQ = new Obo2Owl().convert(new OBOFormatParser().parse(new BufferedReader(new StringReader(hpEQOBOInvolves))));
     write(hpEQ, "hp-logical-definitions.owl");
 
-    
     val zfaToUberon = load("http://purl.obolibrary.org/obo/uberon/bridge/uberon-ext-bridge-to-zfa.owl");
     write(zfaToUberon, "uberon-ext-bridge-to-zfa.owl");
     val xaoToUberon = load("http://purl.obolibrary.org/obo/uberon/bridge/uberon-bridge-to-xao.owl");
@@ -58,18 +69,61 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     val anatomicalEntities = coreReasoner.getSubClasses(Class(Vocab.ANATOMICAL_ENTITY), false).getFlattened();
     val qualities = coreReasoner.getSubClasses(Class(Vocab.QUALITY), false).getFlattened();
 
+    val vtoIndividuals = TaxonomyConverter.createInstanceOntology(vto);
+    write(vtoIndividuals, "vto-individuals.owl");
+    val vtoReasoner = new RELReasonerFactory().createReasoner(vtoIndividuals);
+    val materializedVTO = manager.createOntology();
+    MaterializeInferences.materializeInferences(materializedVTO, vtoReasoner);
+    write(materializedVTO, "vto-individuals-closure.owl");
+    
+    //TODO NeXML
+
+    val zfinGenes = PropertyNormalizer.normalize(ZFINGeneticMarkersToOWL.convert(Source.fromURL("http://zfin.org/downloads/genetic_markers.txt", "ISO-8859-1")));
+    write(zfinGenes, "zfin-genes.owl");
+    val zfinPreviousGeneNames = PropertyNormalizer.normalize(ZFINPreviousGeneNamesToOWL.convert(Source.fromURL("http://zfin.org/downloads/aliases.txt", "ISO-8859-1")));
+    write(zfinPreviousGeneNames, "zfin-previous-gene-names.owl");    
+    val zfinExpressionData = PropertyNormalizer.normalize(ZFINExpressionToOWL.convert(Source.fromURL("http://zfin.org/downloads/wildtype-expression.txt", "ISO-8859-1")));
+    write(zfinExpressionData, "zfin-expression-data.owl");    
+    val zfinPhenotypeData = PropertyNormalizer.normalize(ZFINPhenotypesToOWL.convert(Source.fromURL("https://zfin.org/downloads/phenoGeneClean.txt", "ISO-8859-1")));
+    write(zfinPhenotypeData, "zfin-phenotype-data.owl");
+
+
+    val mgiGenes = PropertyNormalizer.normalize(MGIGeneticMarkersToOWL.convert(Source.fromURL("ftp://ftp.informatics.jax.org/pub/reports/MRK_List2.rpt", "utf-8")));
+    write(mgiGenes, "mgi-genes.owl");
+    //val mgiExpressionData = PropertyNormalizer.normalize(MGIExpressionToOWL.convert(Source.fromURL()));
+    //write(mgiExpressionData, "mgi-expression-data.owl");
+    //val mgiPhenotypeData = PropertyNormalizer.normalize(MGIPhenotypesToOWL.convert(Source.fromURL()));
+    //write(mgiPhenotypeData, "mgi-phenotype-data.owl");
+
+
+    val xenbaseGenes = PropertyNormalizer.normalize(XenbaseGenesToOWL.convert(Source.fromURL("ftp://ftp.xenbase.org/pub/GenePageReports/GenePageGeneralInfo_ManuallyCurated.txt")));
+    write(xenbaseGenes, "xenbase-genes.owl");
+    val xenbaseExpressionData = PropertyNormalizer.normalize(XenbaseExpressionToOWL.convert(
+            Source.fromURL("ftp://ftp.xenbase.org/pub/GenePageReports/XenbaseGenepageToGeneIdMapping.txt"),
+            Source.fromURL("ftp://ftp.xenbase.org/pub/GenePageReports/GeneExpression_laevis.txt"), 
+            Source.fromURL("ftp://ftp.xenbase.org/pub//GenePageReports/GeneExpression_tropicalis.txt")));
+    write(xenbaseExpressionData, "xenbase-expression-data.owl");
+
+
+    val humanPhenotypeData = PropertyNormalizer.normalize(HumanPhenotypesToOWL.convert(Source.fromURL("http://compbio.charite.de/hudson/job/hpo.annotations.monthly/lastStableBuild/artifact/annotation/genes_to_phenotype.txt", "utf-8")));
+    write(humanPhenotypeData, "human-phenotypes.owl");
+
+    val tboxFromData = manager.createOntology(
+            zfinGenes.getTBoxAxioms(false) ++ 
+            zfinPreviousGeneNames.getTBoxAxioms(false) ++
+            zfinExpressionData.getTBoxAxioms(false) ++
+            zfinPhenotypeData.getTBoxAxioms(false) ++
+            mgiGenes.getTBoxAxioms(false) ++
+            xenbaseGenes.getTBoxAxioms(false) ++
+            xenbaseExpressionData.getTBoxAxioms(false) ++
+            humanPhenotypeData.getTBoxAxioms(false));
+
     val parts = manager.createOntology(anatomicalEntities.map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.PART_OF), _)).toSet[OWLAxiom]);
     val bearers = manager.createOntology(qualities.map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.BEARER_OF), _)).toSet[OWLAxiom]);
     val involvers = manager.createOntology((anatomicalEntities ++ qualities).map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.INVOLVES), _)).toSet[OWLAxiom]);
 
-    val zfinGeneticMarkers = PropertyNormalizer.normalize(ZFINGeneticMarkersToOWL.convert(Source.fromURL("http://zfin.org/downloads/genetic_markers.txt", "ISO-8859-1")));
-    write(zfinGeneticMarkers, "zfin-genetic-markers.owl");
-    val zfinPreviousGeneNames = PropertyNormalizer.normalize(ZFINPreviousGeneNamesToOWL.convert(Source.fromURL("http://zfin.org/downloads/aliases.txt", "ISO-8859-1")));
-    write(zfinPreviousGeneNames, "zfin-previous-gene-names.owl");
-
-    //TODO get class axioms from data files to add to tbox
-    val allTBox = List(uberon, ext, pato, bspo, go, zfa, xao, hp, 
-        hpEQ, zfaToUberon, xaoToUberon, fmaToUberon, parts, bearers, involvers);
+    val allTBox = List(uberon, ext, pato, bspo, go, vto, zfa, xao, hp, 
+            hpEQ, zfaToUberon, xaoToUberon, fmaToUberon, parts, bearers, involvers, tboxFromData);
     val tboxReasoner = reasoner(allTBox);
     val inferredAxioms = manager.createOntology();
     MaterializeInferences.materializeInferences(inferredAxioms, tboxReasoner);

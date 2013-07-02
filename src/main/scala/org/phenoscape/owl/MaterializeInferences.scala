@@ -19,6 +19,7 @@ import com.clarkparsia.pellet.owlapiv3.PelletReasonerFactory
 import eu.trowl.owlapi3.rel.reasoner.dl.RELReasonerFactory
 import uk.ac.manchester.cs.factplusplus.owlapiv3.FaCTPlusPlusReasonerFactory
 import org.semanticweb.owlapi.model.OWLAxiom
+import org.semanticweb.elk.owlapi.ElkReasoner
 
 object MaterializeInferences extends OWLTask {
 
@@ -61,7 +62,7 @@ object MaterializeInferences extends OWLTask {
 					new InferredEquivalentClassAxiomGenerator(),
 					new InferredSubClassAxiomGenerator()
 					);
-			if (getReasonerChoice() != "elk") {
+			if (!reasoner.isInstanceOf[ElkReasoner]) {
 				axiomGenerators.add(new InferredPropertyAssertionGenerator());
 			}
 			val generator = new InferredOntologyGenerator(reasoner, axiomGenerators);
