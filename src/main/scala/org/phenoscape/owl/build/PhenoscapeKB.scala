@@ -1,38 +1,50 @@
 package org.phenoscape.owl.build
 
+import java.io.BufferedReader
+import java.io.StringReader
 import scala.collection.JavaConversions._
 import scala.collection.Set
+import scala.collection.mutable
 import scala.io.Source
+import scala.sys.process._
 import org.nescent.strix.OWL._
+import org.obolibrary.obo2owl.Obo2Owl
+import org.obolibrary.oboformat.parser.OBOFormatParser
 import org.phenoscape.owl.KnowledgeBaseBuilder
 import org.phenoscape.owl.MaterializeInferences
 import org.phenoscape.owl.NamedRestrictionGenerator
 import org.phenoscape.owl.PropertyNormalizer
+import org.phenoscape.owl.TaxonomyConverter
 import org.phenoscape.owl.Vocab
+import org.phenoscape.owl.mod.human.HumanPhenotypesToOWL
+import org.phenoscape.owl.mod.mgi.MGIGeneticMarkersToOWL
+import org.phenoscape.owl.mod.xenbase.XenbaseExpressionToOWL
+import org.phenoscape.owl.mod.xenbase.XenbaseGenesToOWL
+import org.phenoscape.owl.mod.zfin.ZFINExpressionToOWL
 import org.phenoscape.owl.mod.zfin.ZFINGeneticMarkersToOWL
+import org.phenoscape.owl.mod.zfin.ZFINPhenotypesToOWL
 import org.phenoscape.owl.mod.zfin.ZFINPreviousGeneNamesToOWL
-import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model.IRI
 import org.semanticweb.owlapi.model.OWLAxiom
 import org.semanticweb.owlapi.model.OWLOntology
 import org.semanticweb.owlapi.reasoner.OWLReasoner
-import org.obolibrary.oboformat.parser.OBOFormatParser
-import java.io.StringReader
-import java.io.BufferedReader
-import org.obolibrary.obo2owl.Obo2Owl
-import org.phenoscape.owl.util.NullIRIMapper
-import org.phenoscape.owl.TaxonomyConverter
 import eu.trowl.owlapi3.rel.reasoner.dl.RELReasonerFactory
-import org.phenoscape.owl.mod.zfin.ZFINExpressionToOWL
-import org.phenoscape.owl.mod.zfin.ZFINPhenotypesToOWL
-import org.phenoscape.owl.mod.mgi.MGIGeneticMarkersToOWL
-import org.phenoscape.owl.mod.mgi.MGIExpressionToOWL
-import org.phenoscape.owl.mod.mgi.MGIPhenotypesToOWL
-import org.phenoscape.owl.mod.xenbase.XenbaseGenesToOWL
-import org.phenoscape.owl.mod.xenbase.XenbaseExpressionToOWL
-import org.phenoscape.owl.mod.human.HumanPhenotypesToOWL
+import java.io.File
+import org.apache.commons.io.FileUtils
+import org.phenoscape.owl.PhenexToOWL
+import org.apache.commons.lang3.StringUtils
+import org.semanticweb.owlapi.model.OWLClassAxiom
 
 object PhenoscapeKB extends KnowledgeBaseBuilder {
+
+    val cwd = System.getProperty("user.dir");
+    val STAGING = new File("staging");
+    val KB = new File("staging/kb");
+    val NEXML = new File("staging/nexml");
+    STAGING.mkdir();
+    KB.mkdir();
+    NEXML.mkdir();
+    cd(KB);
 
     val uberon = load("http://purl.obolibrary.org/obo/uberon/merged.owl");
     val uberonReferences = load("http://purl.obolibrary.org/obo/uberon/references/references.owl");
@@ -54,8 +66,8 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     write(hp, "hp.owl");
 
     val hpEQOBO = Source.fromURL("http://purl.obolibrary.org/obo/hp/hp-equivalence-axioms.obo", "utf-8").mkString;
-    val hpEQOBOInvolves = hpEQOBO.replaceFirst("ontology: hp/hp-logical-definitions", "ontology: hp/hp-logical-definitions\nlogical-definition-view-relation: involves")
-            val hpEQ = new Obo2Owl().convert(new OBOFormatParser().parse(new BufferedReader(new StringReader(hpEQOBOInvolves))));
+    val hpEQOBOInvolves = hpEQOBO.replaceFirst("ontology: hp/hp-logical-definitions", "ontology: hp/hp-logical-definitions\nlogical-definition-view-relation: involves");
+    val hpEQ = new Obo2Owl().convert(new OBOFormatParser().parse(new BufferedReader(new StringReader(hpEQOBOInvolves))));
     write(hpEQ, "hp-logical-definitions.owl");
 
     val zfaToUberon = load("http://purl.obolibrary.org/obo/uberon/bridge/uberon-ext-bridge-to-zfa.owl");
@@ -75,8 +87,21 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     val materializedVTO = manager.createOntology();
     MaterializeInferences.materializeInferences(materializedVTO, vtoReasoner);
     write(materializedVTO, "vto-individuals-closure.owl");
-    
-    //TODO NeXML
+
+    cd(STAGING);
+    Seq("svn", "checkout", "https://github.com/phenoscape/phenoscape-data/trunk/Curation Files", "nexml") !!;
+    cd(NEXML);
+    val filesToConvert = (FileUtils.listFiles(new File("completed-phenex-files"), Array("xml"), true) ++ 
+            FileUtils.listFiles(new File("fin_limb-incomplete-files"), Array("xml"), true)).filterNot(_.getName() == "catalog-v001.xml");
+    cd(KB);
+    val nexmlTBoxAxioms: Set[OWLAxiom] = mutable.Set();
+    filesToConvert.foreach(file => {
+        val nexOntology = PropertyNormalizer.normalize(PhenexToOWL.convert(file));
+        MaterializeInferences.materializeInferences(nexOntology); //TODO may be able to remove this with tweaks to Phenex converter
+        nexmlTBoxAxioms.addAll(nexOntology.getTBoxAxioms(false));
+        write(nexOntology, file.getName().replaceAll(".xml$", ".owl"));
+    });
+
 
     val zfinGenes = PropertyNormalizer.normalize(ZFINGeneticMarkersToOWL.convert(Source.fromURL("http://zfin.org/downloads/genetic_markers.txt", "ISO-8859-1")));
     write(zfinGenes, "zfin-genes.owl");
@@ -116,7 +141,8 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
             mgiGenes.getTBoxAxioms(false) ++
             xenbaseGenes.getTBoxAxioms(false) ++
             xenbaseExpressionData.getTBoxAxioms(false) ++
-            humanPhenotypeData.getTBoxAxioms(false));
+            humanPhenotypeData.getTBoxAxioms(false) ++ 
+            nexmlTBoxAxioms);
 
     val parts = manager.createOntology(anatomicalEntities.map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.PART_OF), _)).toSet[OWLAxiom]);
     val bearers = manager.createOntology(qualities.map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.BEARER_OF), _)).toSet[OWLAxiom]);

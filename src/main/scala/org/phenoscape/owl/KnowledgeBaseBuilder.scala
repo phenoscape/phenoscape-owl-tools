@@ -42,4 +42,12 @@ class KnowledgeBaseBuilder extends App {
             ontManager.saveOntology(ontology, new RDFXMLOntologyFormat(), new FileDocumentTarget(new File(filename)));
     }
 
+    def cd(dir: String): Unit = {
+            cd(new File(dir));
+    }
+
+    def cd(dir: File): Unit = {
+            System.setProperty("user.dir", dir.getAbsolutePath());
+    }
+
 }
