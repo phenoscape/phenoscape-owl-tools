@@ -34,6 +34,7 @@ import eu.trowl.owlapi3.rel.reasoner.dl.RELReasonerFactory
 import org.apache.log4j.BasicConfigurator
 import org.apache.log4j.Logger
 import org.apache.log4j.Level
+import org.phenoscape.owl.MaterializeSubClassOfClosure
 
 object PhenoscapeKB extends KnowledgeBaseBuilder {
 
@@ -99,12 +100,10 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     val vtoIndividuals = TaxonomyConverter.createInstanceOntology(vto);
     write(vtoIndividuals, cwd + "/staging/kb/vto-individuals.owl");
     step("Materializing VTO closure");
-    //val vtoReasoner = new RELReasonerFactory().createReasoner(combine(vtoIndividuals, ro));
-    val materializedVTO = manager.createOntology();
-    //MaterializeInferences.materializeInferences(materializedVTO, vtoReasoner);
-    //vtoReasoner.dispose();
+    val materializedVTOClasses = MaterializeSubClassOfClosure.materialize(vto);
+    val materializedVTOIndividuals = TaxonomyConverter.createInstanceOntology(materializedVTOClasses);
     step("Writing VTO closure");
-    write(materializedVTO, cwd + "/staging/kb/vto-individuals-closure.owl");
+    write(materializedVTOIndividuals, cwd + "/staging/kb/vto-individuals-closure.owl");
 
     //TODO check all data for compatibility with tbox-only reasoning
     step("Converting NeXML to OWL");
