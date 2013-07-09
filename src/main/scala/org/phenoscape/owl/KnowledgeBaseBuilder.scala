@@ -13,6 +13,7 @@ import scala.io.Source
 import java.io.BufferedReader
 import java.net.URL
 import org.phenoscape.owl.util.NullIRIMapper
+import java.util.Date
 
 class KnowledgeBaseBuilder extends App {
 
@@ -23,8 +24,17 @@ class KnowledgeBaseBuilder extends App {
     def iri(string: String): IRI = { IRI.create(string); }
 
     def combine(ontologies: OWLOntology*): OWLOntology = {
-            val newManager = OWLManager.createOWLOntologyManager();
-            newManager.createOntology(ontologies.flatMap(_.getAxioms()).toSet);
+            ontologies.size match {
+            case 1 => ontologies(0);
+            case _ => {
+                val newManager = OWLManager.createOWLOntologyManager();
+                newManager.createOntology(ontologies.flatMap(_.getAxioms()).toSet);
+            }
+            }
+    }
+
+    def reasoner(ontology: OWLOntology): OWLReasoner = {
+            reasoner(Seq(ontology));
     }
 
     def reasoner(ontologies: Seq[OWLOntology]): OWLReasoner = {
@@ -34,6 +44,11 @@ class KnowledgeBaseBuilder extends App {
 
     def load(location: String): OWLOntology = {
             val ont = manager.loadOntologyFromOntologyDocument(iri(location));
+            PropertyNormalizer.normalize(ont);
+    }
+
+    def load(location: File): OWLOntology = {
+            val ont = manager.loadOntologyFromOntologyDocument(location);
             PropertyNormalizer.normalize(ont);
     }
 
@@ -48,6 +63,10 @@ class KnowledgeBaseBuilder extends App {
 
     def cd(dir: File): Unit = {
             System.setProperty("user.dir", dir.getAbsolutePath());
+    }
+
+    def step(message: String): Unit = {
+            println(new Date() + ": " + message);
     }
 
 }

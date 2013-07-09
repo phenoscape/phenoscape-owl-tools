@@ -46,7 +46,7 @@ object ZFINPhenotypesToOWL extends OWLTask {
 	}
 
 	def translate(expressionLine: String): Set[OWLAxiom] = {
-			val items = expressionLine.split("\\|");
+			val items = expressionLine.split("\t");
 			val involved = mutable.Set[OWLClass]();
 			val axioms = mutable.Set[OWLAxiom]();
 			val phenotypeAnnotation = nextIndividual();
