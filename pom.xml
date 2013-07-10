@@ -106,7 +106,6 @@
 			<artifactId>elk-owlapi</artifactId>
 			<version>0.3.2</version>
 		</dependency>
-
 		<dependency>
 			<groupId>pellet</groupId>
 			<artifactId>pellet-core</artifactId>
@@ -143,6 +142,11 @@
 			<version>1.8.2</version>
 		</dependency>
 		<dependency>
+			<groupId>commons-io</groupId>
+			<artifactId>commons-io</artifactId>
+			<version>2.4</version>
+		</dependency>
+		<dependency>
 			<groupId>eu.trowl</groupId>
 			<artifactId>trowlcore</artifactId>
 			<version>1.0</version>
@@ -151,6 +155,17 @@
 			<groupId>org.nescent</groupId>
 			<artifactId>strix</artifactId>
 			<version>1.0-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>org.bbop</groupId>
+			<artifactId>oboformat</artifactId>
+			<version>0.5.3</version>
+			<exclusions>
+				<exclusion>
+					<groupId>owlapi</groupId>
+					<artifactId>owlapi</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 	</dependencies>
 	<build>
@@ -178,12 +193,12 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>
 				<configuration>
-                    <archive>
-                        <manifest>
-                            <mainClass>org.phenoscape.owl.EQCreator</mainClass>
-                        </manifest>
-                    </archive>
-                </configuration>
+					<archive>
+						<manifest>
+							<mainClass>org.phenoscape.owl.build.PhenoscapeKB</mainClass>
+						</manifest>
+					</archive>
+				</configuration>
 			</plugin>
 			<plugin>
 				<groupId>org.dstovall</groupId>
