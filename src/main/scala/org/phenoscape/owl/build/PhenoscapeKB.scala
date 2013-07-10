@@ -53,6 +53,8 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     step("Loading ontologies");
     val ro = load(new File(cwd + "/staging/sources/ro-slim.owl"));
     write(ro, cwd + "/staging/kb/ro-slim.owl");
+    val phenoscapeVocab = load(new File(cwd + "/staging/sources/phenoscape-vocab.owl"));
+    write(phenoscapeVocab, cwd + "/staging/kb/phenoscape-vocab.owl");
     val uberonReferences = load(new File(cwd + "/staging/sources/references.owl"));
     val uberonChebi = load(new File(cwd + "/staging/sources/chebi_import.owl"));
     val uberonCL = load(new File(cwd + "/staging/sources/cl_import.owl"));
@@ -64,6 +66,8 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     val ext = load(new File(cwd + "/staging/sources/ext.owl"));
     val uberon = combine(uberonMerged, ext, uberonReferences, uberonChebi, uberonGO, uberonTaxon, uberonPATO, uberonPR);
     write(uberon, cwd + "/staging/kb/uberon.owl");
+    val homology = load(new File(cwd + "/staging/sources/homology.owl"));
+    write(homology, cwd + "/staging/kb/homology.owl");
     val pato = load(new File(cwd + "/staging/sources/pato.owl"));
     write(pato, cwd + "/staging/kb/pato.owl");
     val bspo = load(new File(cwd + "/staging/sources/bspo.owl"));
@@ -92,7 +96,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     write(fmaToUberon, cwd + "/staging/kb/uberon-bridge-to-fma.owl");
 
     step("Querying entities and qualities");
-    val coreReasoner = reasoner(List(uberon, pato, bspo, go, ro));
+    val coreReasoner = reasoner(List(uberon, pato, bspo, go, ro, phenoscapeVocab));
     val anatomicalEntities = coreReasoner.getSubClasses(Class(Vocab.ANATOMICAL_ENTITY), false).getFlattened();
     val qualities = coreReasoner.getSubClasses(Class(Vocab.QUALITY), false).getFlattened();
     coreReasoner.dispose();
@@ -163,14 +167,15 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
             humanPhenotypeData.getTBoxAxioms(false) ++ 
             nexmlTBoxAxioms);
 
-    val parts = manager.createOntology(anatomicalEntities.map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.PART_OF), _)).toSet[OWLAxiom]);
     //TODO replace with has_part some part_of... or "has_part_of" and "has_part"
     // and has_part_bearer_of?
+    val parts = manager.createOntology(anatomicalEntities.map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.PART_OF), _)).toSet[OWLAxiom]);
     val bearers = manager.createOntology(qualities.map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.BEARER_OF), _)).toSet[OWLAxiom]);
     val involvers = manager.createOntology((anatomicalEntities ++ qualities).map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.INVOLVES), _)).toSet[OWLAxiom]);
+    val homologies = manager.createOntology(anatomicalEntities.map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.PHP), _)).toSet[OWLAxiom]);
 
-    val allTBox = combine(uberon, pato, bspo, go, vto, zfa, xao, hp, 
-            hpEQ, zfaToUberon, xaoToUberon, fmaToUberon, parts, bearers, involvers, tboxFromData, ro);
+    val allTBox = combine(uberon, homology, pato, bspo, go, vto, zfa, xao, hp, 
+            hpEQ, zfaToUberon, xaoToUberon, fmaToUberon, parts, bearers, involvers, tboxFromData, ro, phenoscapeVocab);
     println("tbox class count: " + allTBox.getClassesInSignature().size());
     println("tbox logical axiom count: " + allTBox.getLogicalAxiomCount());
     val tboxReasoner = reasoner(allTBox);

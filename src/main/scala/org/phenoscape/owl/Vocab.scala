@@ -57,5 +57,6 @@ object Vocab {
 	val EVIDENCE = IRI.create("http://www.geneontology.org/formats/oboInOwl#evidence");
 	val ANATOMICAL_ENTITY = IRI.create("http://purl.obolibrary.org/obo/UBERON_0001062");
 	val QUALITY = IRI.create("http://purl.obolibrary.org/obo/PATO_0000001");
+	val PHP = IRI.create("http://example.org/php"); // part_of some homologous_to some part_of... experimental
 	
 }

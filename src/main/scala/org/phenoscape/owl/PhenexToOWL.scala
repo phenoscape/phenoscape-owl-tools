@@ -214,6 +214,8 @@ object PhenexToOWL extends OWLTask {
             manager.addAxiom(ontology, factory.getOWLSubClassOfAxiom(owlPhenotype, eq));
             involved.addAll(eq.getClassesInSignature());
             manager.addAxioms(ontology, involved.map(involvee => {
+                //FIXME should create named classes for entity postcompositions for use in involves; it's possible these can get classified
+                // under named structure types in the ontology
                 val involvesClass = Class(NamedRestrictionGenerator.getRestrictionIRI(Vocab.INVOLVES, involvee.getIRI()));
                 owlState Type involvesClass;
             }));
