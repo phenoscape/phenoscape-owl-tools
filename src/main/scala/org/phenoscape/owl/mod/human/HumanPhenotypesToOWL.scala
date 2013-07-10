@@ -7,7 +7,7 @@ import scala.collection.TraversableOnce.flattenTraversableOnce
 import scala.collection.Set
 import scala.collection.mutable
 import scala.io.Source
-
+import org.nescent.strix.OWL._
 import org.apache.commons.lang3.StringUtils
 import org.phenoscape.owl.util.OBOUtil
 import org.phenoscape.owl.OWLTask
@@ -43,25 +43,23 @@ object HumanPhenotypesToOWL extends OWLTask {
 			return ontology;
 	}
 
-	def translate(expressionLine: String): Set[OWLAxiom] = {
-			val items = expressionLine.split("\t");
+	def translate(phenotypeLine: String): Set[OWLAxiom] = {
+			val items = phenotypeLine.split("\t");
 			val axioms = mutable.Set[OWLAxiom]();
 			val phenotypeAnnotation = nextIndividual();
-			axioms.add(factory.getOWLClassAssertionAxiom(annotationClass, phenotypeAnnotation));
+			axioms.add(phenotypeAnnotation Type annotationClass);
 			axioms.add(factory.getOWLDeclarationAxiom(phenotypeAnnotation));
 			val phenotypeID = StringUtils.stripToNull(items(3));
-			val phenotypeClass = factory.getOWLClass(OBOUtil.iriForTermID(phenotypeID));
-			//val involvesPhenotypeClass = factory.getOWLClass(NamedRestrictionGenerator.getRestrictionIRI(involves.getIRI(), phenotypeClass.getIRI()));
-			//axioms.add(factory.getOWLClassAssertionAxiom(involvesPhenotypeClass, phenotypeAnnotation));
-			axioms.add(factory.getOWLClassAssertionAxiom(phenotypeClass, phenotypeAnnotation));
+			val phenotypeClass = Class(OBOUtil.iriForTermID(phenotypeID));
+			axioms.add(phenotypeAnnotation Type phenotypeClass);
 			val geneIRI = IRI.create("http://www.ncbi.nlm.nih.gov/gene/" + StringUtils.stripToNull(items(0)));
 			val geneSymbol = StringUtils.stripToNull(items(1));
-			axioms.add(factory.getOWLAnnotationAssertionAxiom(rdfsLabel, geneIRI, factory.getOWLLiteral(geneSymbol)));
-			val gene = factory.getOWLNamedIndividual(geneIRI);
-			axioms.add(factory.getOWLClassAssertionAxiom(geneClass, gene));
+			axioms.add(geneIRI Annotation (rdfsLabel, factory.getOWLLiteral(geneSymbol)));
+			val gene = Individual(geneIRI);
+			axioms.add(gene Type geneClass);
 			axioms.add(factory.getOWLDeclarationAxiom(gene));
-			axioms.add(factory.getOWLObjectPropertyAssertionAxiom(annotatedGene, phenotypeAnnotation, gene));
-			axioms.add(factory.getOWLObjectPropertyAssertionAxiom(annotatedTaxon, phenotypeAnnotation, human));
+			axioms.add(phenotypeAnnotation Fact (annotatedGene, gene));
+			axioms.add(phenotypeAnnotation Fact (annotatedTaxon, human));
 			return axioms;
 	}
 

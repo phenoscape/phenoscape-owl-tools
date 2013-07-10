@@ -1,26 +1,27 @@
 package org.phenoscape.owl
 
+import java.io.File
+
 import scala.collection.JavaConversions._
 import scala.collection.Set
-import org.nescent.strix.OWL._
-import org.semanticweb.owlapi.model.IRI
-import java.io.File
-import org.semanticweb.owlapi.model.AddImport
-import org.semanticweb.owlapi.apibinding.OWLManager
+
+import org.nescent.strix.OWL.Class
+import org.nescent.strix.OWL.OWLClassExpressionToClassExpression
+import org.nescent.strix.OWL.OWLObjectPropertyToProperty
+import org.nescent.strix.OWL.ObjectProperty
 import org.semanticweb.elk.owlapi.ElkReasonerFactory
-import org.semanticweb.owlapi.model.OWLEquivalentClassesAxiom
-import org.semanticweb.owlapi.model.OWLClass
+import org.semanticweb.owlapi.apibinding.OWLManager
+import org.semanticweb.owlapi.model.AddImport
+import org.semanticweb.owlapi.model.IRI
 import org.semanticweb.owlapi.model.OWLAnnotationAssertionAxiom
 import org.semanticweb.owlapi.model.OWLAxiom
-import org.semanticweb.owlapi.model.OWLNamedIndividual
-import org.semanticweb.owlapi.model.OWLOntology
-import org.semanticweb.owlapi.model.AxiomType
-import org.semanticweb.owlapi.model.OWLEntity
+import org.semanticweb.owlapi.model.OWLClass
+import org.semanticweb.owlapi.model.OWLEquivalentClassesAxiom
 import org.semanticweb.owlapi.vocab.DublinCoreVocabulary
 
 object MatrixGenerator extends OWLTask {
 
-	val manager = this.getOWLOntologyManager();
+	val manager = OWLManager.createOWLOntologyManager();
 	val partOf = ObjectProperty(Vocab.PART_OF);
 	val involves = ObjectProperty(Vocab.INVOLVES);
 	val limbFin = Class(Vocab.LIMB_FIN);
@@ -32,30 +33,39 @@ object MatrixGenerator extends OWLTask {
 	def main(args: Array[String]): Unit = {
 			val dataIRI = IRI.create(new File(args(0)));
 			val dataOntology = manager.loadOntology(dataIRI);
-			val attributesSlim = manager.loadOntologyFromOntologyDocument(IRI.create("http://sourceforge.net/p/phenoscape/code/HEAD/tree/trunk/vocab/character_slims.obo?format=raw"));
-			val ontology = manager.createOntology();
-			manager.applyChange(new AddImport(ontology, factory.getOWLImportsDeclaration(dataIRI)));
-			val entities = getEntities();
+			val attributesSlim = manager.loadOntologyFromOntologyDocument(new File("character_slims.obo"));
+			println("Getting entities");
+			val ro = manager.loadOntologyFromOntologyDocument(new File("ro-slim.owl"));
+			val pato = manager.loadOntologyFromOntologyDocument(new File("pato.owl"));
+			manager.loadOntologyFromOntologyDocument(new File("references.owl"));
+            manager.loadOntologyFromOntologyDocument(new File("merged.owl"));
+            val uberon = manager.loadOntologyFromOntologyDocument(new File("ext.owl"));
+            manager.applyChange(new AddImport(dataOntology, factory.getOWLImportsDeclaration(ro.getOntologyID().getOntologyIRI())));
+            manager.applyChange(new AddImport(dataOntology, factory.getOWLImportsDeclaration(pato.getOntologyID().getOntologyIRI())));
+            manager.applyChange(new AddImport(dataOntology, factory.getOWLImportsDeclaration(uberon.getOntologyID().getOntologyIRI())));
+            //val partOfLimbFin = Class(IRI.create("http://example.org/partOfLimbFin"));
+            val anatomicalEntity = Class(Vocab.ANATOMICAL_ENTITY);
+            //manager.addAxiom(uberon, (partOfLimbFin EquivalentTo (partOf some limbFin)));
+            val uberonReasoner = new ElkReasonerFactory().createReasoner(uberon);
+            val entities = uberonReasoner.getSubClasses(anatomicalEntity, false).getFlattened();
+            uberonReasoner.dispose();
 			val attributes = attributesSlim.getClassesInSignature();
+			println("Creating phenotype classes");
 			val newAxioms = (for (entity <- entities; quality <- attributes) yield composeEntityAndQuality(entity, quality)).flatten;
 			val characterClasses = for (entity <- entities; quality <- attributes) yield Class(compositionIRI(entity, quality)); 
 			manager.addAxioms(dataOntology, newAxioms);
 			val dataReasoner = new ElkReasonerFactory().createReasoner(dataOntology);
-			val resultOntology = manager.createOntology();
+			val newManager = OWLManager.createOWLOntologyManager();
+			val resultOntology = newManager.createOntology();
+			println("Creating class assertions with reasoner");
 			val classAssertions = characterClasses.map(charClass => dataReasoner.getInstances(charClass, true).getFlattened().map(inst => factory.getOWLClassAssertionAxiom(charClass, inst))).flatten;
-			manager.addAxioms(resultOntology, classAssertions);
-			manager.addAxioms(resultOntology, newAxioms);
-			manager.addAxioms(resultOntology,dataOntology.getAxioms(dcDescription));
-			manager.saveOntology(resultOntology, IRI.create(new File(args(1))));
+			newManager.addAxioms(resultOntology, classAssertions);
+			newManager.addAxioms(resultOntology, newAxioms);
+			newManager.addAxioms(resultOntology, dataOntology.getAxioms(dcDescription));
+			println("Saving");
+			newManager.saveOntology(resultOntology, IRI.create(new File(args(1))));
+			dataReasoner.dispose();
 			System.exit(0);
-	}
-	
-	def getEntities(): Set[OWLClass] = {
-			val uberon = manager.loadOntology(IRI.create("http://purl.obolibrary.org/obo/uberon/phenoscape-ext.owl"));
-			val partOfLimbFin = Class(IRI.create("http://example.org/partOfLimbFin"));
-			manager.addAxiom(uberon, (partOfLimbFin EquivalentTo (partOf some limbFin)));
-			val uberonReasoner = new ElkReasonerFactory().createReasoner(uberon);
-			uberonReasoner.getSubClasses(partOfLimbFin, false).getFlattened();
 	}
 
 	def composeEntityAndQuality(entity: OWLClass, quality: OWLClass): Set[OWLAxiom] = {
@@ -78,24 +88,24 @@ object MatrixGenerator extends OWLTask {
 			IRI.create("http://example.org/involves?entity=%s&quality=%s".format(entity.getIRI(), quality.getIRI()));
 	}
 
-	def characterForState(state: OWLNamedIndividual, ontology: OWLOntology): OWLNamedIndividual = {
-			val axioms = ontology.getAxioms(AxiomType.OBJECT_PROPERTY_ASSERTION);
-			axioms.find(_.getObject() == state).find(
-					_.getProperty() == mayHaveState).map(
-							_.getSubject().asOWLNamedIndividual()).getOrElse(null);
-	}
+//	def characterForState(state: OWLNamedIndividual, ontology: OWLOntology): OWLNamedIndividual = {
+//			val axioms = ontology.getAxioms(AxiomType.OBJECT_PROPERTY_ASSERTION);
+//			axioms.find(_.getObject() == state).find(
+//					_.getProperty() == mayHaveState).map(
+//							_.getSubject().asOWLNamedIndividual()).getOrElse(null);
+//	}
 
-	def getLabel(entity: OWLEntity, ontology: OWLOntology): String = {
-			val axioms = ontology.getImportsClosure().map(_.getAxioms(AxiomType.ANNOTATION_ASSERTION)).flatten;
-			val b = axioms.filter(_.getSubject() == entity.getIRI());
-			println(b);
-			axioms.filter(_.getSubject() == entity.getIRI()).find(
-					_.getProperty() == factory.getRDFSLabel()).map(_.getValue().toString()).getOrElse(null);
-	}
-
-	def formatState(state: OWLNamedIndividual, ontology: OWLOntology): String = {
-			getLabel(characterForState(state, ontology), ontology) + ": " + getLabel(state, ontology);
-	}
+//	def getLabel(entity: OWLEntity, ontology: OWLOntology): String = {
+//			val axioms = ontology.getImportsClosure().map(_.getAxioms(AxiomType.ANNOTATION_ASSERTION)).flatten;
+//			val b = axioms.filter(_.getSubject() == entity.getIRI());
+//			println(b);
+//			axioms.filter(_.getSubject() == entity.getIRI()).find(
+//					_.getProperty() == factory.getRDFSLabel()).map(_.getValue().toString()).getOrElse(null);
+//	}
+//
+//	def formatState(state: OWLNamedIndividual, ontology: OWLOntology): String = {
+//			getLabel(characterForState(state, ontology), ontology) + ": " + getLabel(state, ontology);
+//	}
 
 /*
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>

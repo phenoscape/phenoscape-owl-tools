@@ -41,7 +41,7 @@ object PropertyNormalizer extends OWLTask {
 			}
 	}
 
-	def normalize(ontology: OWLOntology): Unit = {
+	def normalize(ontology: OWLOntology): OWLOntology = {
 			val manager = ontology.getOWLOntologyManager();
 			val factory = manager.getOWLDataFactory();
 			manager.applyChange(new AddImport(ontology, factory.getOWLImportsDeclaration(IRI.create("http://purl.obolibrary.org/obo/ro.owl"))));
@@ -49,6 +49,7 @@ object PropertyNormalizer extends OWLTask {
 			for ((key, value) <- properties) {
 				ontology.getOWLOntologyManager().applyChanges(renamer.changeIRI(key, value));
 			}
+			return ontology;
 	}
 
 }
