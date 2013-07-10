@@ -1,28 +1,31 @@
 package org.phenoscape.owl.mod.zfin
 
-import org.phenoscape.owl.OWLTask
-import scala.collection.JavaConversions._
-import scala.collection.mutable
-import scala.collection.Set
-import org.semanticweb.owlapi.model.OWLOntology
 import java.io.File
+
+import scala.collection.JavaConversions._
+import scala.collection.Set
+import scala.collection.TraversableOnce.flattenTraversableOnce
+import scala.collection.mutable
 import scala.io.Source
-import org.semanticweb.owlapi.model.OWLAxiom
-import org.phenoscape.owl.Vocab
+
 import org.apache.commons.lang3.StringUtils
+import org.nescent.strix.OWL._
+import org.phenoscape.owl.OWLTask
+import org.phenoscape.owl.Vocab
 import org.phenoscape.owl.util.OBOUtil
-import org.semanticweb.owlapi.model.IRI
-import org.phenoscape.owl.NamedRestrictionGenerator
 import org.semanticweb.owlapi.model.AddImport
+import org.semanticweb.owlapi.model.IRI
+import org.semanticweb.owlapi.model.OWLAxiom
+import org.semanticweb.owlapi.model.OWLOntology
 
 object ZFINExpressionToOWL extends OWLTask {
 
-	val occursIn = factory.getOWLObjectProperty(Vocab.OCCURS_IN);
-	val partOf = factory.getOWLObjectProperty(Vocab.PART_OF);
-	val annotatedGene = factory.getOWLObjectProperty(Vocab.ANNOTATED_GENE);
-	val annotatedTaxon = factory.getOWLObjectProperty(Vocab.ANNOTATED_TAXON);
-	val geneExpression = factory.getOWLClass(Vocab.GENE_EXPRESSION);
-	val zebrafish = factory.getOWLNamedIndividual(Vocab.ZEBRAFISH);
+	val occursIn = ObjectProperty(Vocab.OCCURS_IN);
+	val partOf = ObjectProperty(Vocab.PART_OF);
+	val annotatedGene = ObjectProperty(Vocab.ANNOTATED_GENE);
+	val annotatedTaxon = ObjectProperty(Vocab.ANNOTATED_TAXON);
+	val geneExpression = Class(Vocab.GENE_EXPRESSION);
+	val zebrafish = Individual(Vocab.ZEBRAFISH);
 	val manager = this.getOWLOntologyManager();
 
 	def main(args: Array[String]): Unit = {
@@ -47,26 +50,27 @@ object ZFINExpressionToOWL extends OWLTask {
 			} else {
 				val expression = nextIndividual();
 				axioms.add(factory.getOWLDeclarationAxiom(expression));
-				axioms.add(factory.getOWLClassAssertionAxiom(geneExpression, expression));
+				axioms.add(expression Type geneExpression);
 				val structure = nextIndividual();
 				axioms.add(factory.getOWLDeclarationAxiom(structure));
-				axioms.add(factory.getOWLObjectPropertyAssertionAxiom(occursIn, expression, structure));
+				axioms.add(expression Fact (occursIn, structure));
 				val superStructureID = StringUtils.stripToNull(items(3));
 				val subStructureID = StringUtils.stripToNull(items(5));
-				val structureType = if (subStructureID == null) {
-					factory.getOWLClass(OBOUtil.iriForTermID(superStructureID));
+				if (subStructureID == null) {
+					val structureType = Class(OBOUtil.iriForTermID(superStructureID));
+					axioms.add(structure Type structureType);
 				} else {
-					val superStructure = factory.getOWLClass(OBOUtil.iriForTermID(superStructureID));
-					val subStructure = factory.getOWLClass(OBOUtil.iriForTermID(subStructureID));
-					factory.getOWLObjectIntersectionOf(subStructure, factory.getOWLObjectSomeValuesFrom(partOf, superStructure));
+					val superStructure = Class(OBOUtil.iriForTermID(superStructureID));
+					val subStructure = Class(OBOUtil.iriForTermID(subStructureID));
+					val structureType = nextClass();
+					axioms.add(structureType EquivalentTo (subStructure and (partOf some superStructure)));
+					axioms.add(structure Type structureType);
 				}
-				axioms.add(factory.getOWLClassAssertionAxiom(structureType, structure));
 				val geneIRI = IRI.create("http://zfin.org/" + StringUtils.stripToNull(items(0)));
-				val gene = factory.getOWLNamedIndividual(geneIRI);
+				val gene = Individual(geneIRI);
 				axioms.add(factory.getOWLDeclarationAxiom(gene));
-				axioms.add(factory.getOWLObjectPropertyAssertionAxiom(annotatedGene, expression, gene));
-				axioms.add(factory.getOWLObjectPropertyAssertionAxiom(annotatedTaxon, expression, zebrafish));
-				//axioms.addAll(structureType.getClassesInSignature().map(NamedRestrictionGenerator.createRestriction(partOf, _)));
+				axioms.add(expression Fact (annotatedGene, gene));
+				axioms.add(expression Fact (annotatedTaxon, zebrafish));
 				return axioms;
 			}
 	}
