@@ -35,6 +35,7 @@ import org.apache.log4j.BasicConfigurator
 import org.apache.log4j.Logger
 import org.apache.log4j.Level
 import org.phenoscape.owl.MaterializeSubClassOfClosure
+import org.phenoscape.owl.MaterializeSubClassOfClosureToNTriples
 
 object PhenoscapeKB extends KnowledgeBaseBuilder {
 
@@ -176,8 +177,10 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     val inferredAxioms = manager.createOntology();
     step("Materializing tbox classification");
     MaterializeInferences.materializeInferences(inferredAxioms, tboxReasoner);
-    tboxReasoner.dispose();
     step("Writing inferred tbox axioms");
     write(combine(parts, bearers, involvers, inferredAxioms), cwd + "/staging/kb/generated.owl");
-
+    step("Materializing subclass closure");
+    MaterializeSubClassOfClosureToNTriples.writeClosureToFile(tboxReasoner, new File(cwd + "/staging/kb/hierarchy_closure.nt"));
+    tboxReasoner.dispose();
+    step("Done");
 }
