@@ -37,7 +37,7 @@ class OWLTask {
 
 	def nextIRI(): IRI = {
 			this.nodeIncrementer += 1;
-			val id = "http://kb.phenoscape.org/uuid/" + this.uuid + "-" + this.nodeIncrementer;
+			val id = "http://purl.org/phenoscape/uuid/" + this.uuid + "-" + this.nodeIncrementer;
 			return IRI.create(id);
 	}
 
