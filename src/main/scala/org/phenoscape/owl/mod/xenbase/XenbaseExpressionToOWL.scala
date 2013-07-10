@@ -1,33 +1,33 @@
 package org.phenoscape.owl.mod.xenbase
 
 import java.io.File
+
 import scala.collection.JavaConversions._
-import scala.collection.TraversableOnce.flattenTraversableOnce
 import scala.collection.Map
 import scala.collection.Set
+import scala.collection.TraversableOnce.flattenTraversableOnce
 import scala.collection.mutable
 import scala.io.Source
+
 import org.apache.commons.lang3.StringUtils
-import org.phenoscape.owl.util.OBOUtil
-import org.phenoscape.owl.NamedRestrictionGenerator
+import org.nescent.strix.OWL._
 import org.phenoscape.owl.OWLTask
 import org.phenoscape.owl.Vocab
+import org.phenoscape.owl.util.OBOUtil
 import org.semanticweb.owlapi.model.IRI
 import org.semanticweb.owlapi.model.OWLAxiom
 import org.semanticweb.owlapi.model.OWLNamedIndividual
 import org.semanticweb.owlapi.model.OWLOntology
-import org.semanticweb.owlapi.vocab.OWLRDFVocabulary
-import org.semanticweb.owlapi.model.AddImport
 
 object XenbaseExpressionToOWL extends OWLTask {
 
-    val occursIn = factory.getOWLObjectProperty(Vocab.OCCURS_IN);
-    val partOf = factory.getOWLObjectProperty(Vocab.PART_OF);
-    val annotatedGene = factory.getOWLObjectProperty(Vocab.ANNOTATED_GENE);
-    val annotatedTaxon = factory.getOWLObjectProperty(Vocab.ANNOTATED_TAXON);
-    val geneExpression = factory.getOWLClass(Vocab.GENE_EXPRESSION);
-    val laevis = factory.getOWLNamedIndividual(Vocab.XENOPUS_LAEVIS);
-    val tropicalis = factory.getOWLNamedIndividual(Vocab.XENOPUS_TROPICALIS);
+    val occursIn = ObjectProperty(Vocab.OCCURS_IN);
+    val partOf = ObjectProperty(Vocab.PART_OF);
+    val annotatedGene = ObjectProperty(Vocab.ANNOTATED_GENE);
+    val annotatedTaxon = ObjectProperty(Vocab.ANNOTATED_TAXON);
+    val geneExpression = Class(Vocab.GENE_EXPRESSION);
+    val laevis = Individual(Vocab.XENOPUS_LAEVIS);
+    val tropicalis = Individual(Vocab.XENOPUS_TROPICALIS);
     val manager = this.getOWLOntologyManager();
 
     def main(args: Array[String]): Unit = {
@@ -65,10 +65,9 @@ object XenbaseExpressionToOWL extends OWLTask {
             val id = if (species == laevis) "http://purl.obolibrary.org/obo/phenoscape/xenbase_gene_expression.owl" else "";
             val ontology = manager.createOntology(IRI.create(id));
             manager.addAxioms(ontology, expressionData.getLines.map(translate(_, genepageMappings, species)).flatten.toSet[OWLAxiom]);
-            val rdfsLabel = factory.getOWLAnnotationProperty(OWLRDFVocabulary.RDFS_LABEL.getIRI());
-            manager.addAxiom(ontology, factory.getOWLAnnotationAssertionAxiom(rdfsLabel, laevis.getIRI(), factory.getOWLLiteral("Xenopus laevis")));
-            manager.addAxiom(ontology, factory.getOWLAnnotationAssertionAxiom(rdfsLabel, tropicalis.getIRI(), factory.getOWLLiteral("Xenopus tropicalis")));
-            manager.applyChange(new AddImport(ontology, factory.getOWLImportsDeclaration(IRI.create("http://purl.obolibrary.org/obo/phenoscape/tbox.owl"))));
+            val rdfsLabel = factory.getRDFSLabel();
+            manager.addAxiom(ontology, laevis Annotation (rdfsLabel, factory.getOWLLiteral("Xenopus laevis")));
+            manager.addAxiom(ontology, tropicalis Annotation (rdfsLabel, factory.getOWLLiteral("Xenopus tropicalis")));
             return ontology;
     }
 
@@ -80,20 +79,19 @@ object XenbaseExpressionToOWL extends OWLTask {
             } else {
                 val expression = nextIndividual();
                 axioms.add(factory.getOWLDeclarationAxiom(expression));
-                axioms.add(factory.getOWLClassAssertionAxiom(geneExpression, expression));
+                axioms.add(expression Type geneExpression);
                 val structure = nextIndividual();
                 axioms.add(factory.getOWLDeclarationAxiom(structure));
-                axioms.add(factory.getOWLObjectPropertyAssertionAxiom(occursIn, expression, structure));
+                axioms.add(expression Fact (occursIn, structure));
                 val structureID = StringUtils.stripToNull(items(3).trim().split(" ")(0));
-                val structureType =	factory.getOWLClass(OBOUtil.iriForTermID(structureID));
-                axioms.add(factory.getOWLClassAssertionAxiom(structureType, structure));
+                val structureType =	Class(OBOUtil.iriForTermID(structureID));
+                axioms.add(structure Type structureType);
                 val genepageID = genepageMappings(StringUtils.stripToNull(items(0)));
                 val geneIRI = XenbaseGenesToOWL.getGeneIRI(genepageID);
-                val gene = factory.getOWLNamedIndividual(geneIRI);
+                val gene = Individual(geneIRI);
                 axioms.add(factory.getOWLDeclarationAxiom(gene));
-                axioms.add(factory.getOWLObjectPropertyAssertionAxiom(annotatedGene, expression, gene));
-                axioms.add(factory.getOWLObjectPropertyAssertionAxiom(annotatedTaxon, expression, species));
-                //axioms.addAll(structureType.getClassesInSignature().map(NamedRestrictionGenerator.createRestriction(partOf, _)));
+                axioms.add(expression Fact (annotatedGene, gene));
+                axioms.add(expression Fact (annotatedTaxon, species));
                 return axioms;
             }
     }

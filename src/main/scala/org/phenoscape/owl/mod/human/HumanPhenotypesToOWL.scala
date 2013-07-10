@@ -39,7 +39,6 @@ object HumanPhenotypesToOWL extends OWLTask {
 	def convert(phenotypeData: Source): OWLOntology = {
 			val ontology = manager.createOntology(IRI.create("http://purl.obolibrary.org/obo/phenoscape/human_phenotypes.owl"));
 			manager.addAxioms(ontology, phenotypeData.getLines.drop(1).map(translate(_)).flatten.toSet[OWLAxiom]);
-			manager.applyChange(new AddImport(ontology, factory.getOWLImportsDeclaration(IRI.create("http://purl.obolibrary.org/obo/phenoscape/tbox.owl"))));
 			return ontology;
 	}
 

@@ -213,9 +213,10 @@ object PhenexToOWL extends OWLTask {
             }
             manager.addAxiom(ontology, factory.getOWLSubClassOfAxiom(owlPhenotype, eq));
             involved.addAll(eq.getClassesInSignature());
-            //FIXME need to just add class assertion for named involves restriction to avoid reasoning
-            manager.addAxioms(ontology, involved.map(term => owlState Type (involves some term)));
-            involved.foreach(createRestrictions(_));
+            manager.addAxioms(ontology, involved.map(involvee => {
+                val involvesClass = Class(NamedRestrictionGenerator.getRestrictionIRI(Vocab.INVOLVES, involvee.getIRI()));
+                owlState Type involvesClass;
+            }));
     }
 
     def translateMatrixRow(row: Element): Unit = {

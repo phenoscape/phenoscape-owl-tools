@@ -21,16 +21,16 @@ import org.semanticweb.owlapi.model.AddImport
 
 object MGIPhenotypesToOWL extends OWLTask {
 
-    val involves = factory.getOWLObjectProperty(Vocab.INVOLVES);
-    val partOf = factory.getOWLObjectProperty(Vocab.PART_OF);
-    val hasPart = factory.getOWLObjectProperty(Vocab.HAS_PART);
-    val annotatedGene = factory.getOWLObjectProperty(Vocab.ANNOTATED_GENE);
-    val annotatedTaxon = factory.getOWLObjectProperty(Vocab.ANNOTATED_TAXON);
-    val annotatedOrganism = factory.getOWLObjectProperty(Vocab.ANNOTATED_ORGANISM);
-    val annotationClass = factory.getOWLClass(Vocab.PHENOTYPE_ANNOTATION);
-    val mouse = factory.getOWLNamedIndividual(Vocab.MOUSE);
-    val towards = factory.getOWLObjectProperty(Vocab.TOWARDS);
-    val bearerOf = factory.getOWLObjectProperty(Vocab.BEARER_OF);
+    val involves = ObjectProperty(Vocab.INVOLVES);
+    val partOf = ObjectProperty(Vocab.PART_OF);
+    val hasPart = ObjectProperty(Vocab.HAS_PART);
+    val annotatedGene = ObjectProperty(Vocab.ANNOTATED_GENE);
+    val annotatedTaxon = ObjectProperty(Vocab.ANNOTATED_TAXON);
+    val annotatedOrganism = ObjectProperty(Vocab.ANNOTATED_ORGANISM);
+    val annotationClass = Class(Vocab.PHENOTYPE_ANNOTATION);
+    val mouse = Individual(Vocab.MOUSE);
+    val towards = ObjectProperty(Vocab.TOWARDS);
+    val bearerOf = ObjectProperty(Vocab.BEARER_OF);
     val manager = this.getOWLOntologyManager();
 
     def main(args: Array[String]): Unit = {
@@ -43,7 +43,6 @@ object MGIPhenotypesToOWL extends OWLTask {
     def convert(phenotypeData: Source): OWLOntology = {
             val ontology = manager.createOntology(IRI.create("http://purl.obolibrary.org/obo/phenoscape/mgi_phenotypes.owl"));
             manager.addAxioms(ontology, phenotypeData.getLines.drop(1).map(translate(_)).flatten.toSet[OWLAxiom]);
-            manager.applyChange(new AddImport(ontology, factory.getOWLImportsDeclaration(IRI.create("http://purl.obolibrary.org/obo/phenoscape/tbox.owl"))));
             return ontology;
     }
 
@@ -86,7 +85,8 @@ object MGIPhenotypesToOWL extends OWLTask {
                 axioms.add(phenotypeAnnotation Fact (annotatedGene, gene));
                 axioms.add(phenotypeAnnotation Fact (annotatedTaxon, mouse));
                 axioms.addAll(involved.map(involvee => {
-                    phenotypeAnnotation Type (involves some involvee);
+                    val involvesClass = Class(NamedRestrictionGenerator.getRestrictionIRI(Vocab.INVOLVES, involvee.getIRI()));
+                    phenotypeAnnotation Type involvesClass;
                 }));
             }
             return axioms;

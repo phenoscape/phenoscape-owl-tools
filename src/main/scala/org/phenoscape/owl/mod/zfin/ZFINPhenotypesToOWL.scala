@@ -42,7 +42,6 @@ object ZFINPhenotypesToOWL extends OWLTask {
     def convert(phenotypeData: Source): OWLOntology = {
             val ontology = manager.createOntology(IRI.create("http://purl.obolibrary.org/obo/phenoscape/zfin_phenotypes.owl"));
             manager.addAxioms(ontology, phenotypeData.getLines.map(translate(_)).flatten.toSet[OWLAxiom]);
-            manager.applyChange(new AddImport(ontology, factory.getOWLImportsDeclaration(IRI.create("http://purl.obolibrary.org/obo/phenoscape/tbox.owl"))));
             return ontology;
     }
 
@@ -99,7 +98,8 @@ object ZFINPhenotypesToOWL extends OWLTask {
             axioms.add(phenotypeAnnotation Fact (annotatedGene, gene));
             axioms.add(phenotypeAnnotation Fact (annotatedTaxon, zebrafish));
             axioms.addAll(involved.map(involvee => {
-                phenotypeAnnotation Type (involves some involvee);
+                val involvesClass = Class(NamedRestrictionGenerator.getRestrictionIRI(Vocab.INVOLVES, involvee.getIRI()));
+                phenotypeAnnotation Type involvesClass;
             }));
             return axioms;
     }

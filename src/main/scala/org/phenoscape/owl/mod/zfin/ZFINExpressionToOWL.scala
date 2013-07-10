@@ -38,7 +38,6 @@ object ZFINExpressionToOWL extends OWLTask {
 	def convert(expressionData: Source): OWLOntology = {
 			val ontology = manager.createOntology(IRI.create("http://purl.obolibrary.org/obo/phenoscape/zfin_gene_expression.owl"));
 			manager.addAxioms(ontology, expressionData.getLines.map(translate(_)).flatten.toSet[OWLAxiom]);
-			manager.applyChange(new AddImport(ontology, factory.getOWLImportsDeclaration(IRI.create("http://purl.obolibrary.org/obo/phenoscape/tbox.owl"))));
 			return ontology;
 	}
 
@@ -63,7 +62,7 @@ object ZFINExpressionToOWL extends OWLTask {
 					val superStructure = Class(OBOUtil.iriForTermID(superStructureID));
 					val subStructure = Class(OBOUtil.iriForTermID(subStructureID));
 					val structureType = nextClass();
-					axioms.add(structureType EquivalentTo (subStructure and (partOf some superStructure)));
+					axioms.add(structureType SubClassOf (subStructure and (partOf some superStructure)));
 					axioms.add(structure Type structureType);
 				}
 				val geneIRI = IRI.create("http://zfin.org/" + StringUtils.stripToNull(items(0)));
