@@ -163,6 +163,8 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
             nexmlTBoxAxioms);
 
     val parts = manager.createOntology(anatomicalEntities.map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.PART_OF), _)).toSet[OWLAxiom]);
+    //TODO replace with has_part some part_of... or "has_part_of" and "has_part"
+    // and has_part_bearer_of?
     val bearers = manager.createOntology(qualities.map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.BEARER_OF), _)).toSet[OWLAxiom]);
     val involvers = manager.createOntology((anatomicalEntities ++ qualities).map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.INVOLVES), _)).toSet[OWLAxiom]);
 

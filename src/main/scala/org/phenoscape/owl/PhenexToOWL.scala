@@ -11,6 +11,7 @@ import org.jdom2.input.SAXBuilder
 import org.jdom2.Element
 import org.jdom2.Namespace
 import org.phenoscape.owl.util.OBOUtil
+import org.nescent.strix.OWL._
 import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model.IRI
 import org.semanticweb.owlapi.model.OWLAnnotationSubject
@@ -160,11 +161,10 @@ object PhenexToOWL extends OWLTask {
             translatePhenotypeSemantics(phenotype, owlPhenotype, owlState);
             val denotes = factory.getOWLObjectProperty(Vocab.DENOTES);
             val denotesExemplar = factory.getOWLObjectProperty(Vocab.DENOTES_EXEMPLAR);
-            val denotesOnlyPhenotype = factory.getOWLObjectAllValuesFrom(denotes, owlPhenotype);
-            manager.addAxiom(ontology, factory.getOWLClassAssertionAxiom(denotesOnlyPhenotype, owlState));
+            manager.addAxiom(ontology, owlState Type (denotes only owlPhenotype));
             val exemplar = nextIndividual();
-            manager.addAxiom(ontology, factory.getOWLObjectPropertyAssertionAxiom(denotesExemplar, owlState, exemplar));
-            manager.addAxiom(ontology, factory.getOWLClassAssertionAxiom(owlPhenotype, exemplar));
+            manager.addAxiom(ontology, owlState Fact (denotesExemplar, exemplar));
+            manager.addAxiom(ontology, exemplar Type owlPhenotype);
             instantiateClassAssertion(exemplar, owlPhenotype, true);
     }
 
@@ -213,7 +213,8 @@ object PhenexToOWL extends OWLTask {
             }
             manager.addAxiom(ontology, factory.getOWLSubClassOfAxiom(owlPhenotype, eq));
             involved.addAll(eq.getClassesInSignature());
-            manager.addAxioms(ontology, involved.map(factory.getOWLObjectSomeValuesFrom(involves, _)).map(factory.getOWLClassAssertionAxiom(_, owlState)));
+            //FIXME need to just add class assertion for named involves restriction to avoid reasoning
+            manager.addAxioms(ontology, involved.map(term => owlState Type (involves some term)));
             involved.foreach(createRestrictions(_));
     }
 

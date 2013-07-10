@@ -51,8 +51,6 @@ object HumanPhenotypesToOWL extends OWLTask {
 			axioms.add(factory.getOWLDeclarationAxiom(phenotypeAnnotation));
 			val phenotypeID = StringUtils.stripToNull(items(3));
 			val phenotypeClass = factory.getOWLClass(OBOUtil.iriForTermID(phenotypeID));
-			//val involvesPhenotypeClass = factory.getOWLClass(NamedRestrictionGenerator.getRestrictionIRI(involves.getIRI(), phenotypeClass.getIRI()));
-			//axioms.add(factory.getOWLClassAssertionAxiom(involvesPhenotypeClass, phenotypeAnnotation));
 			axioms.add(factory.getOWLClassAssertionAxiom(phenotypeClass, phenotypeAnnotation));
 			val geneIRI = IRI.create("http://www.ncbi.nlm.nih.gov/gene/" + StringUtils.stripToNull(items(0)));
 			val geneSymbol = StringUtils.stripToNull(items(1));
