@@ -110,7 +110,6 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     step("Writing VTO closure");
     write(materializedVTOIndividuals, cwd + "/staging/kb/vto-individuals-closure.owl");
 
-    //TODO check all data for compatibility with tbox-only reasoning
     step("Converting NeXML to OWL");
     cd(NEXML);
     val filesToConvert = (FileUtils.listFiles(new File(cwd + "/staging/nexml/completed-phenex-files"), Array("xml"), true) ++ 
@@ -167,9 +166,10 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
             humanPhenotypeData.getTBoxAxioms(false) ++ 
             nexmlTBoxAxioms);
 
-    //TODO replace with has_part some part_of... or "has_part_of" and "has_part"
-    // and has_part_bearer_of?
+    
     val parts = manager.createOntology(anatomicalEntities.map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.PART_OF), _)).toSet[OWLAxiom]);
+    //TODO add has_part some part_of... or "has_part_of" and "has_part"
+    // and has_part_bearer_of?
     val bearers = manager.createOntology(qualities.map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.BEARER_OF), _)).toSet[OWLAxiom]);
     val involvers = manager.createOntology((anatomicalEntities ++ qualities).map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.INVOLVES), _)).toSet[OWLAxiom]);
     val homologies = manager.createOntology(anatomicalEntities.map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.PHP), _)).toSet[OWLAxiom]);
