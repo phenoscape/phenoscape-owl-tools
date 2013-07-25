@@ -38,14 +38,14 @@ object Vocab {
 	val LACKS_ALL_PARTS_OF_TYPE = IRI.create("http://purl.obolibrary.org/obo/PATO_0002000");
 	val INVOLVES = IRI.create("http://purl.org/phenoscape/vocab/involves");
 	val GENE_EXPRESSION = IRI.create("http://purl.obolibrary.org/obo/GO_0010467");
-	val PHENOTYPE_ANNOTATION = IRI.create("http://purl.org/phenoscape/vocab/PhenotypeAnnotation");
+	val ANNOTATED_PHENOTYPE = IRI.create("http://purl.org/phenoscape/vocab/PhenotypeAnnotation"); //FIXME change IRI
 	val OCCURS_IN = IRI.create("http://purl.obolibrary.org/obo/BFO_0000066");
 	val GENE = IRI.create("http://purl.obolibrary.org/obo/SO_0000704");
-	val ANNOTATED_GENE = IRI.create("http://purl.org/phenoscape/vocab/annotated_gene");
+	val ASSOCIATED_WITH_GENE = IRI.create("http://purl.org/phenoscape/vocab/annotated_gene"); //FIXME change IRI
 	val ANNOTATED_ORGANISM = IRI.create("http://purl.org/phenoscape/vocab/annotated_organism");
 	val HAS_EXACT_SYNONYM = IRI.create("http://www.geneontology.org/formats/oboInOwl#hasExactSynonym");
 	val HAS_RELATED_SYNONYM = IRI.create("http://www.geneontology.org/formats/oboInOwl#hasRelatedSynonym");
-	val ANNOTATED_TAXON = IRI.create("http://purl.org/phenoscape/vocab/annotated_taxon");
+	val ASSOCIATED_WITH_TAXON = IRI.create("http://purl.org/phenoscape/vocab/annotated_taxon"); //FIXME change IRI
 	val ZEBRAFISH = IRI.create("http://purl.obolibrary.org/obo/NCBITaxon_7955");
 	val XENOPUS_LAEVIS = IRI.create("http://purl.obolibrary.org/obo/NCBITaxon_8355");
 	val XENOPUS_TROPICALIS = IRI.create("http://purl.obolibrary.org/obo/NCBITaxon_8364");

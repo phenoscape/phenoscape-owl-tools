@@ -23,10 +23,10 @@ object ZFINPhenotypesToOWL extends OWLTask {
     val involves = ObjectProperty(Vocab.INVOLVES);
     val partOf = ObjectProperty(Vocab.PART_OF);
     val hasPart = ObjectProperty(Vocab.HAS_PART);
-    val annotatedGene = ObjectProperty(Vocab.ANNOTATED_GENE);
-    val annotatedTaxon = ObjectProperty(Vocab.ANNOTATED_TAXON);
+    val associatedWithGene = ObjectProperty(Vocab.ASSOCIATED_WITH_GENE);
+    val associatedWithTaxon = ObjectProperty(Vocab.ASSOCIATED_WITH_TAXON);
     val annotatedOrganism = ObjectProperty(Vocab.ANNOTATED_ORGANISM);
-    val annotationClass = Class(Vocab.PHENOTYPE_ANNOTATION);
+    val annotationClass = Class(Vocab.ANNOTATED_PHENOTYPE);
     val zebrafish = Individual(Vocab.ZEBRAFISH);
     val towards = ObjectProperty(Vocab.TOWARDS);
     val bearerOf = ObjectProperty(Vocab.BEARER_OF);
@@ -95,8 +95,8 @@ object ZFINPhenotypesToOWL extends OWLTask {
             val geneIRI = IRI.create("http://zfin.org/" + StringUtils.stripToNull(items(2)));
             val gene = Individual(geneIRI);
             axioms.add(factory.getOWLDeclarationAxiom(gene));
-            axioms.add(phenotypeAnnotation Fact (annotatedGene, gene));
-            axioms.add(phenotypeAnnotation Fact (annotatedTaxon, zebrafish));
+            axioms.add(phenotypeAnnotation Fact (associatedWithGene, gene));
+            axioms.add(phenotypeAnnotation Fact (associatedWithTaxon, zebrafish));
             axioms.addAll(involved.map(involvee => {
                 val involvesClass = Class(NamedRestrictionGenerator.getRestrictionIRI(Vocab.INVOLVES, involvee.getIRI()));
                 phenotypeAnnotation Type involvesClass;
