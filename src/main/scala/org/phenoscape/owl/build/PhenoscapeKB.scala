@@ -96,7 +96,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     write(fmaToUberon, cwd + "/staging/kb/uberon-bridge-to-fma.owl");
 
     step("Querying entities and qualities");
-    val coreReasoner = reasoner(List(uberon, pato, bspo, go, ro, phenoscapeVocab));
+    val coreReasoner = reasoner(List(uberon, pato, bspo, go, ro)); //phenoscapeVocab //causing problem with reasoner?
     val anatomicalEntities = coreReasoner.getSubClasses(Class(Vocab.ANATOMICAL_ENTITY), false).getFlattened();
     val qualities = coreReasoner.getSubClasses(Class(Vocab.QUALITY), false).getFlattened();
     coreReasoner.dispose();
@@ -175,7 +175,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     val homologies = manager.createOntology(anatomicalEntities.map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.PHP), _)).toSet[OWLAxiom]);
 
     val allTBox = combine(uberon, homology, pato, bspo, go, vto, zfa, xao, hp, 
-            hpEQ, zfaToUberon, xaoToUberon, fmaToUberon, parts, bearers, involvers, tboxFromData, ro, phenoscapeVocab);
+            hpEQ, zfaToUberon, xaoToUberon, fmaToUberon, parts, bearers, involvers, tboxFromData, ro); //phenoscapeVocab
     println("tbox class count: " + allTBox.getClassesInSignature().size());
     println("tbox logical axiom count: " + allTBox.getLogicalAxiomCount());
     val tboxReasoner = reasoner(allTBox);

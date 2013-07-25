@@ -7,6 +7,8 @@ object Vocab {
 	val HAS_PART = IRI.create("http://purl.obolibrary.org/obo/BFO_0000051");
 	val PART_OF = IRI.create("http://purl.obolibrary.org/obo/BFO_0000050");
 	val BEARER_OF = IRI.create("http://purl.obolibrary.org/obo/BFO_0000053");
+	val INHERES_IN = IRI.create("http://purl.obolibrary.org/obo/BFO_0000052");
+	val exhibits = IRI.create("http://purl.org/phenoscape/vocab/exhibits");
 	val DEVELOPS_FROM = IRI.create("http://purl.obolibrary.org/obo/RO_0002202");
 	val NEGATES = IRI.create("http://purl.org/phenoscape/vocab/negation_of_class");
 	val MAY_HAVE_STATE_VALUE = IRI.create("http://purl.org/phenoscape/vocab/may_have_state_value");
@@ -25,13 +27,15 @@ object Vocab {
 	val BELONGS_TO_TU = IRI.create("http://purl.obolibrary.org/obo/CDAO_0000191");
 	val HAS_STATE = IRI.create("http://purl.obolibrary.org/obo/CDAO_0000184");
 	val DENOTES = IRI.create("http://purl.obolibrary.org/obo/IAO_0000219");
-	val DENOTES_EXEMPLAR = IRI.create("http://purl.org/phenoscape/vocab/denotes_exemplar");
+	val DENOTES_EXHIBITING = IRI.create("http://purl.org/phenoscape/vocab/denotes_exhibiting");
 	val TOWARDS = IRI.create("http://purl.obolibrary.org/obo/pato#towards");
 	val INDIVIDUAL_ID = IRI.create("http://rs.tdwg.org/dwc/terms/individualID");
 	val SPECIMEN = IRI.create("http://purl.org/dsw/Specimen");
 	val SPECIMEN_TO_COLLECTION = IRI.create("http://rs.tdwg.org/dwc/terms/collectionID");
 	val SPECIMEN_TO_CATALOG_ID = IRI.create("http://rs.tdwg.org/dwc/terms/catalogNumber");
 	val ABSENT = IRI.create("http://purl.obolibrary.org/obo/PATO_0000462");
+	val PRESENT = IRI.create("http://purl.obolibrary.org/obo/PATO_0000467");
+	val LACKS_ALL_PARTS_OF_TYPE = IRI.create("http://purl.obolibrary.org/obo/PATO_0002000");
 	val INVOLVES = IRI.create("http://purl.org/phenoscape/vocab/involves");
 	val GENE_EXPRESSION = IRI.create("http://purl.obolibrary.org/obo/GO_0010467");
 	val PHENOTYPE_ANNOTATION = IRI.create("http://purl.org/phenoscape/vocab/PhenotypeAnnotation");
@@ -58,5 +62,5 @@ object Vocab {
 	val ANATOMICAL_ENTITY = IRI.create("http://purl.obolibrary.org/obo/UBERON_0001062");
 	val QUALITY = IRI.create("http://purl.obolibrary.org/obo/PATO_0000001");
 	val PHP = IRI.create("http://example.org/php"); // part_of some homologous_to some part_of... experimental
-	
+	val MULTI_CELLULAR_ORGANISM = IRI.create("http://purl.obolibrary.org/obo/UBERON_0000468");
 }
