@@ -165,25 +165,29 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
             xenbaseExpressionData.getTBoxAxioms(false) ++
             humanPhenotypeData.getTBoxAxioms(false) ++ 
             nexmlTBoxAxioms);
-
     
     val parts = manager.createOntology(anatomicalEntities.map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.PART_OF), _)).toSet[OWLAxiom]);
-    //TODO add has_part some part_of... or "has_part_of" and "has_part"
-    // and has_part_bearer_of?
-    val bearers = manager.createOntology(qualities.map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.BEARER_OF), _)).toSet[OWLAxiom]);
+    val inherers = manager.createOntology(qualities.map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.INHERES_IN), _)).toSet[OWLAxiom]);
+    val inherersInPartOf = manager.createOntology(qualities.map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.INHERES_IN_PART_OF), _)).toSet[OWLAxiom]);
+    val towards = manager.createOntology(qualities.map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.TOWARDS), _)).toSet[OWLAxiom]);
     val involvers = manager.createOntology((anatomicalEntities ++ qualities).map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.INVOLVES), _)).toSet[OWLAxiom]);
     val homologies = manager.createOntology(anatomicalEntities.map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.PHP), _)).toSet[OWLAxiom]);
 
     val allTBox = combine(uberon, homology, pato, bspo, go, vto, zfa, xao, hp, 
-            hpEQ, zfaToUberon, xaoToUberon, fmaToUberon, parts, bearers, involvers, tboxFromData, ro); //phenoscapeVocab
+            hpEQ, zfaToUberon, xaoToUberon, fmaToUberon, parts, inherers, inherersInPartOf, towards, involvers, tboxFromData, ro); //phenoscapeVocab
     println("tbox class count: " + allTBox.getClassesInSignature().size());
     println("tbox logical axiom count: " + allTBox.getLogicalAxiomCount());
     val tboxReasoner = reasoner(allTBox);
     val inferredAxioms = manager.createOntology();
     step("Materializing tbox classification");
+    if (tboxReasoner.getUnsatisfiableClasses().getEntitiesMinusBottom().isEmpty()) {
+        println("SUCCESS: all classes are satisfiable.");
+    } else {
+        println("WARNING: some classes are unsatisfiable.");
+    }
     MaterializeInferences.materializeInferences(inferredAxioms, tboxReasoner);
     step("Writing inferred tbox axioms");
-    write(combine(parts, bearers, involvers, inferredAxioms), cwd + "/staging/kb/generated.owl");
+    write(combine(parts, inherers, inherersInPartOf, towards, involvers, inferredAxioms), cwd + "/staging/kb/generated.owl");
     step("Materializing subclass closure");
     MaterializeSubClassOfClosureToNTriples.writeClosureToFile(tboxReasoner, new File(cwd + "/staging/kb/hierarchy_closure.nt"));
     tboxReasoner.dispose();

@@ -1,6 +1,7 @@
 package org.phenoscape.owl
 
 import scala.collection.JavaConversions._
+import scala.collection.Set
 import java.io.File
 import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model.IRI
@@ -9,6 +10,7 @@ import org.semanticweb.owlapi.model.OWLEquivalentClassesAxiom
 import org.semanticweb.owlapi.model.OWLOntology
 import org.semanticweb.owlapi.model.AddImport
 import org.semanticweb.owlapi.model.OWLClassExpression
+import org.semanticweb.owlapi.model.OWLAxiom
 
 object AbsenceClassGenerator extends OWLTask {
 
@@ -29,6 +31,10 @@ object AbsenceClassGenerator extends OWLTask {
 			//manager.applyChange(new AddImport(absenceOntology, factory.getOWLImportsDeclaration(ontology.getOntologyID().getOntologyIRI())));
 			ontology.getClassesInSignature(false).map(createAbsenceClassAxiom(_)).foreach(manager.addAxiom(absenceOntology, _));
 			return absenceOntology;
+	}
+	
+	def createAbsenceClass(ontClass: OWLClass): Set[OWLAxiom] = {
+	        return null;
 	}
 
 	def createAbsenceClassAxiom(ontClass: OWLClass): OWLEquivalentClassesAxiom = {

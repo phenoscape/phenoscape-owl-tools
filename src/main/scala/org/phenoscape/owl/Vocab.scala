@@ -8,6 +8,7 @@ object Vocab {
 	val PART_OF = IRI.create("http://purl.obolibrary.org/obo/BFO_0000050");
 	val BEARER_OF = IRI.create("http://purl.obolibrary.org/obo/BFO_0000053");
 	val INHERES_IN = IRI.create("http://purl.obolibrary.org/obo/BFO_0000052");
+	val INHERES_IN_PART_OF = IRI.create("http://purl.obolibrary.org/obo/RO_0002314");
 	val exhibits = IRI.create("http://purl.org/phenoscape/vocab/exhibits");
 	val DEVELOPS_FROM = IRI.create("http://purl.obolibrary.org/obo/RO_0002202");
 	val NEGATES = IRI.create("http://purl.org/phenoscape/vocab/negation_of_class");
