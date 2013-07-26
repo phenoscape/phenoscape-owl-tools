@@ -24,13 +24,17 @@ object MGIPhenotypesToOWL extends OWLTask {
     val involves = ObjectProperty(Vocab.INVOLVES);
     val partOf = ObjectProperty(Vocab.PART_OF);
     val hasPart = ObjectProperty(Vocab.HAS_PART);
-    val annotatedGene = ObjectProperty(Vocab.ANNOTATED_GENE);
-    val annotatedTaxon = ObjectProperty(Vocab.ANNOTATED_TAXON);
-    val annotatedOrganism = ObjectProperty(Vocab.ANNOTATED_ORGANISM);
-    val annotationClass = Class(Vocab.PHENOTYPE_ANNOTATION);
+    val associatedWithGene = ObjectProperty(Vocab.ASSOCIATED_WITH_GENE);
+    val associatedWithTaxon = ObjectProperty(Vocab.ASSOCIATED_WITH_TAXON);
+    val annotationClass = Class(Vocab.ANNOTATED_PHENOTYPE);
     val mouse = Individual(Vocab.MOUSE);
     val towards = ObjectProperty(Vocab.TOWARDS);
     val bearerOf = ObjectProperty(Vocab.BEARER_OF);
+    val inheres_in = ObjectProperty(Vocab.INHERES_IN);
+    val present = Class(Vocab.PRESENT);
+    val absent = Class(Vocab.ABSENT);
+    val lacksAllPartsOfType = Class(Vocab.LACKS_ALL_PARTS_OF_TYPE);
+    val organism = Class(Vocab.MULTI_CELLULAR_ORGANISM);
     val manager = this.getOWLOntologyManager();
 
     def main(args: Array[String]): Unit = {
@@ -50,44 +54,47 @@ object MGIPhenotypesToOWL extends OWLTask {
             val items = expressionLine.split("\t", -1);
             val involved = mutable.Set[OWLClass]();
             val axioms = mutable.Set[OWLAxiom]();
-            val phenotypeAnnotation = nextIndividual();
-            axioms.add(phenotypeAnnotation Type annotationClass);
-            axioms.add(factory.getOWLDeclarationAxiom(phenotypeAnnotation));
+            val phenotype = nextIndividual();
+            axioms.add(phenotype Type annotationClass);
+            axioms.add(factory.getOWLDeclarationAxiom(phenotype));
             val structureItem = StringUtils.stripToNull(items(5));
             if (structureItem != null) {
                 val structureID = structureItem.split(" ")(0);
-                val structureType = Class(OBOUtil.iriForTermID(structureID));
-                val primaryQualityType = Class(OBOUtil.iriForTermID(StringUtils.stripToNull(items(6)).split(" ")(0)));
+                val entityTerm = Class(OBOUtil.iriForTermID(structureID));
+                val qualityTerm = Class(OBOUtil.iriForTermID(StringUtils.stripToNull(items(6)).split(" ")(0)));
                 val relatedStructureID = if (StringUtils.isNotBlank(items(8))) StringUtils.stripToNull(items(8).split(" ")(0)) else null;
-                val relatedStructureType = if (relatedStructureID != null) Class(OBOUtil.iriForTermID(relatedStructureID)) else null;
-                val qualityType = if (relatedStructureType != null) { //TODO ignoring "quality 2" for the moment, as it is always "abnormal"
-                    primaryQualityType and (towards some relatedStructureType)
-                } else {
-                    primaryQualityType;
+                val relatedEntityTerm = if (relatedStructureID != null) Class(OBOUtil.iriForTermID(relatedStructureID)) else null;
+                val eq_phenotype = (entityTerm, qualityTerm, relatedEntityTerm) match {
+                case (null, null, _) => null;
+                case (entity: OWLClass, null, null) => (present and (inheres_in some entity));
+                case (entity: OWLClass, null, relatedEntity: OWLClass) => {
+                    log().warn("Related entity with no quality.");
+                    (present and (inheres_in some entity));
                 }
-                val eq =  if (!qualityType.isAnonymous() && qualityType.asOWLClass().getIRI() == Vocab.ABSENT) { //TODO also handle lacks_all_parts_of_type
-                    involved.add(qualityType.asOWLClass());
-                    not (hasPart some structureType);
-                } else {
-                    hasPart some (structureType and (bearerOf some qualityType));
+                case (entity: OWLClass, `absent`, null) => (lacksAllPartsOfType and (inheres_in some organism) and (towards value Individual(entity.getIRI())));
+                case (entity: OWLClass, `lacksAllPartsOfType`, relatedEntity: OWLClass) => (lacksAllPartsOfType and (inheres_in some entity) and (towards value Individual(relatedEntity.getIRI())));
+                case (null, quality: OWLClass, null) => quality;
+                case (null, quality: OWLClass, relatedEntity: OWLClass) => (quality and (towards some relatedEntity));
+                case (entity: OWLClass, quality: OWLClass, null) => (quality and (inheres_in some entity));
+                case (entity: OWLClass, quality: OWLClass, relatedEntity: OWLClass) => (quality and (inheres_in some entity) and (towards some relatedEntity));
                 }
-                involved.addAll(eq.getClassesInSignature());
-                val organism = nextIndividual();
-                val phenotype = nextClass();
-                axioms.add(phenotype SubClassOf eq);
-                axioms.add(factory.getOWLDeclarationAxiom(organism));
-                axioms.add(organism Type phenotype);
-                axioms.addAll(ExpressionUtil.instantiateClassAssertion(organism, eq, this));
-                axioms.add(phenotypeAnnotation Fact (annotatedOrganism, organism));
-                val geneIRI = MGIGeneticMarkersToOWL.getGeneIRI(StringUtils.stripToNull(items(1)));
-                val gene = Individual(geneIRI);
-                axioms.add(factory.getOWLDeclarationAxiom(gene));
-                axioms.add(phenotypeAnnotation Fact (annotatedGene, gene));
-                axioms.add(phenotypeAnnotation Fact (annotatedTaxon, mouse));
-                axioms.addAll(involved.map(involvee => {
-                    val involvesClass = Class(NamedRestrictionGenerator.getRestrictionIRI(Vocab.INVOLVES, involvee.getIRI()));
-                    phenotypeAnnotation Type involvesClass;
-                }));
+                if (eq_phenotype != null) {
+                    involved.addAll(eq_phenotype.getClassesInSignature());
+                    val phenotypeClass = nextClass();
+                    axioms.add(factory.getOWLDeclarationAxiom(phenotypeClass));
+                    axioms.add(phenotypeClass SubClassOf eq_phenotype);
+                    axioms.add(phenotype Type phenotypeClass);
+                    val geneIRI = MGIGeneticMarkersToOWL.getGeneIRI(StringUtils.stripToNull(items(1)));
+                    val gene = Individual(geneIRI);
+                    axioms.add(factory.getOWLDeclarationAxiom(gene));
+                    axioms.add(phenotype Fact (associatedWithGene, gene));
+                    axioms.add(phenotype Fact (associatedWithTaxon, mouse));
+                    //TODO not sure if this will be needed
+                    //                axioms.addAll(involved.map(involvee => {
+                    //                    val involvesClass = Class(NamedRestrictionGenerator.getRestrictionIRI(Vocab.INVOLVES, involvee.getIRI()));
+                    //                    phenotype Type involvesClass;
+                    //                }));
+                }
             }
             return axioms;
     }

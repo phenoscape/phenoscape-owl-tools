@@ -23,13 +23,18 @@ object ZFINPhenotypesToOWL extends OWLTask {
     val involves = ObjectProperty(Vocab.INVOLVES);
     val partOf = ObjectProperty(Vocab.PART_OF);
     val hasPart = ObjectProperty(Vocab.HAS_PART);
-    val annotatedGene = ObjectProperty(Vocab.ANNOTATED_GENE);
-    val annotatedTaxon = ObjectProperty(Vocab.ANNOTATED_TAXON);
+    val associatedWithGene = ObjectProperty(Vocab.ASSOCIATED_WITH_GENE);
+    val associatedWithTaxon = ObjectProperty(Vocab.ASSOCIATED_WITH_TAXON);
     val annotatedOrganism = ObjectProperty(Vocab.ANNOTATED_ORGANISM);
-    val annotationClass = Class(Vocab.PHENOTYPE_ANNOTATION);
+    val annotationClass = Class(Vocab.ANNOTATED_PHENOTYPE);
     val zebrafish = Individual(Vocab.ZEBRAFISH);
     val towards = ObjectProperty(Vocab.TOWARDS);
     val bearerOf = ObjectProperty(Vocab.BEARER_OF);
+    val inheres_in = ObjectProperty(Vocab.INHERES_IN);
+    val present = Class(Vocab.PRESENT);
+    val absent = Class(Vocab.ABSENT);
+    val lacksAllPartsOfType = Class(Vocab.LACKS_ALL_PARTS_OF_TYPE);
+    val organism = Class(Vocab.MULTI_CELLULAR_ORGANISM);
     val manager = this.getOWLOntologyManager();
 
     def main(args: Array[String]): Unit = {
@@ -49,58 +54,66 @@ object ZFINPhenotypesToOWL extends OWLTask {
             val items = expressionLine.split("\t");
             val involved = mutable.Set[OWLClass]();
             val axioms = mutable.Set[OWLAxiom]();
-            val phenotypeAnnotation = nextIndividual();
-            axioms.add(phenotypeAnnotation Type annotationClass);
-            axioms.add(factory.getOWLDeclarationAxiom(phenotypeAnnotation));
+            val phenotype = nextIndividual();
+            axioms.add(phenotype Type annotationClass);
+            axioms.add(factory.getOWLDeclarationAxiom(phenotype));
             val superStructureID = StringUtils.stripToNull(items(3));
             val subStructureID = StringUtils.stripToNull(items(5));
-            val structureType = if (subStructureID == null) {
+            val entityTerm = if (subStructureID == null) {
                 Class(OBOUtil.iriForTermID(superStructureID));
             } else {
                 val superStructure = Class(OBOUtil.iriForTermID(superStructureID));
                 val subStructure = Class(OBOUtil.iriForTermID(subStructureID));
-                subStructure and (partOf some superStructure);
+                val namedComposition = nextClass();
+                axioms.add(namedComposition EquivalentTo (subStructure and (partOf some superStructure)));
+                namedComposition;
             }
-            val primaryQualityType = Class(OBOUtil.iriForTermID(StringUtils.stripToNull(items(11))));
+            val qualityTerm = Class(OBOUtil.iriForTermID(StringUtils.stripToNull(items(11))));
             val relatedSuperStructureID = StringUtils.stripToNull(items(7));
             val relatedSubStructureID = StringUtils.stripToNull(items(9));
-            val relatedStructureType = if (relatedSubStructureID == null) {
+            val relatedEntityTerm = if (relatedSubStructureID == null) {
                 if (relatedSuperStructureID != null) {
                     Class(OBOUtil.iriForTermID(relatedSuperStructureID));
                 } else { null; }
             } else {
                 val relatedSuperStructure = Class(OBOUtil.iriForTermID(relatedSuperStructureID));
                 val relatedSubStructure = Class(OBOUtil.iriForTermID(relatedSubStructureID));
-                relatedSubStructure and (partOf some relatedSuperStructure);
+                val namedComposition = nextClass();
+                axioms.add(namedComposition EquivalentTo (relatedSubStructure and (partOf some relatedSuperStructure)));
+                namedComposition;
             }
-            val qualityType = if (relatedStructureType != null) {
-                primaryQualityType and (towards some relatedStructureType);
-            } else {
-                primaryQualityType;
+            val eq_phenotype = (entityTerm, qualityTerm, relatedEntityTerm) match {
+            case (null, null, _) => null;
+            case (entity: OWLClass, null, null) => (present and (inheres_in some entity));
+            case (entity: OWLClass, null, relatedEntity: OWLClass) => {
+                log().warn("Related entity with no quality.");
+                (present and (inheres_in some entity));
             }
-            val eq =  if (!qualityType.isAnonymous() && qualityType.asOWLClass().getIRI() == Vocab.ABSENT) { //TODO also handle lacks_all_parts_of_type
-                involved.add(qualityType.asOWLClass());
-                not (hasPart some structureType);
-            } else {
-                hasPart some (structureType and (bearerOf some qualityType));
+            case (entity: OWLClass, `absent`, null) => (lacksAllPartsOfType and (inheres_in some organism) and (towards value Individual(entity.getIRI())));
+            case (entity: OWLClass, `lacksAllPartsOfType`, relatedEntity: OWLClass) => (lacksAllPartsOfType and (inheres_in some entity) and (towards value Individual(relatedEntity.getIRI())));
+            case (null, quality: OWLClass, null) => quality;
+            case (null, quality: OWLClass, relatedEntity: OWLClass) => (quality and (towards some relatedEntity));
+            case (entity: OWLClass, quality: OWLClass, null) => (quality and (inheres_in some entity));
+            case (entity: OWLClass, quality: OWLClass, relatedEntity: OWLClass) => (quality and (inheres_in some entity) and (towards some relatedEntity));
             }
-            involved.addAll(eq.getClassesInSignature());
-            val organism = nextIndividual();
-            axioms.add(factory.getOWLDeclarationAxiom(organism));
-            val phenotype = nextClass();
-            axioms.add(phenotype SubClassOf eq);
-            axioms.add(organism Type phenotype);
-            axioms.addAll(ExpressionUtil.instantiateClassAssertion(organism, eq, this));
-            axioms.add(phenotypeAnnotation Fact (annotatedOrganism, organism));
-            val geneIRI = IRI.create("http://zfin.org/" + StringUtils.stripToNull(items(2)));
-            val gene = Individual(geneIRI);
-            axioms.add(factory.getOWLDeclarationAxiom(gene));
-            axioms.add(phenotypeAnnotation Fact (annotatedGene, gene));
-            axioms.add(phenotypeAnnotation Fact (annotatedTaxon, zebrafish));
-            axioms.addAll(involved.map(involvee => {
-                val involvesClass = Class(NamedRestrictionGenerator.getRestrictionIRI(Vocab.INVOLVES, involvee.getIRI()));
-                phenotypeAnnotation Type involvesClass;
-            }));
+            if (eq_phenotype != null) {
+                involved.addAll(eq_phenotype.getClassesInSignature());
+                axioms.add(factory.getOWLDeclarationAxiom(organism));
+                val phenotypeClass = nextClass();
+                axioms.add(factory.getOWLDeclarationAxiom(phenotypeClass));
+                axioms.add(phenotypeClass SubClassOf eq_phenotype);
+                axioms.add(phenotype Type phenotypeClass);
+                val geneIRI = IRI.create("http://zfin.org/" + StringUtils.stripToNull(items(2)));
+                val gene = Individual(geneIRI);
+                axioms.add(factory.getOWLDeclarationAxiom(gene));
+                axioms.add(phenotype Fact (associatedWithGene, gene));
+                axioms.add(phenotype Fact (associatedWithTaxon, zebrafish));
+                //TODO not sure if this will be needed
+                //            axioms.addAll(involved.map(involvee => {
+                //                val involvesClass = Class(NamedRestrictionGenerator.getRestrictionIRI(Vocab.INVOLVES, involvee.getIRI()));
+                //                phenotype Type involvesClass;
+                //            }));
+            }
             return axioms;
     }
 

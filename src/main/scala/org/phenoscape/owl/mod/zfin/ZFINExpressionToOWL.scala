@@ -22,8 +22,8 @@ object ZFINExpressionToOWL extends OWLTask {
 
 	val occursIn = ObjectProperty(Vocab.OCCURS_IN);
 	val partOf = ObjectProperty(Vocab.PART_OF);
-	val annotatedGene = ObjectProperty(Vocab.ANNOTATED_GENE);
-	val annotatedTaxon = ObjectProperty(Vocab.ANNOTATED_TAXON);
+	val associatedWithGene = ObjectProperty(Vocab.ASSOCIATED_WITH_GENE);
+	val associatedWithTaxon = ObjectProperty(Vocab.ASSOCIATED_WITH_TAXON);
 	val geneExpression = Class(Vocab.GENE_EXPRESSION);
 	val zebrafish = Individual(Vocab.ZEBRAFISH);
 	val manager = this.getOWLOntologyManager();
@@ -68,8 +68,8 @@ object ZFINExpressionToOWL extends OWLTask {
 				val geneIRI = IRI.create("http://zfin.org/" + StringUtils.stripToNull(items(0)));
 				val gene = Individual(geneIRI);
 				axioms.add(factory.getOWLDeclarationAxiom(gene));
-				axioms.add(expression Fact (annotatedGene, gene));
-				axioms.add(expression Fact (annotatedTaxon, zebrafish));
+				axioms.add(expression Fact (associatedWithGene, gene));
+				axioms.add(expression Fact (associatedWithTaxon, zebrafish));
 				return axioms;
 			}
 	}
