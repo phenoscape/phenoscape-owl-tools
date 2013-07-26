@@ -102,8 +102,8 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
 
     step("Querying entities and qualities");
     val coreReasoner = reasoner(List(uberon, pato, bspo, go, ro)); //phenoscapeVocab //causing problem with reasoner?
-    val anatomicalEntities = coreReasoner.getSubClasses(Class(Vocab.ANATOMICAL_ENTITY), false).getFlattened();
-    val qualities = coreReasoner.getSubClasses(Class(Vocab.QUALITY), false).getFlattened();
+    val anatomicalEntities = coreReasoner.getSubClasses(Class(Vocab.ANATOMICAL_ENTITY), false).getFlattened().filterNot(_.isOWLNothing());
+    val qualities = coreReasoner.getSubClasses(Class(Vocab.QUALITY), false).getFlattened().filterNot(_.isOWLNothing());
     coreReasoner.dispose();
 
     step("Creating VTO instances");
@@ -123,7 +123,6 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     val nexmlTBoxAxioms: mutable.Set[OWLAxiom] = mutable.Set();
     filesToConvert.foreach(file => {
         val nexOntology = PropertyNormalizer.normalize(PhenexToOWL.convert(file));
-        //MaterializeInferences.materializeInferences(combine(nexOntology, ro)); //TODO may be able to remove this with tweaks to Phenex converter
         nexmlTBoxAxioms.addAll(nexOntology.getTBoxAxioms(false));
         write(nexOntology, cwd + "/staging/kb/" + file.getName().replaceAll(".xml$", ".owl"));
     });
@@ -200,6 +199,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
         println("SUCCESS: all classes are satisfiable.");
     } else {
         println("WARNING: some classes are unsatisfiable.");
+        println(tboxReasoner.getUnsatisfiableClasses());
     }
     
     step("Writing inferred tbox axioms");
