@@ -260,16 +260,6 @@ object PhenexToOWL extends OWLTask {
             });
     }
 
-    def createRestrictions(aClass: OWLClass): Unit = {
-            val partOf = factory.getOWLObjectProperty(Vocab.PART_OF);
-            manager.addAxiom(ontology, NamedRestrictionGenerator.createRestriction(partOf, aClass));
-            val bearerOf = factory.getOWLObjectProperty(Vocab.BEARER_OF);
-            manager.addAxiom(ontology, NamedRestrictionGenerator.createRestriction(bearerOf, aClass));
-            val involves = factory.getOWLObjectProperty(Vocab.INVOLVES);
-            manager.addAxiom(ontology, NamedRestrictionGenerator.createRestriction(involves, aClass));
-            manager.addAxiom(ontology, AbsenceClassGenerator.createAbsenceClassAxiom(aClass));
-    }
-
     def classFromTyperef(typeref: Element): OWLClassExpression = {
             val genusID = typeref.getAttributeValue("about");
             val qualifiers = typeref.getChildren("qualifier", phenoNS);

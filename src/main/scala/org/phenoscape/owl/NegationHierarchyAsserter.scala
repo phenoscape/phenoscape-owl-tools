@@ -16,7 +16,7 @@ import org.semanticweb.owlapi.model.OWLAxiom
 
 object NegationHierarchyAsserter extends OWLTask {
 
-	val negates = OWLManager.getOWLDataFactory().getOWLAnnotationProperty(Vocab.NEGATES);
+	val negates = factory.getOWLAnnotationProperty(Vocab.NEGATES);
 
 	def main(args: Array[String]): Unit = {
 			val manager = this.getOWLOntologyManager();
@@ -31,7 +31,6 @@ object NegationHierarchyAsserter extends OWLTask {
 
 	def assertNegationHierarchy(ontology: OWLOntology): Unit = {
 			val manager = ontology.getOWLOntologyManager();
-			val factory = manager.getOWLDataFactory();
 			val ontologies = ontology.getImportsClosure();
 			val allClasses = ontology.getClassesInSignature(true);
 			val negatesIndex: mutable.Map[IRI, mutable.Set[IRI]] = mutable.Map();

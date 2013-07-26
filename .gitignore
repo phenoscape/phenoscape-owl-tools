@@ -2,3 +2,4 @@
 .cache
 target
 src/test/resources/catalog-v001.xml
+catalog-v001.xml

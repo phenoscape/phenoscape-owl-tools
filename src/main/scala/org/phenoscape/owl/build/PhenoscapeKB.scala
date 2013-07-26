@@ -36,6 +36,11 @@ import org.apache.log4j.Logger
 import org.apache.log4j.Level
 import org.phenoscape.owl.MaterializeSubClassOfClosure
 import org.phenoscape.owl.MaterializeSubClassOfClosureToNTriples
+import org.phenoscape.owl.AbsenceClassGenerator
+import org.phenoscape.owl.NegationClassGenerator
+import org.phenoscape.owl.ReverseDevelopsFromRuleGenerator
+import org.phenoscape.owl.NegationHierarchyAsserter
+import org.semanticweb.owlapi.reasoner.InferenceType
 
 object PhenoscapeKB extends KnowledgeBaseBuilder {
 
@@ -84,8 +89,8 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     write(hp, cwd + "/staging/kb/hp.owl");
 
     val hpEQOBO = Source.fromFile(new File(cwd + "/staging/sources/hp-equivalence-axioms.obo"), "utf-8").mkString;
-    val hpEQOBOInvolves = hpEQOBO.replaceFirst("ontology: hp/hp-logical-definitions", "ontology: hp/hp-logical-definitions\nlogical-definition-view-relation: involves");
-    val hpEQ = new Obo2Owl().convert(new OBOFormatParser().parse(new BufferedReader(new StringReader(hpEQOBOInvolves))));
+    //val hpEQOBOInvolves = hpEQOBO.replaceFirst("ontology: hp/hp-logical-definitions", "ontology: hp/hp-logical-definitions\nlogical-definition-view-relation: involves");
+    val hpEQ = new Obo2Owl().convert(new OBOFormatParser().parse(new BufferedReader(new StringReader(hpEQOBO))));
     write(hpEQ, cwd + "/staging/kb/hp-logical-definitions.owl");
 
     val zfaToUberon = load(new File(cwd + "/staging/sources/uberon-ext-bridge-to-zfa.owl"));
@@ -167,29 +172,43 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
             nexmlTBoxAxioms);
     
     val parts = manager.createOntology(anatomicalEntities.map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.PART_OF), _)).toSet[OWLAxiom]);
+    val hasParts = manager.createOntology(anatomicalEntities.map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.HAS_PART), _)).toSet[OWLAxiom]);
     val inherers = manager.createOntology(qualities.map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.INHERES_IN), _)).toSet[OWLAxiom]);
     val inherersInPartOf = manager.createOntology(qualities.map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.INHERES_IN_PART_OF), _)).toSet[OWLAxiom]);
     val towards = manager.createOntology(qualities.map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.TOWARDS), _)).toSet[OWLAxiom]);
     val involvers = manager.createOntology((anatomicalEntities ++ qualities).map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.INVOLVES), _)).toSet[OWLAxiom]);
     val homologies = manager.createOntology(anatomicalEntities.map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.PHP), _)).toSet[OWLAxiom]);
+    val absences = manager.createOntology(anatomicalEntities.flatMap(AbsenceClassGenerator.createAbsenceClass(_)));
+    val namedHasPartClasses = anatomicalEntities.map(_.getIRI()).map(NamedRestrictionGenerator.getRestrictionIRI(Vocab.HAS_PART, _)).map(Class(_));
+    val absenceNegationEquivalences = manager.createOntology(namedHasPartClasses.flatMap(NegationClassGenerator.createNegationClassAxioms(_, hasParts)));
+    val developsFromRulesForAbsence = manager.createOntology(anatomicalEntities.map(ReverseDevelopsFromRuleGenerator.createRule(_)).toSet[OWLAxiom]);
 
     val allTBox = combine(uberon, homology, pato, bspo, go, vto, zfa, xao, hp, 
-            hpEQ, zfaToUberon, xaoToUberon, fmaToUberon, parts, inherers, inherersInPartOf, towards, involvers, tboxFromData, ro); //phenoscapeVocab
+            hpEQ, zfaToUberon, xaoToUberon, fmaToUberon, parts, hasParts, inherers, inherersInPartOf, towards, involvers, homologies, absences, absenceNegationEquivalences, developsFromRulesForAbsence, tboxFromData, ro); //phenoscapeVocab
     println("tbox class count: " + allTBox.getClassesInSignature().size());
     println("tbox logical axiom count: " + allTBox.getLogicalAxiomCount());
     val tboxReasoner = reasoner(allTBox);
     val inferredAxioms = manager.createOntology();
+    
     step("Materializing tbox classification");
+    MaterializeInferences.materializeInferences(inferredAxioms, tboxReasoner);
+    step("Asserting reverse negation hierarchy");
+    NegationHierarchyAsserter.assertNegationHierarchy(inferredAxioms);
+    tboxReasoner.flush();
+    tboxReasoner.precomputeInferences(InferenceType.CLASS_HIERARCHY);
     if (tboxReasoner.getUnsatisfiableClasses().getEntitiesMinusBottom().isEmpty()) {
         println("SUCCESS: all classes are satisfiable.");
     } else {
         println("WARNING: some classes are unsatisfiable.");
     }
-    MaterializeInferences.materializeInferences(inferredAxioms, tboxReasoner);
+    
     step("Writing inferred tbox axioms");
-    write(combine(parts, inherers, inherersInPartOf, towards, involvers, inferredAxioms), cwd + "/staging/kb/generated.owl");
+    write(combine(parts, hasParts, inherers, inherersInPartOf, towards, involvers, homologies, absences, absenceNegationEquivalences, developsFromRulesForAbsence, inferredAxioms), cwd + "/staging/kb/generated.owl");
+    
     step("Materializing subclass closure");
     MaterializeSubClassOfClosureToNTriples.writeClosureToFile(tboxReasoner, new File(cwd + "/staging/kb/hierarchy_closure.nt"));
     tboxReasoner.dispose();
+    
     step("Done");
+    
 }

@@ -2,7 +2,9 @@ package org.phenoscape.owl
 
 import scala.collection.JavaConversions._
 import scala.collection.Set
+import scala.collection.mutable
 import java.io.File
+import org.nescent.strix.OWL._
 import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model.IRI
 import org.semanticweb.owlapi.model.OWLClass
@@ -15,9 +17,11 @@ import org.semanticweb.owlapi.model.OWLAxiom
 object AbsenceClassGenerator extends OWLTask {
 
 	val hasPart = OWLManager.getOWLDataFactory().getOWLObjectProperty(Vocab.HAS_PART);
+	val lacksAllPartsOfType = Class(Vocab.LACKS_ALL_PARTS_OF_TYPE);
+	val towards = ObjectProperty(Vocab.TOWARDS);
+	val manager = this.getOWLOntologyManager();
 
 	def main(args: Array[String]): Unit = {
-			val manager = this.getOWLOntologyManager();
 			val ontology = manager.loadOntologyFromOntologyDocument(new File(args(0)));
 			val absenceOntology = generateAbsenceClasses(ontology);
 			manager.saveOntology(absenceOntology, IRI.create(new File(args(1))));
@@ -28,29 +32,23 @@ object AbsenceClassGenerator extends OWLTask {
 			val factory = manager.getOWLDataFactory();
 			val newIRI = getAbsenceOntologyIRI(ontology);
 			val absenceOntology = manager.createOntology(newIRI);
-			//manager.applyChange(new AddImport(absenceOntology, factory.getOWLImportsDeclaration(ontology.getOntologyID().getOntologyIRI())));
-			ontology.getClassesInSignature(false).map(createAbsenceClassAxiom(_)).foreach(manager.addAxiom(absenceOntology, _));
+			ontology.getClassesInSignature(false).map(createAbsenceClass(_)).foreach(manager.addAxioms(absenceOntology, _));
 			return absenceOntology;
 	}
 	
 	def createAbsenceClass(ontClass: OWLClass): Set[OWLAxiom] = {
-	        return null;
-	}
-
-	def createAbsenceClassAxiom(ontClass: OWLClass): OWLEquivalentClassesAxiom = {
-			val factory = OWLManager.getOWLDataFactory();
-			val absence = factory.getOWLClass(getAbsenceIRI(ontClass.getIRI()));
-			val desc = createAbsenceClassExpression(ontClass);
-			factory.getOWLEquivalentClassesAxiom(absence, desc);
-	}
-
-	def createAbsenceClassExpression(ontClass: OWLClassExpression): OWLClassExpression = {
-			val factory = OWLManager.getOWLDataFactory();
-			return factory.getOWLObjectComplementOf(factory.getOWLObjectSomeValuesFrom(hasPart, ontClass));
+	        val axioms: mutable.Set[OWLAxiom] = mutable.Set();
+	        val classIRI = ontClass.getIRI();
+	        val absenceClass = Class(getAbsenceIRI(classIRI));
+	        axioms.add(factory.getOWLDeclarationAxiom(absenceClass));
+	        axioms.add(absenceClass EquivalentTo (lacksAllPartsOfType and (towards value Individual(classIRI))));
+	        val notHasPartClass = Class(NegationClassGenerator.getNegationIRI(NamedRestrictionGenerator.getRestrictionIRI(hasPart.getIRI(), classIRI)));
+	        axioms.add(absenceClass EquivalentTo notHasPartClass);
+	        return axioms;
 	}
 
 	def getAbsenceIRI(classIRI: IRI): IRI = {
-			return NegationClassGenerator.getNegationIRI(NamedRestrictionGenerator.getRestrictionIRI(hasPart.getIRI(), classIRI));
+	        return IRI.create("http://purl.org/phenoscape/lacks/" + classIRI.toString());
 	}
 
 	def getAbsenceOntologyIRI(ontology: OWLOntology): IRI = {
