@@ -4,6 +4,7 @@ import java.io.File
 import scala.collection.JavaConversions._
 import scala.collection.Set
 import scala.collection.mutable
+import org.nescent.strix.OWL._
 import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model.IRI
 import org.semanticweb.owlapi.model.OWLClass
@@ -36,17 +37,12 @@ object NegationClassGenerator extends OWLTask {
 			val axioms = mutable.Set[OWLAxiom]();
 			val factory = OWLManager.getOWLDataFactory();
 			val negation = factory.getOWLClass(getNegationIRI(ontClass.getIRI()));
-			val desc = createNegationClassExpression(ontClass);
+			val desc = not (ontClass);
 			axioms.add(factory.getOWLEquivalentClassesAxiom(negation, desc));
 			val anonymousEquivalents = ontClass.getEquivalentClasses(ontology).filter(_.isAnonymous());
-			anonymousEquivalents.map(equivClass => factory.getOWLEquivalentClassesAxiom(negation, createNegationClassExpression(equivClass)));
+			anonymousEquivalents.map(equivClass => factory.getOWLEquivalentClassesAxiom(negation, not (equivClass)));
 			axioms.add(factory.getOWLAnnotationAssertionAxiom(negates, negation.getIRI(), ontClass.getIRI()));
 			return axioms;
-	}
-
-	def createNegationClassExpression(ontClass: OWLClassExpression): OWLClassExpression = {
-			val factory = OWLManager.getOWLDataFactory();
-			return factory.getOWLObjectComplementOf(ontClass);
 	}
 
 	def getNegationIRI(classIRI: IRI): IRI = {

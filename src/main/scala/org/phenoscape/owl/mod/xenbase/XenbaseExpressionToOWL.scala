@@ -23,8 +23,8 @@ object XenbaseExpressionToOWL extends OWLTask {
 
     val occursIn = ObjectProperty(Vocab.OCCURS_IN);
     val partOf = ObjectProperty(Vocab.PART_OF);
-    val annotatedGene = ObjectProperty(Vocab.ANNOTATED_GENE);
-    val annotatedTaxon = ObjectProperty(Vocab.ANNOTATED_TAXON);
+    val associatedWithGene = ObjectProperty(Vocab.ASSOCIATED_WITH_GENE);
+    val associatedWithTaxon = ObjectProperty(Vocab.ASSOCIATED_WITH_TAXON);
     val geneExpression = Class(Vocab.GENE_EXPRESSION);
     val laevis = Individual(Vocab.XENOPUS_LAEVIS);
     val tropicalis = Individual(Vocab.XENOPUS_TROPICALIS);
@@ -90,8 +90,8 @@ object XenbaseExpressionToOWL extends OWLTask {
                 val geneIRI = XenbaseGenesToOWL.getGeneIRI(genepageID);
                 val gene = Individual(geneIRI);
                 axioms.add(factory.getOWLDeclarationAxiom(gene));
-                axioms.add(expression Fact (annotatedGene, gene));
-                axioms.add(expression Fact (annotatedTaxon, species));
+                axioms.add(expression Fact (associatedWithGene, gene));
+                axioms.add(expression Fact (associatedWithTaxon, species));
                 return axioms;
             }
     }

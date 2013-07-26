@@ -24,8 +24,8 @@ object MGIExpressionToOWL extends OWLTask {
 
     val occursIn = ObjectProperty(Vocab.OCCURS_IN);
     val partOf = ObjectProperty(Vocab.PART_OF);
-    val annotatedGene = ObjectProperty(Vocab.ANNOTATED_GENE);
-    val annotatedTaxon = ObjectProperty(Vocab.ANNOTATED_TAXON);
+    val associatedWithGene = ObjectProperty(Vocab.ASSOCIATED_WITH_GENE);
+    val associatedWithTaxon = ObjectProperty(Vocab.ASSOCIATED_WITH_TAXON);
     val geneExpression = Class(Vocab.GENE_EXPRESSION);
     val mouse = Individual(Vocab.MOUSE);
     val manager = this.getOWLOntologyManager();
@@ -63,8 +63,8 @@ object MGIExpressionToOWL extends OWLTask {
                 val geneIRI = MGIGeneticMarkersToOWL.getGeneIRI(StringUtils.stripToNull(items(0)));
                 val gene = Individual(geneIRI);
                 axioms.add(factory.getOWLDeclarationAxiom(gene));
-                axioms.add(expression Fact (annotatedGene, gene));
-                axioms.add(expression Fact (annotatedTaxon, mouse));
+                axioms.add(expression Fact (associatedWithGene, gene));
+                axioms.add(expression Fact (associatedWithTaxon, mouse));
                 return axioms;
             }
     }

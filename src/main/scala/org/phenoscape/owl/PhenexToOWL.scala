@@ -36,6 +36,17 @@ object PhenexToOWL extends OWLTask {
     val nexmlNS = Namespace.getNamespace("http://www.nexml.org/2009");
     val phenoNS = Namespace.getNamespace("http://www.bioontologies.org/obd/schema/pheno");
     val rdfsNS = Namespace.getNamespace("http://www.w3.org/2000/01/rdf-schema#");
+    val towards = ObjectProperty(Vocab.TOWARDS);
+    val hasPart = ObjectProperty(Vocab.HAS_PART);
+    val bearerOf = ObjectProperty(Vocab.BEARER_OF);
+    val inheres_in = ObjectProperty(Vocab.INHERES_IN);
+    val exhibits = ObjectProperty(Vocab.exhibits);
+    val denotes = ObjectProperty(Vocab.DENOTES);
+    val denotes_exhibiting = ObjectProperty(Vocab.DENOTES_EXHIBITING);
+    val present = Class(Vocab.PRESENT);
+    val absent = Class(Vocab.ABSENT);
+    val lacksAllPartsOfType = Class(Vocab.LACKS_ALL_PARTS_OF_TYPE);
+    val organism = Class(Vocab.MULTI_CELLULAR_ORGANISM);
     val characterToOWLMap = mutable.Map[String, OWLNamedIndividual]();
     val stateToOWLMap = mutable.Map[String, OWLNamedIndividual]();
     val taxonOTUToOWLMap = mutable.Map[String, OWLNamedIndividual]();
@@ -159,66 +170,65 @@ object PhenexToOWL extends OWLTask {
             val owlPhenotype = nextClass();
             stateToOWLPhenotypeMap.getOrElseUpdate(stateID, mutable.Set()).add(owlPhenotype);
             translatePhenotypeSemantics(phenotype, owlPhenotype, owlState);
-            val denotes = factory.getOWLObjectProperty(Vocab.DENOTES);
-            val denotesExemplar = factory.getOWLObjectProperty(Vocab.DENOTES_EXEMPLAR);
-            manager.addAxiom(ontology, owlState Type (denotes only owlPhenotype));
-            val exemplar = nextIndividual();
-            manager.addAxiom(ontology, owlState Fact (denotesExemplar, exemplar));
-            manager.addAxiom(ontology, exemplar Type owlPhenotype);
-            instantiateClassAssertion(exemplar, owlPhenotype, true);
+            //TODO perhaps state should denote phenotype, not organism; modify property chain
+            manager.addAxiom(ontology, owlState Type (denotes only (exhibits some owlPhenotype)));
+            val phenotypeInstance = nextIndividual();
+            manager.addAxiom(ontology, owlState Fact (denotes_exhibiting, phenotypeInstance));
+            manager.addAxiom(ontology, phenotypeInstance Type owlPhenotype);
     }
 
     def translatePhenotypeSemantics(phenotype: Element, owlPhenotype: OWLClass, owlState: OWLNamedIndividual): Unit = {
-            val involves = factory.getOWLObjectProperty(Vocab.INVOLVES);
             val involved = mutable.Set[OWLClass]();
-            val bearer = phenotype.getChild("bearer", phenoNS);
-            val entityClass = if (bearer != null) {
-                val bearerType = bearer.getChild("typeref", phenoNS);
+            val bearerElement = phenotype.getChild("bearer", phenoNS);
+            val entityTerm = if (bearerElement != null) {
+                val bearerType = bearerElement.getChild("typeref", phenoNS);
                 if (bearerType != null) {
-                    classFromTyperef(bearerType);
+                    namedClassFromTyperef(bearerType);
                 } else { null; }
             } else { null; }
-            val quality = phenotype.getChild("quality", phenoNS);
-            val qualityClass = if (quality != null) {
-                val qualityType = quality.getChild("typeref", phenoNS);
-                val primaryQualityClass = if (qualityType != null) {
-                    classFromTyperef(qualityType);
+            val qualityElement = phenotype.getChild("quality", phenoNS);
+            val qualityTerm = if (qualityElement != null) {
+                val qualityType = qualityElement.getChild("typeref", phenoNS);
+                if (qualityType != null) {
+                    namedClassFromTyperef(qualityType);
                 } else { null; }
-                val relatedEntity = quality.getChild("related_entity", phenoNS);
-                val relatedEntityClass = if (relatedEntity != null) {
-                    val relatedEntityType = relatedEntity.getChild("typeref", phenoNS);
+            } else { null; }
+            val relatedEntityTerm = if (qualityElement != null) {
+                val relatedEntityElement = qualityElement.getChild("related_entity", phenoNS);
+                if (relatedEntityElement != null) {
+                    val relatedEntityType = relatedEntityElement.getChild("typeref", phenoNS);
                     if (relatedEntityType != null) {
-                        classFromTyperef(relatedEntityType);
+                        namedClassFromTyperef(relatedEntityType);
                     } else { null; }
                 } else { null; }
-                if (relatedEntityClass != null) {
-                    val towards = factory.getOWLObjectProperty(Vocab.TOWARDS);
-                    factory.getOWLObjectIntersectionOf(primaryQualityClass, this.factory.getOWLObjectSomeValuesFrom(towards, relatedEntityClass));
-                } else {
-                    primaryQualityClass;
-                }
             } else { null; }
-            if (entityClass == null) {
+            val eq_phenotype = (entityTerm, qualityTerm, relatedEntityTerm) match {
+            case (null, null, _) => null;
+            case (entity: OWLClass, null, null) => (present and (inheres_in some entity));
+            case (entity: OWLClass, null, relatedEntity: OWLClass) => {
+                log().warn("Related entity with no quality.");
+                (present and (inheres_in some entity));
+            }
+            case (entity: OWLClass, `absent`, null) => (lacksAllPartsOfType and (inheres_in some organism) and (towards value Individual(entity.getIRI())));
+            case (entity: OWLClass, `lacksAllPartsOfType`, relatedEntity: OWLClass) => (lacksAllPartsOfType and (inheres_in some entity) and (towards value Individual(relatedEntity.getIRI())));
+            case (null, quality: OWLClass, null) => quality;
+            case (null, quality: OWLClass, relatedEntity: OWLClass) => (quality and (towards some relatedEntity));
+            case (entity: OWLClass, quality: OWLClass, null) => (quality and (inheres_in some entity));
+            case (entity: OWLClass, quality: OWLClass, relatedEntity: OWLClass) => (quality and (inheres_in some entity) and (towards some relatedEntity));
+            //TODO comparisons, etc.
+            }
+            if (eq_phenotype == null) {
                 return;
-            }
-            val hasPart = factory.getOWLObjectProperty(Vocab.HAS_PART);
-            val eq = if (qualityClass == null) {
-                factory.getOWLObjectSomeValuesFrom(hasPart, entityClass);
-            } else if (!qualityClass.isAnonymous() && qualityClass.asOWLClass().getIRI() == Vocab.ABSENT) { //TODO also handle lacks_all_parts_of_type
-                involved.add(qualityClass.asOWLClass());
-                factory.getOWLObjectComplementOf(factory.getOWLObjectSomeValuesFrom(hasPart, entityClass));
             } else {
-                val bearerOf = factory.getOWLObjectProperty(Vocab.BEARER_OF);
-                factory.getOWLObjectSomeValuesFrom(hasPart, factory.getOWLObjectIntersectionOf(entityClass, factory.getOWLObjectSomeValuesFrom(bearerOf, qualityClass)));
+                manager.addAxiom(ontology, owlPhenotype SubClassOf eq_phenotype);
+                involved.addAll(eq_phenotype.getClassesInSignature()); //FIXME infer involved
+                manager.addAxioms(ontology, involved.map(involvee => {
+                    //FIXME should create named classes for entity postcompositions for use in involves; it's possible these can get classified
+                    // under named structure types in the ontology
+                    val involvesClass = Class(NamedRestrictionGenerator.getRestrictionIRI(Vocab.INVOLVES, involvee.getIRI()));
+                    owlState Type involvesClass;
+                }));
             }
-            manager.addAxiom(ontology, factory.getOWLSubClassOfAxiom(owlPhenotype, eq));
-            involved.addAll(eq.getClassesInSignature());
-            manager.addAxioms(ontology, involved.map(involvee => {
-                //FIXME should create named classes for entity postcompositions for use in involves; it's possible these can get classified
-                // under named structure types in the ontology
-                val involvesClass = Class(NamedRestrictionGenerator.getRestrictionIRI(Vocab.INVOLVES, involvee.getIRI()));
-                owlState Type involvesClass;
-            }));
     }
 
     def translateMatrixRow(row: Element): Unit = {
@@ -241,22 +251,13 @@ object PhenexToOWL extends OWLTask {
                 taxonOTUToValidTaxonMap.get(otuID).foreach(owlTaxon => {
                     stateToOWLPhenotypeMap.get(stateID).flatten.foreach(owlPhenotype => {
                         val organism = nextIndividual();
-                        addClass(organism, owlPhenotype);
+                        val phenotype = nextIndividual();
+                        addClass(phenotype, owlPhenotype);
                         addPropertyAssertion(Vocab.HAS_MEMBER, owlTaxon, organism);
-                        instantiateClassAssertion(organism, owlPhenotype, true);
+                        addPropertyAssertion(Vocab.exhibits, organism, phenotype);
                     });
                 });
             });
-    }
-
-    def createRestrictions(aClass: OWLClass): Unit = {
-            val partOf = factory.getOWLObjectProperty(Vocab.PART_OF);
-            manager.addAxiom(ontology, NamedRestrictionGenerator.createRestriction(partOf, aClass));
-            val bearerOf = factory.getOWLObjectProperty(Vocab.BEARER_OF);
-            manager.addAxiom(ontology, NamedRestrictionGenerator.createRestriction(bearerOf, aClass));
-            val involves = factory.getOWLObjectProperty(Vocab.INVOLVES);
-            manager.addAxiom(ontology, NamedRestrictionGenerator.createRestriction(involves, aClass));
-            manager.addAxiom(ontology, AbsenceClassGenerator.createAbsenceClassAxiom(aClass));
     }
 
     def classFromTyperef(typeref: Element): OWLClassExpression = {
@@ -264,11 +265,22 @@ object PhenexToOWL extends OWLTask {
             val qualifiers = typeref.getChildren("qualifier", phenoNS);
             val genus = factory.getOWLClass(OBOUtil.iriForTermID(genusID)); 
             if (qualifiers.isEmpty()) {
-                return genus
+                return genus;
             } else {
                 val operands: mutable.Set[OWLClassExpression] = mutable.Set(genus);
             operands.addAll(qualifiers.map(restrictionFromQualifier(_)));
             return factory.getOWLObjectIntersectionOf(operands);
+            }
+    }
+
+    def namedClassFromTyperef(typeref: Element): OWLClass = {
+            classFromTyperef(typeref) match {
+            case named: OWLClass => named;
+            case expression => {
+                val named = nextClass();
+                manager.addAxiom(ontology, (named EquivalentTo expression));
+                named;
+            }
             }
     }
 
