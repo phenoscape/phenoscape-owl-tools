@@ -41,6 +41,7 @@ import org.phenoscape.owl.NegationClassGenerator
 import org.phenoscape.owl.ReverseDevelopsFromRuleGenerator
 import org.phenoscape.owl.NegationHierarchyAsserter
 import org.semanticweb.owlapi.reasoner.InferenceType
+import org.phenoscape.owl.EQCharactersGenerator
 
 object PhenoscapeKB extends KnowledgeBaseBuilder {
 
@@ -60,6 +61,8 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     write(ro, cwd + "/staging/kb/ro-slim.owl");
     val phenoscapeVocab = load(new File(cwd + "/staging/sources/phenoscape-vocab.owl"));
     write(phenoscapeVocab, cwd + "/staging/kb/phenoscape-vocab.owl");
+    val attributes = load(new File(cwd + "/staging/sources/character_slims.obo"));
+    write(attributes, cwd + "/staging/kb/attributes.owl");
     val uberonReferences = load(new File(cwd + "/staging/sources/references.owl"));
     val uberonChebi = load(new File(cwd + "/staging/sources/chebi_import.owl"));
     val uberonCL = load(new File(cwd + "/staging/sources/cl_import.owl"));
@@ -105,6 +108,10 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     val anatomicalEntities = coreReasoner.getSubClasses(Class(Vocab.ANATOMICAL_ENTITY), false).getFlattened().filterNot(_.isOWLNothing());
     val qualities = coreReasoner.getSubClasses(Class(Vocab.QUALITY), false).getFlattened().filterNot(_.isOWLNothing());
     coreReasoner.dispose();
+    
+    step("Generating EQ characters for analyses");
+    val attributeQualities = attributes.getClassesInSignature();
+    val eqCharacters = manager.createOntology(EQCharactersGenerator.generateEQCharacters(anatomicalEntities, attributeQualities));
 
     step("Creating VTO instances");
     val vtoIndividuals = TaxonomyConverter.createInstanceOntology(vto);
@@ -183,7 +190,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     val developsFromRulesForAbsence = manager.createOntology(anatomicalEntities.map(ReverseDevelopsFromRuleGenerator.createRule(_)).toSet[OWLAxiom]);
 
     val allTBox = combine(uberon, homology, pato, bspo, go, vto, zfa, xao, hp, 
-            hpEQ, zfaToUberon, xaoToUberon, fmaToUberon, parts, hasParts, inherers, inherersInPartOf, towards, involvers, homologies, absences, absenceNegationEquivalences, developsFromRulesForAbsence, tboxFromData, ro); //phenoscapeVocab
+            hpEQ, zfaToUberon, xaoToUberon, fmaToUberon, eqCharacters, parts, hasParts, inherers, inherersInPartOf, towards, involvers, homologies, absences, absenceNegationEquivalences, developsFromRulesForAbsence, tboxFromData, ro); //phenoscapeVocab
     println("tbox class count: " + allTBox.getClassesInSignature().size());
     println("tbox logical axiom count: " + allTBox.getLogicalAxiomCount());
     val tboxReasoner = reasoner(allTBox);
@@ -203,7 +210,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     }
     
     step("Writing inferred tbox axioms");
-    write(combine(parts, hasParts, inherers, inherersInPartOf, towards, involvers, homologies, absences, absenceNegationEquivalences, developsFromRulesForAbsence, inferredAxioms), cwd + "/staging/kb/generated.owl");
+    write(combine(eqCharacters, parts, hasParts, inherers, inherersInPartOf, towards, involvers, homologies, absences, absenceNegationEquivalences, developsFromRulesForAbsence, inferredAxioms), cwd + "/staging/kb/generated.owl");
     
     step("Materializing subclass closure");
     MaterializeSubClassOfClosureToNTriples.writeClosureToFile(tboxReasoner, new File(cwd + "/staging/kb/hierarchy_closure.nt"));
