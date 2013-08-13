@@ -33,11 +33,7 @@ class KnowledgeBaseBuilder extends App {
             }
     }
 
-    def reasoner(ontology: OWLOntology): OWLReasoner = {
-            reasoner(Seq(ontology));
-    }
-
-    def reasoner(ontologies: Seq[OWLOntology]): OWLReasoner = {
+    def reasoner(ontologies: OWLOntology*): OWLReasoner = {
             val allAxioms = combine(ontologies:_*);
             new ElkReasonerFactory().createReasoner(allAxioms);
     }

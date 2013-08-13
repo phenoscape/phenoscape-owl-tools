@@ -17,9 +17,9 @@ object EQCharactersGenerator {
     val manager = OWLManager.createOWLOntologyManager();
     val partOf = ObjectProperty(Vocab.PART_OF);
     val involves = ObjectProperty(Vocab.INVOLVES);
-    val limbFin = Class(Vocab.LIMB_FIN);
-    val entityTerm = factory.getOWLAnnotationProperty(IRI.create("http://example.org/entity_term"));
-    val qualityTerm = factory.getOWLAnnotationProperty(IRI.create("http://example.org/quality_term"));
+    val eqCharacterToken = Class(Vocab.EQ_CHARACTER_TOKEN);
+    val entityTerm = factory.getOWLAnnotationProperty(IRI.create("http://example.org/entity_term")); //FIXME better ID
+    val qualityTerm = factory.getOWLAnnotationProperty(IRI.create("http://example.org/quality_term")); //FIXME better ID
     val mayHaveState = factory.getOWLObjectProperty(Vocab.MAY_HAVE_STATE_VALUE);
     val dcDescription = factory.getOWLAnnotationProperty(DublinCoreVocabulary.DESCRIPTION.getIRI());
 
@@ -33,7 +33,7 @@ object EQCharactersGenerator {
 
     def composeEntityAndQualityInvolves(entity: OWLClass, quality: OWLClass): OWLEquivalentClassesAxiom = {
             val composition = Class(compositionIRI(entity, quality));
-            composition EquivalentTo ((involves some entity) and (involves some quality));
+            composition EquivalentTo ((involves some entity) and (involves some quality) and eqCharacterToken);
     }
 
     def annotateComposedEntityAndQuality(entity: OWLClass, quality: OWLClass): Set[OWLAnnotationAssertionAxiom] = {

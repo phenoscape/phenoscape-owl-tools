@@ -3,6 +3,7 @@ package org.phenoscape.owl
 import org.junit.Test
 import junit.framework.Assert
 import org.semanticweb.owlapi.apibinding.OWLManager
+import scala.collection.JavaConversions._
 
 class NegationHierarchyAsserterTest {
 
@@ -16,7 +17,7 @@ class NegationHierarchyAsserterTest {
 		input.close();
 		expectation.close();
 		Assert.assertTrue(ontology.getAxiomCount() < expectedOntology.getAxiomCount());
-        NegationHierarchyAsserter.assertNegationHierarchy(ontology);
+        manager.addAxioms(ontology, NegationHierarchyAsserter.assertNegationHierarchy(ontology));
         Assert.assertTrue(ontology.getAxiomCount() == expectedOntology.getAxiomCount());
         Assert.assertEquals(ontology.getAxioms(), expectedOntology.getAxioms());
 	}

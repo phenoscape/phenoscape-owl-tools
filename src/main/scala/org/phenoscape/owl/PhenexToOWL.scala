@@ -45,6 +45,7 @@ object PhenexToOWL extends OWLTask {
     val denotes_exhibiting = ObjectProperty(Vocab.DENOTES_EXHIBITING);
     val present = Class(Vocab.PRESENT);
     val absent = Class(Vocab.ABSENT);
+    val eqCharacterToken = Class(Vocab.EQ_CHARACTER_TOKEN);
     val lacksAllPartsOfType = Class(Vocab.LACKS_ALL_PARTS_OF_TYPE);
     val organism = Class(Vocab.MULTI_CELLULAR_ORGANISM);
     val characterToOWLMap = mutable.Map[String, OWLNamedIndividual]();
@@ -221,13 +222,7 @@ object PhenexToOWL extends OWLTask {
                 return;
             } else {
                 manager.addAxiom(ontology, owlPhenotype SubClassOf eq_phenotype);
-                involved.addAll(eq_phenotype.getClassesInSignature()); //FIXME infer involved
-                manager.addAxioms(ontology, involved.map(involvee => {
-                    //FIXME should create named classes for entity postcompositions for use in involves; it's possible these can get classified
-                    // under named structure types in the ontology
-                    val involvesClass = Class(NamedRestrictionGenerator.getRestrictionIRI(Vocab.INVOLVES, involvee.getIRI()));
-                    owlState Type involvesClass;
-                }));
+                manager.addAxiom(ontology, owlPhenotype SubClassOf eqCharacterToken);
             }
     }
 

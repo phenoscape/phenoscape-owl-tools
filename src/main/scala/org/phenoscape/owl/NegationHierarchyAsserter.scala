@@ -29,10 +29,8 @@ object NegationHierarchyAsserter extends OWLTask {
 			}
 	}
 
-	def assertNegationHierarchy(ontology: OWLOntology): Unit = {
-			val manager = ontology.getOWLOntologyManager();
-			val ontologies = ontology.getImportsClosure();
-			val allClasses = ontology.getClassesInSignature(true);
+	def assertNegationHierarchy(ontologies: OWLOntology*): Set[OWLAxiom] = {
+			val allClasses = ontologies.map(_.getClassesInSignature(true)).flatten;
 			val negatesIndex: mutable.Map[IRI, mutable.Set[IRI]] = mutable.Map();
 			val negatedByIndex: mutable.Map[IRI, mutable.Set[IRI]] = mutable.Map();
 			ontologies.foreach(ont => {
@@ -42,8 +40,8 @@ object NegationHierarchyAsserter extends OWLTask {
 					negatedByIndex.getOrElseUpdate(annot.getValue().asInstanceOf[IRI], mutable.Set()).add(annot.getSubject().asInstanceOf[IRI]);
 				});
 			});
-			val axioms = allClasses.map(createSubclassOfAxioms(_, negatesIndex, negatedByIndex, ontologies));
-			axioms.foreach(setOfAxioms => manager.addAxioms(ontology, setOfAxioms.toSet[OWLAxiom]));
+			val axioms = allClasses.map(createSubclassOfAxioms(_, negatesIndex, negatedByIndex, ontologies.toSet));
+			axioms.toSet.flatten;
 	}
 
 	def createSubclassOfAxioms(ontClass: OWLClass, negatesIndex: Map[IRI, Set[IRI]], negatedByIndex: Map[IRI, Set[IRI]], ontologies: Set[OWLOntology]): Iterable[OWLSubClassOfAxiom] = {
