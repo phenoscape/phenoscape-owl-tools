@@ -112,7 +112,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     coreReasoner.dispose();
     
     step("Generating EQ characters for analyses");
-    val attributeQualities = attributes.getClassesInSignature();
+    val attributeQualities = attributes.getClassesInSignature() + Class(Vocab.HAS_NUMBER_OF);
     val eqCharacters = manager.createOntology(EQCharactersGenerator.generateEQCharacters(anatomicalEntities, attributeQualities));
 
     step("Creating VTO instances");

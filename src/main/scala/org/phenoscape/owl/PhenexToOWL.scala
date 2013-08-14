@@ -40,7 +40,7 @@ object PhenexToOWL extends OWLTask {
     val hasPart = ObjectProperty(Vocab.HAS_PART);
     val bearerOf = ObjectProperty(Vocab.BEARER_OF);
     val inheres_in = ObjectProperty(Vocab.INHERES_IN);
-    val exhibits = ObjectProperty(Vocab.exhibits);
+    val exhibits = ObjectProperty(Vocab.EXHIBITS);
     val denotes = ObjectProperty(Vocab.DENOTES);
     val denotes_exhibiting = ObjectProperty(Vocab.DENOTES_EXHIBITING);
     val present = Class(Vocab.PRESENT);
@@ -216,7 +216,7 @@ object PhenexToOWL extends OWLTask {
             case (null, quality: OWLClass, relatedEntity: OWLClass) => (quality and (towards some relatedEntity));
             case (entity: OWLClass, quality: OWLClass, null) => (quality and (inheres_in some entity));
             case (entity: OWLClass, quality: OWLClass, relatedEntity: OWLClass) => (quality and (inheres_in some entity) and (towards some relatedEntity));
-            //TODO comparisons, etc.
+            //TODO comparisons, etc., "not"
             }
             if (eq_phenotype == null) {
                 return;
@@ -249,7 +249,7 @@ object PhenexToOWL extends OWLTask {
                         val phenotype = nextIndividual();
                         addClass(phenotype, owlPhenotype);
                         addPropertyAssertion(Vocab.HAS_MEMBER, owlTaxon, organism);
-                        addPropertyAssertion(Vocab.exhibits, organism, phenotype);
+                        addPropertyAssertion(Vocab.EXHIBITS, organism, phenotype);
                     });
                 });
             });

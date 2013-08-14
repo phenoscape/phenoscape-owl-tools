@@ -9,7 +9,7 @@ object Vocab {
 	val BEARER_OF = IRI.create("http://purl.obolibrary.org/obo/BFO_0000053");
 	val INHERES_IN = IRI.create("http://purl.obolibrary.org/obo/BFO_0000052");
 	val INHERES_IN_PART_OF = IRI.create("http://purl.obolibrary.org/obo/RO_0002314");
-	val exhibits = IRI.create("http://purl.org/phenoscape/vocab/exhibits");
+	val EXHIBITS = IRI.create("http://purl.org/phenoscape/vocab/exhibits");
 	val DEVELOPS_FROM = IRI.create("http://purl.obolibrary.org/obo/RO_0002202");
 	val NEGATES = IRI.create("http://purl.org/phenoscape/vocab/negation_of_class");
 	val MAY_HAVE_STATE_VALUE = IRI.create("http://purl.org/phenoscape/vocab/may_have_state_value");
@@ -66,4 +66,6 @@ object Vocab {
 	val MULTI_CELLULAR_ORGANISM = IRI.create("http://purl.obolibrary.org/obo/UBERON_0000468");
 	val ABSENCE_OF = IRI.create("http://purl.org/phenoscape/vocab/absence_of"); //FIXME change IRI
 	val EQ_CHARACTER_TOKEN = IRI.create("http://purl.org/phenoscape/vocab/EQCharacterToken");
+	val HAS_NUMBER_OF = IRI.create("http://purl.obolibrary.org/obo/PATO_0001555");
+	
 }
