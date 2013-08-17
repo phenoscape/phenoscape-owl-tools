@@ -3,20 +3,30 @@ package org.phenoscape.owl.build
 import java.io.BufferedReader
 import java.io.File
 import java.io.StringReader
+
 import scala.collection.JavaConversions._
-import scala.collection.Set
 import scala.collection.mutable
 import scala.io.Source
+
 import org.apache.commons.io.FileUtils
-import org.nescent.strix.OWL.Class
-import org.nescent.strix.OWL.ObjectProperty
+import org.apache.log4j.BasicConfigurator
+import org.apache.log4j.Level
+import org.apache.log4j.Logger
+import org.nescent.strix.OWL._
 import org.obolibrary.obo2owl.Obo2Owl
 import org.obolibrary.oboformat.parser.OBOFormatParser
+import org.phenoscape.owl.AbsenceClassGenerator
+import org.phenoscape.owl.EQCharactersGenerator
 import org.phenoscape.owl.KnowledgeBaseBuilder
 import org.phenoscape.owl.MaterializeInferences
+import org.phenoscape.owl.MaterializeSubClassOfClosure
+import org.phenoscape.owl.MaterializeSubClassOfClosureToNTriples
 import org.phenoscape.owl.NamedRestrictionGenerator
+import org.phenoscape.owl.NegationClassGenerator
+import org.phenoscape.owl.NegationHierarchyAsserter
 import org.phenoscape.owl.PhenexToOWL
 import org.phenoscape.owl.PropertyNormalizer
+import org.phenoscape.owl.ReverseDevelopsFromRuleGenerator
 import org.phenoscape.owl.TaxonomyConverter
 import org.phenoscape.owl.Vocab
 import org.phenoscape.owl.mod.human.HumanPhenotypesToOWL
@@ -30,18 +40,6 @@ import org.phenoscape.owl.mod.zfin.ZFINGeneticMarkersToOWL
 import org.phenoscape.owl.mod.zfin.ZFINPhenotypesToOWL
 import org.phenoscape.owl.mod.zfin.ZFINPreviousGeneNamesToOWL
 import org.semanticweb.owlapi.model.OWLAxiom
-import eu.trowl.owlapi3.rel.reasoner.dl.RELReasonerFactory
-import org.apache.log4j.BasicConfigurator
-import org.apache.log4j.Logger
-import org.apache.log4j.Level
-import org.phenoscape.owl.MaterializeSubClassOfClosure
-import org.phenoscape.owl.MaterializeSubClassOfClosureToNTriples
-import org.phenoscape.owl.AbsenceClassGenerator
-import org.phenoscape.owl.NegationClassGenerator
-import org.phenoscape.owl.ReverseDevelopsFromRuleGenerator
-import org.phenoscape.owl.NegationHierarchyAsserter
-import org.semanticweb.owlapi.reasoner.InferenceType
-import org.phenoscape.owl.EQCharactersGenerator
 
 object PhenoscapeKB extends KnowledgeBaseBuilder {
 
