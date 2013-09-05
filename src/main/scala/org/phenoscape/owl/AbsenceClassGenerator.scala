@@ -20,6 +20,7 @@ object AbsenceClassGenerator extends OWLTask {
 	val lacksAllPartsOfType = Class(Vocab.LACKS_ALL_PARTS_OF_TYPE);
 	val towards = ObjectProperty(Vocab.TOWARDS);
 	val absenceOf = factory.getOWLAnnotationProperty(Vocab.ABSENCE_OF);
+	val involves = ObjectProperty(Vocab.INVOLVES);
 	val manager = this.getOWLOntologyManager();
 
 	def main(args: Array[String]): Unit = {
@@ -46,6 +47,7 @@ object AbsenceClassGenerator extends OWLTask {
 	        val notHasPartClass = Class(NegationClassGenerator.getNegationIRI(NamedRestrictionGenerator.getRestrictionIRI(hasPart.getIRI(), classIRI)));
 	        axioms.add(absenceClass EquivalentTo notHasPartClass);
 	        axioms.add(absenceClass Annotation (absenceOf, ontClass.getIRI()));
+	        //axioms.add(absenceClass SubClassOf (involves some ontClass)); //this is dangerous
 	        return axioms;
 	}
 

@@ -12,27 +12,33 @@ import org.semanticweb.owlapi.model.OWLSubClassOfAxiom
 
 object ReverseDevelopsFromRuleGenerator extends OWLTask {
 
-	val hasPart = ObjectProperty(Vocab.HAS_PART);
-	val developsFrom = ObjectProperty(Vocab.DEVELOPS_FROM);
+    //FIXME rename to reverse absence rules
 
-	def main(args: Array[String]): Unit = {
-			val manager = this.getOWLOntologyManager();
-			val ontology = manager.loadOntologyFromOntologyDocument(new File(args(0)));
-			val developsFromOntology = generateDevelopsFromRules(ontology);
-			manager.saveOntology(developsFromOntology, IRI.create(new File(args(1))));
-	}
+    val hasPart = ObjectProperty(Vocab.HAS_PART);
+    val partOf = ObjectProperty(Vocab.PART_OF);
+    val developsFrom = ObjectProperty(Vocab.DEVELOPS_FROM);
 
-	def generateDevelopsFromRules(ontology: OWLOntology): OWLOntology = {
-			val manager = ontology.getOWLOntologyManager();
-			val factory = manager.getOWLDataFactory();
-			val newIRI = ontology.getOntologyID().getOntologyIRI().toString() + "/reverse_develops_from_rules.owl";
-			val developsFromOntology = manager.createOntology(IRI.create(newIRI));
-			ontology.getClassesInSignature(false).map(createRule(_)).foreach(manager.addAxiom(developsFromOntology, _));
-			return developsFromOntology;  
-	}
+    def main(args: Array[String]): Unit = {
+            val manager = this.getOWLOntologyManager();
+            val ontology = manager.loadOntologyFromOntologyDocument(new File(args(0)));
+            val developsFromOntology = generateDevelopsFromRules(ontology);
+            manager.saveOntology(developsFromOntology, IRI.create(new File(args(1))));
+    }
 
-	def createRule(ontClass: OWLClass): OWLSubClassOfAxiom = {
-			(hasPart some (developsFrom some ontClass)) SubClassOf (hasPart some ontClass);
-	}
+    def generateDevelopsFromRules(ontology: OWLOntology): OWLOntology = {
+            val manager = ontology.getOWLOntologyManager();
+            val factory = manager.getOWLDataFactory();
+            val newIRI = ontology.getOntologyID().getOntologyIRI().toString() + "/reverse_develops_from_rules.owl";
+            val developsFromOntology = manager.createOntology(IRI.create(newIRI));
+            ontology.getClassesInSignature(false).flatMap(createRules(_)).foreach(manager.addAxiom(developsFromOntology, _));
+            return developsFromOntology;  
+    }
+
+    def createRules(ontClass: OWLClass): Set[OWLSubClassOfAxiom] = {
+            Set(
+                    (hasPart some (developsFrom some ontClass)) SubClassOf (hasPart some ontClass),
+                    (hasPart some (partOf some ontClass)) SubClassOf (hasPart some ontClass)
+                    );
+    }
 
 }

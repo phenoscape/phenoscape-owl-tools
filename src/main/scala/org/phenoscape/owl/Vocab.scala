@@ -65,6 +65,7 @@ object Vocab {
 	val PHP = IRI.create("http://example.org/php"); // part_of some homologous_to some part_of... experimental
 	val MULTI_CELLULAR_ORGANISM = IRI.create("http://purl.obolibrary.org/obo/UBERON_0000468");
 	val ABSENCE_OF = IRI.create("http://purl.org/phenoscape/vocab/absence_of"); //FIXME change IRI
+	val IMPLIES_PRESENCE_OF = IRI.create("http://purl.org/phenoscape/vocab/implies_presence_of"); //FIXME change IRI
 	val EQ_CHARACTER_TOKEN = IRI.create("http://purl.org/phenoscape/vocab/EQCharacterToken");
 	val HAS_NUMBER_OF = IRI.create("http://purl.obolibrary.org/obo/PATO_0001555");
 	

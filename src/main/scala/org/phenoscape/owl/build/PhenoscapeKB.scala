@@ -106,7 +106,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     step("Querying entities and qualities");
     val coreReasoner = reasoner(uberon, pato, bspo, go, ro, phenoscapeVocab); //phenoscapeVocab //causing problem with reasoner?
     val anatomicalEntities = coreReasoner.getSubClasses(Class(Vocab.ANATOMICAL_ENTITY), false).getFlattened().filterNot(_.isOWLNothing());
-    val qualities = coreReasoner.getSubClasses(Class(Vocab.QUALITY), false).getFlattened().filterNot(_.isOWLNothing());
+    //val qualities = coreReasoner.getSubClasses(Class(Vocab.QUALITY), false).getFlattened().filterNot(_.isOWLNothing());
     coreReasoner.dispose();
     
     step("Generating EQ characters for analyses");
@@ -116,11 +116,11 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     step("Creating VTO instances");
     val vtoIndividuals = TaxonomyConverter.createInstanceOntology(vto);
     write(vtoIndividuals, cwd + "/staging/kb/vto-individuals.owl");
-    step("Materializing VTO closure");
-    val materializedVTOClasses = MaterializeSubClassOfClosure.materialize(vto);
-    val materializedVTOIndividuals = TaxonomyConverter.createInstanceOntology(materializedVTOClasses);
-    step("Writing VTO closure");
-    write(materializedVTOIndividuals, cwd + "/staging/kb/vto-individuals-closure.owl");
+    //step("Materializing VTO closure");
+    //val materializedVTOClasses = MaterializeSubClassOfClosure.materialize(vto);
+    //val materializedVTOIndividuals = TaxonomyConverter.createInstanceOntology(materializedVTOClasses);
+    //step("Writing VTO closure");
+    //write(materializedVTOIndividuals, cwd + "/staging/kb/vto-individuals-closure.owl");
 
     step("Converting NeXML to OWL");
     cd(NEXML);
@@ -177,20 +177,21 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
             humanPhenotypeData.getTBoxAxioms(false) ++ 
             nexmlTBoxAxioms);
     
-    val parts = manager.createOntology(anatomicalEntities.map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.PART_OF), _)).flatten);
+    //val parts = manager.createOntology(anatomicalEntities.map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.PART_OF), _)).flatten);
     val hasParts = manager.createOntology(anatomicalEntities.map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.HAS_PART), _)).flatten);
-    val inherers = manager.createOntology(anatomicalEntities.map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.INHERES_IN), _)).flatten);
-    val inherersInPartOf = manager.createOntology(anatomicalEntities.map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.INHERES_IN_PART_OF), _)).flatten);
-    val towards = manager.createOntology(qualities.map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.TOWARDS), _)).flatten);
-    val involvers = manager.createOntology((anatomicalEntities ++ qualities).map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.INVOLVES), _)).flatten);
-    val homologies = manager.createOntology(anatomicalEntities.map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.PHP), _)).flatten);
+    val presences = manager.createOntology(anatomicalEntities.map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.IMPLIES_PRESENCE_OF), _)).flatten)
+    //val inherers = manager.createOntology(anatomicalEntities.map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.INHERES_IN), _)).flatten);
+    //val inherersInPartOf = manager.createOntology(anatomicalEntities.map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.INHERES_IN_PART_OF), _)).flatten);
+    //val towards = manager.createOntology(qualities.map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.TOWARDS), _)).flatten);
+    //val involvers = manager.createOntology((anatomicalEntities ++ qualities).map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.INVOLVES), _)).flatten);
+    //val homologies = manager.createOntology(anatomicalEntities.map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.PHP), _)).flatten);
     val absences = manager.createOntology(anatomicalEntities.flatMap(AbsenceClassGenerator.createAbsenceClass(_)));
     val namedHasPartClasses = anatomicalEntities.map(_.getIRI()).map(NamedRestrictionGenerator.getRestrictionIRI(Vocab.HAS_PART, _)).map(Class(_));
     val absenceNegationEquivalences = manager.createOntology(namedHasPartClasses.flatMap(NegationClassGenerator.createNegationClassAxioms(_, hasParts)));
-    val developsFromRulesForAbsence = manager.createOntology(anatomicalEntities.map(ReverseDevelopsFromRuleGenerator.createRule(_)).toSet[OWLAxiom]);
+    val developsFromRulesForAbsence = manager.createOntology(anatomicalEntities.flatMap(ReverseDevelopsFromRuleGenerator.createRules(_)).toSet[OWLAxiom]);
 
     val allTBox = combine(uberon, homology, pato, bspo, go, vto, zfa, xao, hp, 
-            hpEQ, zfaToUberon, xaoToUberon, fmaToUberon, eqCharacters, parts, hasParts, inherers, inherersInPartOf, towards, involvers, homologies, absences, absenceNegationEquivalences, developsFromRulesForAbsence, tboxFromData, ro, phenoscapeVocab); //phenoscapeVocab
+            hpEQ, zfaToUberon, xaoToUberon, fmaToUberon, hasParts, presences, absences, absenceNegationEquivalences, developsFromRulesForAbsence, tboxFromData, ro, phenoscapeVocab, eqCharacters);
     println("tbox class count: " + allTBox.getClassesInSignature().size());
     println("tbox logical axiom count: " + allTBox.getLogicalAxiomCount());
     
@@ -214,11 +215,13 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     }
     negationReasoner.dispose();
     
-    step("Writing inferred tbox axioms");
-    write(combine(eqCharacters, parts, hasParts, inherers, inherersInPartOf, towards, involvers, homologies, absences, absenceNegationEquivalences, developsFromRulesForAbsence, inferredAxioms), cwd + "/staging/kb/generated.owl");
+    step("Writing generated and inferred tbox axioms");
+    write(combine(hasParts, presences, absences, absenceNegationEquivalences, developsFromRulesForAbsence, inferredAxioms, eqCharacters), cwd + "/staging/kb/generated.owl");
     
-    step("Materializing subclass closure");
-    MaterializeSubClassOfClosureToNTriples.writeClosureToFile(tboxReasoner, new File(cwd + "/staging/kb/hierarchy_closure.nt"));
+    step("Writing tbox axioms for ELK");
+    write(combine(allTBox, inferredAxioms), cwd + "/staging/kb/tbox.owl");
+    //step("Materializing subclass closure");
+    //MaterializeSubClassOfClosureToNTriples.writeClosureToFile(tboxReasoner, new File(cwd + "/staging/kb/hierarchy_closure.nt"));
     tboxReasoner.dispose();
     
     step("Done");
