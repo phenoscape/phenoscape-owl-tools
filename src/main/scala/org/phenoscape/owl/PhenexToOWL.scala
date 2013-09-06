@@ -36,6 +36,7 @@ object PhenexToOWL extends OWLTask {
     val nexmlNS = Namespace.getNamespace("http://www.nexml.org/2009");
     val phenoNS = Namespace.getNamespace("http://www.bioontologies.org/obd/schema/pheno");
     val rdfsNS = Namespace.getNamespace("http://www.w3.org/2000/01/rdf-schema#");
+    val phenoscapeComplement = IRI.create("http://purl.obolibrary.org/obo/PHENOSCAPE_complement_of");
     val towards = ObjectProperty(Vocab.TOWARDS);
     val hasPart = ObjectProperty(Vocab.HAS_PART);
     val bearerOf = ObjectProperty(Vocab.BEARER_OF);
@@ -239,10 +240,18 @@ object PhenexToOWL extends OWLTask {
             val characterID = cell.getAttributeValue("char");
             val owlCharacter = characterToOWLMap(characterID);
             val stateID = cell.getAttributeValue("state");
-            stateToOWLMap.get(stateID).foreach(owlState => { //FIXME missing stateIDs in the map refer to polymorphisms: these are being skipped
-                addPropertyAssertion(Vocab.BELONGS_TO_CHARACTER, owlCell, owlCharacter);
-                addPropertyAssertion(Vocab.BELONGS_TO_TU, owlCell, owlOTU);
-                addPropertyAssertion(Vocab.HAS_STATE, owlCell, owlState);
+            addPropertyAssertion(Vocab.BELONGS_TO_CHARACTER, owlCell, owlCharacter);
+            addPropertyAssertion(Vocab.BELONGS_TO_TU, owlCell, owlOTU);
+            // We are flattening uncertain/polymorphic states into multiple individual states related to the matrix cell
+            val states = if (stateToOWLMap.containsKey(stateID)) {
+                Set(stateID);
+            } else {
+                getElementByID(stateID).getChildren("member", nexmlNS).map(_.getAttributeValue("state"));
+            } 
+            states.foreach(singleState => {
+                stateToOWLMap.get(stateID).foreach(owlState => {
+                    addPropertyAssertion(Vocab.HAS_STATE, owlCell, owlState);
+                });
                 taxonOTUToValidTaxonMap.get(otuID).foreach(owlTaxon => {
                     stateToOWLPhenotypeMap.get(stateID).flatten.foreach(owlPhenotype => {
                         val organism = nextIndividual();
@@ -279,11 +288,15 @@ object PhenexToOWL extends OWLTask {
             }
     }
 
-    def restrictionFromQualifier(qualifier: Element): OWLObjectSomeValuesFrom = {
+    def restrictionFromQualifier(qualifier: Element): OWLClassExpression = {
             val propertyIRI = OBOUtil.iriForTermID(qualifier.getAttributeValue("relation"));
-            val property = factory.getOWLObjectProperty(propertyIRI);
             val filler = classFromTyperef(qualifier.getChild("holds_in_relation_to", phenoNS).getChild("typeref", phenoNS));
-            return factory.getOWLObjectSomeValuesFrom(property, filler);
+            if (propertyIRI == phenoscapeComplement) {
+                return factory.getOWLObjectComplementOf(filler);
+            } else {
+                val property = factory.getOWLObjectProperty(propertyIRI);
+                return factory.getOWLObjectSomeValuesFrom(property, filler);
+            }
     }
 
     private
