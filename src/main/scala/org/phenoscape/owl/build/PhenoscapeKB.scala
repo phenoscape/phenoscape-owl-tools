@@ -55,8 +55,13 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     cd(KB);
 
     step("Loading ontologies");
-    val ro = load(new File(cwd + "/staging/sources/ro-slim.owl"));
-    write(ro, cwd + "/staging/kb/ro-slim.owl");
+    val roAnnotations = load(new File(cwd + "/staging/sources/ro-annotations.owl"));
+    val bfoMinimal = load(new File(cwd + "/staging/sources/bfo-classes-minimal.owl"));
+    val roCore = load(new File(cwd + "/staging/sources/ro-core.owl"));
+    val temporalIntervals = load(new File(cwd + "/staging/sources/temporal-intervals.owl"));
+    val roRelease = load(new File(cwd + "/staging/sources/ro.owl"));
+    val ro = combine(roRelease, temporalIntervals, roCore, bfoMinimal, roAnnotations);
+    write(ro, cwd + "/staging/kb/ro.owl");
     val phenoscapeVocab = load(new File(cwd + "/staging/sources/phenoscape-vocab.owl"));
     write(phenoscapeVocab, cwd + "/staging/kb/phenoscape-vocab.owl");
     val attributes = load(new File(cwd + "/staging/sources/character_slims.obo"));
@@ -68,9 +73,8 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     val uberonTaxon = load(new File(cwd + "/staging/sources/ncbitaxon_import.owl"));
     val uberonPATO = load(new File(cwd + "/staging/sources/pato_import.owl"));
     val uberonPR = load(new File(cwd + "/staging/sources/pr_import.owl"));
-    val uberonMerged = load(new File(cwd + "/staging/sources/merged.owl"));
     val ext = load(new File(cwd + "/staging/sources/ext.owl"));
-    val uberon = combine(uberonMerged, ext, uberonReferences, uberonChebi, uberonGO, uberonTaxon, uberonPATO, uberonPR);
+    val uberon = combine(ext, uberonReferences, uberonChebi, uberonGO, uberonTaxon, uberonPATO, uberonPR);
     write(uberon, cwd + "/staging/kb/uberon.owl");
     val homology = load(new File(cwd + "/staging/sources/homology.owl"));
     write(homology, cwd + "/staging/kb/homology.owl");
