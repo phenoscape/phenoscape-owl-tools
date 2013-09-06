@@ -57,20 +57,23 @@ object ZFINPhenotypesToOWL extends OWLTask {
             val phenotype = nextIndividual();
             axioms.add(phenotype Type annotationClass);
             axioms.add(factory.getOWLDeclarationAxiom(phenotype));
-            val superStructureID = StringUtils.stripToNull(items(3));
-            val subStructureID = StringUtils.stripToNull(items(5));
+            val superStructureID = StringUtils.stripToNull(items(7));
+            val subStructureID = StringUtils.stripToNull(items(3));
+            val relationID = StringUtils.stripToNull(items(5));
             val entityTerm = if (subStructureID == null) {
                 Class(OBOUtil.iriForTermID(superStructureID));
             } else {
                 val superStructure = Class(OBOUtil.iriForTermID(superStructureID));
                 val subStructure = Class(OBOUtil.iriForTermID(subStructureID));
+                val relation = ObjectProperty(OBOUtil.iriForTermID(relationID));
                 val namedComposition = nextClass();
-                axioms.add(namedComposition EquivalentTo (subStructure and (partOf some superStructure)));
+                axioms.add(namedComposition EquivalentTo (subStructure and (relation some superStructure)));
                 namedComposition;
             }
-            val qualityTerm = Class(OBOUtil.iriForTermID(StringUtils.stripToNull(items(11))));
-            val relatedSuperStructureID = StringUtils.stripToNull(items(7));
-            val relatedSubStructureID = StringUtils.stripToNull(items(9));
+            val qualityTerm = Class(OBOUtil.iriForTermID(StringUtils.stripToNull(items(9))));
+            val relatedSuperStructureID = StringUtils.stripToNull(items(16));
+            val relatedSubStructureID = StringUtils.stripToNull(items(12));
+            val relatedRelationID = StringUtils.stripToNull(items(14));
             val relatedEntityTerm = if (relatedSubStructureID == null) {
                 if (relatedSuperStructureID != null) {
                     Class(OBOUtil.iriForTermID(relatedSuperStructureID));
@@ -78,8 +81,9 @@ object ZFINPhenotypesToOWL extends OWLTask {
             } else {
                 val relatedSuperStructure = Class(OBOUtil.iriForTermID(relatedSuperStructureID));
                 val relatedSubStructure = Class(OBOUtil.iriForTermID(relatedSubStructureID));
+                val relatedRelation = ObjectProperty(OBOUtil.iriForTermID(relatedRelationID));
                 val namedComposition = nextClass();
-                axioms.add(namedComposition EquivalentTo (relatedSubStructure and (partOf some relatedSuperStructure)));
+                axioms.add(namedComposition EquivalentTo (relatedSubStructure and (relatedRelation some relatedSuperStructure)));
                 namedComposition;
             }
             val eq_phenotype = (entityTerm, qualityTerm, relatedEntityTerm) match {
