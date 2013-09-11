@@ -185,7 +185,9 @@ object PhenexToOWL extends OWLTask {
             val entityTerm = if (bearerElement != null) {
                 val bearerType = bearerElement.getChild("typeref", phenoNS);
                 if (bearerType != null) {
-                    namedClassFromTyperef(bearerType);
+                    val e = namedClassFromTyperef(bearerType);
+                    manager.addAxioms(ontology, AbsenceClassGenerator.generateAllAbsenceAxiomsForEntity(e));
+                    e;
                 } else { null; }
             } else { null; }
             val qualityElement = phenotype.getChild("quality", phenoNS);
@@ -200,7 +202,9 @@ object PhenexToOWL extends OWLTask {
                 if (relatedEntityElement != null) {
                     val relatedEntityType = relatedEntityElement.getChild("typeref", phenoNS);
                     if (relatedEntityType != null) {
-                        namedClassFromTyperef(relatedEntityType);
+                        val re = namedClassFromTyperef(relatedEntityType);
+                        manager.addAxioms(ontology, AbsenceClassGenerator.generateAllAbsenceAxiomsForEntity(re));
+                        re;
                     } else { null; }
                 } else { null; }
             } else { null; }
@@ -217,7 +221,7 @@ object PhenexToOWL extends OWLTask {
             case (null, quality: OWLClass, relatedEntity: OWLClass) => (quality and (towards some relatedEntity));
             case (entity: OWLClass, quality: OWLClass, null) => (quality and (inheres_in some entity));
             case (entity: OWLClass, quality: OWLClass, relatedEntity: OWLClass) => (quality and (inheres_in some entity) and (towards some relatedEntity));
-            //TODO comparisons, etc., "not"
+            //TODO comparisons, etc.
             }
             if (eq_phenotype == null) {
                 return;
@@ -282,7 +286,7 @@ object PhenexToOWL extends OWLTask {
             case named: OWLClass => named;
             case expression => {
                 val named = nextClass();
-                manager.addAxiom(ontology, (named EquivalentTo expression));
+                manager.addAxiom(ontology, (named SubClassOf expression));
                 named;
             }
             }

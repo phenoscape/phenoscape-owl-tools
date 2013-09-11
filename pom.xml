@@ -86,13 +86,8 @@
 		</dependency>
 		<dependency>
 			<groupId>net.sourceforge.owlapi</groupId>
-			<artifactId>owlapi-api</artifactId>
-			<version>3.4.2</version>
-		</dependency>
-		<dependency>
-			<groupId>net.sourceforge.owlapi</groupId>
-			<artifactId>owlapi-impl</artifactId>
-			<version>3.4.2</version>
+			<artifactId>owlapi-distribution</artifactId>
+			<version>3.4.4</version>
 		</dependency>
 		<dependency>
 			<groupId>uk.ac.manchester.cs</groupId>
