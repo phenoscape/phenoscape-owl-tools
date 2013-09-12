@@ -28,6 +28,7 @@ import org.semanticweb.owlapi.vocab.DublinCoreVocabulary
 import org.semanticweb.owlapi.vocab.OWLRDFVocabulary
 import org.semanticweb.owlapi.model.OWLOntology
 import scala.io.Source
+import org.semanticweb.owlapi.io.RDFXMLOntologyFormat
 
 object PhenexToOWL extends OWLTask {
 
@@ -60,7 +61,7 @@ object PhenexToOWL extends OWLTask {
 
     def main(args: Array[String]): Unit = {
             val inputFile = new File(args(0));
-            manager.saveOntology(this.convert(inputFile), IRI.create(new File(args(1))));
+            manager.saveOntology(this.convert(inputFile), new RDFXMLOntologyFormat(), IRI.create(new File(args(1))));
     }
 
     def convert(file: File): OWLOntology = {
@@ -253,11 +254,11 @@ object PhenexToOWL extends OWLTask {
                 getElementByID(stateID).getChildren("member", nexmlNS).map(_.getAttributeValue("state"));
             } 
             states.foreach(singleState => {
-                stateToOWLMap.get(stateID).foreach(owlState => {
+                stateToOWLMap.get(singleState).foreach(owlState => {
                     addPropertyAssertion(Vocab.HAS_STATE, owlCell, owlState);
                 });
                 taxonOTUToValidTaxonMap.get(otuID).foreach(owlTaxon => {
-                    stateToOWLPhenotypeMap.get(stateID).flatten.foreach(owlPhenotype => {
+                    stateToOWLPhenotypeMap.get(singleState).flatten.foreach(owlPhenotype => {
                         val organism = nextIndividual();
                         val phenotype = nextIndividual();
                         addClass(phenotype, owlPhenotype);
