@@ -258,7 +258,8 @@ object PhenexToOWL extends OWLTask {
                     addPropertyAssertion(Vocab.HAS_STATE, owlCell, owlState);
                 });
                 taxonOTUToValidTaxonMap.get(otuID).foreach(owlTaxon => {
-                    stateToOWLPhenotypeMap.get(singleState).flatten.foreach(owlPhenotype => {
+                    val phenotypes = stateToOWLPhenotypeMap.get(singleState).getOrElse(Set[OWLClass]());
+                    phenotypes.foreach(owlPhenotype => {
                         val organism = nextIndividual();
                         val phenotype = nextIndividual();
                         addClass(phenotype, owlPhenotype);
