@@ -18,26 +18,26 @@ import org.phenoscape.owl.OWLTask
 
 object ExpressionUtil {
 
-	val factory = OWLManager.getOWLDataFactory();
+  val factory = OWLManager.getOWLDataFactory();
 
-	def instantiateClassAssertion(individual: OWLIndividual, aClass: OWLClassExpression, context: OWLTask): Set[OWLAxiom] = {
-			val axioms = mutable.Set[OWLAxiom]();
-			if (aClass.isInstanceOf[OWLQuantifiedObjectRestriction]) { // either someValuesFrom or allValuesFrom
-				val restriction = aClass.asInstanceOf[OWLQuantifiedObjectRestriction];
-				val filler = restriction.getFiller();
-				val property = restriction.getProperty();
-				// need IRIs for individuals for type materialization
-				val value = context.nextIndividual();
-				axioms.add(this.factory.getOWLObjectPropertyAssertionAxiom(property, individual, value));
-				axioms.addAll(instantiateClassAssertion(value, filler, context));
-			} else if (aClass.isInstanceOf[OWLObjectIntersectionOf]) {
-				for (operand <- (aClass.asInstanceOf[OWLObjectIntersectionOf]).getOperands()) {
-					axioms.addAll(instantiateClassAssertion(individual, operand, context));
-				}
-			} else {
-				axioms.add(this.factory.getOWLClassAssertionAxiom(aClass, individual));
-			}
-			return axioms;
-	}
+  def instantiateClassAssertion(individual: OWLIndividual, aClass: OWLClassExpression, context: OWLTask): Set[OWLAxiom] = {
+    val axioms = mutable.Set[OWLAxiom]();
+    if (aClass.isInstanceOf[OWLQuantifiedObjectRestriction]) { // either someValuesFrom or allValuesFrom
+      val restriction = aClass.asInstanceOf[OWLQuantifiedObjectRestriction];
+      val filler = restriction.getFiller();
+      val property = restriction.getProperty();
+      // need IRIs for individuals for type materialization
+      val value = context.nextIndividual();
+      axioms.add(this.factory.getOWLObjectPropertyAssertionAxiom(property, individual, value));
+      axioms.addAll(instantiateClassAssertion(value, filler, context));
+    } else if (aClass.isInstanceOf[OWLObjectIntersectionOf]) {
+      for (operand <- (aClass.asInstanceOf[OWLObjectIntersectionOf]).getOperands()) {
+        axioms.addAll(instantiateClassAssertion(individual, operand, context));
+      }
+    } else {
+      axioms.add(this.factory.getOWLClassAssertionAxiom(aClass, individual));
+    }
+    return axioms;
+  }
 
 }

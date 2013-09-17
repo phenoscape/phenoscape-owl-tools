@@ -18,49 +18,49 @@ import org.semanticweb.owlapi.vocab.OWLRDFVocabulary
 
 object XenbaseGenesToOWL extends OWLTask {
 
-	val manager = this.getOWLOntologyManager();
-	val rdfsLabel = factory.getOWLAnnotationProperty(OWLRDFVocabulary.RDFS_LABEL.getIRI());
-	val hasExactSynonym = factory.getOWLAnnotationProperty(Vocab.HAS_EXACT_SYNONYM);
-	val hasRelatedSynonym = factory.getOWLAnnotationProperty(Vocab.HAS_RELATED_SYNONYM);
-	val geneClass = factory.getOWLClass(Vocab.GENE);
+  val manager = this.getOWLOntologyManager();
+  val rdfsLabel = factory.getOWLAnnotationProperty(OWLRDFVocabulary.RDFS_LABEL.getIRI());
+  val hasExactSynonym = factory.getOWLAnnotationProperty(Vocab.HAS_EXACT_SYNONYM);
+  val hasRelatedSynonym = factory.getOWLAnnotationProperty(Vocab.HAS_RELATED_SYNONYM);
+  val geneClass = factory.getOWLClass(Vocab.GENE);
 
-	def main(args: Array[String]): Unit = {
-			val file = Source.fromFile(args(0), "utf-8");
-			val ontology = convert(file);
-			file.close();
-			manager.saveOntology(ontology, IRI.create(new File(args(1))));
-	}
+  def main(args: Array[String]): Unit = {
+    val file = Source.fromFile(args(0), "utf-8");
+    val ontology = convert(file);
+    file.close();
+    manager.saveOntology(ontology, IRI.create(new File(args(1))));
+  }
 
-	def convert(markersData: Source): OWLOntology = {
-			val ontology = manager.createOntology(IRI.create("http://purl.obolibrary.org/obo/phenoscape/xenbase_genes.owl"));
-			manager.addAxioms(ontology, markersData.getLines.map(translate(_)).flatten.toSet[OWLAxiom]);
-			return ontology;
-	}
+  def convert(markersData: Source): OWLOntology = {
+    val ontology = manager.createOntology(IRI.create("http://purl.obolibrary.org/obo/phenoscape/xenbase_genes.owl"));
+    manager.addAxioms(ontology, markersData.getLines.map(translate(_)).flatten.toSet[OWLAxiom]);
+    return ontology;
+  }
 
-	def translate(line: String): Set[OWLAxiom] = {
-			val items = line.split("\t");
-			val axioms = mutable.Set[OWLAxiom]();
-			val geneID = StringUtils.stripToNull(items(0));
-			val geneSymbol = StringUtils.stripToNull(items(1));
-			val geneFullName = StringUtils.stripToNull(items(2));
-			val geneIRI = getGeneIRI(geneID);
-			val gene = factory.getOWLNamedIndividual(geneIRI);
-			axioms.add(factory.getOWLDeclarationAxiom(gene));
-			axioms.add(factory.getOWLClassAssertionAxiom(geneClass, gene));
-			axioms.add(factory.getOWLAnnotationAssertionAxiom(rdfsLabel, geneIRI, factory.getOWLLiteral(geneSymbol)));
-			axioms.add(factory.getOWLAnnotationAssertionAxiom(hasExactSynonym, geneIRI, factory.getOWLLiteral(geneFullName)));
-			if (items.size > 4) {
-				val synonymsField = StringUtils.stripToEmpty(items(4));
-				synonymsField.split("\\|").foreach(synonym => {
-					axioms.add(factory.getOWLAnnotationAssertionAxiom(hasRelatedSynonym, geneIRI, factory.getOWLLiteral(synonym)));
-				});
-			}
-			return axioms;
+  def translate(line: String): Set[OWLAxiom] = {
+    val items = line.split("\t");
+    val axioms = mutable.Set[OWLAxiom]();
+    val geneID = StringUtils.stripToNull(items(0));
+    val geneSymbol = StringUtils.stripToNull(items(1));
+    val geneFullName = StringUtils.stripToNull(items(2));
+    val geneIRI = getGeneIRI(geneID);
+    val gene = factory.getOWLNamedIndividual(geneIRI);
+    axioms.add(factory.getOWLDeclarationAxiom(gene));
+    axioms.add(factory.getOWLClassAssertionAxiom(geneClass, gene));
+    axioms.add(factory.getOWLAnnotationAssertionAxiom(rdfsLabel, geneIRI, factory.getOWLLiteral(geneSymbol)));
+    axioms.add(factory.getOWLAnnotationAssertionAxiom(hasExactSynonym, geneIRI, factory.getOWLLiteral(geneFullName)));
+    if (items.size > 4) {
+      val synonymsField = StringUtils.stripToEmpty(items(4));
+      synonymsField.split("\\|").foreach(synonym => {
+        axioms.add(factory.getOWLAnnotationAssertionAxiom(hasRelatedSynonym, geneIRI, factory.getOWLLiteral(synonym)));
+      });
+    }
+    return axioms;
 
-	}
+  }
 
-	def getGeneIRI(geneID: String): IRI = {
-			return IRI.create("http://xenbase.org/" + geneID);
-	}
+  def getGeneIRI(geneID: String): IRI = {
+    return IRI.create("http://xenbase.org/" + geneID);
+  }
 
 }

@@ -15,36 +15,36 @@ import org.apache.commons.lang3.StringUtils
 
 object ZFINPreviousGeneNamesToOWL extends OWLTask {
 
-	val manager = this.getOWLOntologyManager();
-	val hasRelatedSynonym = factory.getOWLAnnotationProperty(Vocab.HAS_RELATED_SYNONYM);
+  val manager = this.getOWLOntologyManager();
+  val hasRelatedSynonym = factory.getOWLAnnotationProperty(Vocab.HAS_RELATED_SYNONYM);
 
-	def main(args: Array[String]): Unit = {
-			val file = Source.fromFile(args(0), "ISO-8859-1");
-			val ontology = convert(file);
-			file.close();
-			manager.saveOntology(ontology, IRI.create(new File(args(1))));
-	}
+  def main(args: Array[String]): Unit = {
+    val file = Source.fromFile(args(0), "ISO-8859-1");
+    val ontology = convert(file);
+    file.close();
+    manager.saveOntology(ontology, IRI.create(new File(args(1))));
+  }
 
-	def convert(data: Source): OWLOntology = {
-			val ontology = manager.createOntology(IRI.create("http://purl.obolibrary.org/obo/phenoscape/zfin_previous_gene_names.owl"));
-			manager.addAxioms(ontology, data.getLines.map(translate(_)).flatten.toSet[OWLAxiom]);
-			return ontology;
-	}
+  def convert(data: Source): OWLOntology = {
+    val ontology = manager.createOntology(IRI.create("http://purl.obolibrary.org/obo/phenoscape/zfin_previous_gene_names.owl"));
+    manager.addAxioms(ontology, data.getLines.map(translate(_)).flatten.toSet[OWLAxiom]);
+    return ontology;
+  }
 
-	def translate(line: String): Set[OWLAxiom] = {
-			val items = line.split("\t");
-			val axioms = mutable.Set[OWLAxiom]();
-			if (!items(0).startsWith("ZDB-GENE")) {
-				return axioms;
-			} else {
-				val geneID = StringUtils.stripToNull(items(0));
-				val previousName = StringUtils.stripToNull(items(3));
-				val geneIRI = IRI.create("http://zfin.org/" + geneID);
-				val gene = factory.getOWLNamedIndividual(geneIRI);
-				axioms.add(factory.getOWLDeclarationAxiom(gene));
-				axioms.add(factory.getOWLAnnotationAssertionAxiom(hasRelatedSynonym, geneIRI, factory.getOWLLiteral(previousName)));
-				return axioms;
-			}
-	}
+  def translate(line: String): Set[OWLAxiom] = {
+    val items = line.split("\t");
+    val axioms = mutable.Set[OWLAxiom]();
+    if (!items(0).startsWith("ZDB-GENE")) {
+      return axioms;
+    } else {
+      val geneID = StringUtils.stripToNull(items(0));
+      val previousName = StringUtils.stripToNull(items(3));
+      val geneIRI = IRI.create("http://zfin.org/" + geneID);
+      val gene = factory.getOWLNamedIndividual(geneIRI);
+      axioms.add(factory.getOWLDeclarationAxiom(gene));
+      axioms.add(factory.getOWLAnnotationAssertionAxiom(hasRelatedSynonym, geneIRI, factory.getOWLLiteral(previousName)));
+      return axioms;
+    }
+  }
 
 }
