@@ -176,6 +176,8 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
       zfinExpressionData.getTBoxAxioms(false) ++
       zfinPhenotypeData.getTBoxAxioms(false) ++
       mgiGenes.getTBoxAxioms(false) ++
+      mgiExpressionData.getTBoxAxioms(false) ++
+      mgiPhenotypeData.getTBoxAxioms(false) ++
       xenbaseGenes.getTBoxAxioms(false) ++
       xenbaseExpressionData.getTBoxAxioms(false) ++
       humanPhenotypeData.getTBoxAxioms(false) ++

@@ -79,7 +79,6 @@ object MGIPhenotypesToOWL extends OWLTask {
         case (entity: OWLClass, quality: OWLClass, relatedEntity: OWLClass) => (quality and (inheres_in some entity) and (towards some relatedEntity));
       }
       if (eq_phenotype != null) {
-        involved.addAll(eq_phenotype.getClassesInSignature());
         val phenotypeClass = nextClass();
         axioms.add(factory.getOWLDeclarationAxiom(phenotypeClass));
         axioms.add(phenotypeClass SubClassOf eq_phenotype);
@@ -89,11 +88,6 @@ object MGIPhenotypesToOWL extends OWLTask {
         axioms.add(factory.getOWLDeclarationAxiom(gene));
         axioms.add(phenotype Fact (associatedWithGene, gene));
         axioms.add(phenotype Fact (associatedWithTaxon, mouse));
-        //TODO not sure if this will be needed
-        //                axioms.addAll(involved.map(involvee => {
-        //                    val involvesClass = Class(NamedRestrictionGenerator.getRestrictionIRI(Vocab.INVOLVES, involvee.getIRI()));
-        //                    phenotype Type involvesClass;
-        //                }));
       }
     }
     return axioms;
