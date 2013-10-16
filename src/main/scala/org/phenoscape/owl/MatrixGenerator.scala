@@ -5,10 +5,7 @@ import java.io.File
 import scala.collection.JavaConversions._
 import scala.collection.Set
 
-import org.nescent.strix.OWL.Class
-import org.nescent.strix.OWL.OWLClassExpressionToClassExpression
-import org.nescent.strix.OWL.OWLObjectPropertyToProperty
-import org.nescent.strix.OWL.ObjectProperty
+import org.phenoscape.scowl.OWL._
 import org.semanticweb.elk.owlapi.ElkReasonerFactory
 import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model.AddImport

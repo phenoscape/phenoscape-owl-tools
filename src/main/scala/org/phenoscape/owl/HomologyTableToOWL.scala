@@ -7,7 +7,7 @@ import org.semanticweb.owlapi.model.OWLOntology
 import scala.io.Source
 import org.semanticweb.owlapi.model.IRI
 import org.semanticweb.owlapi.model.OWLAxiom
-import org.nescent.strix.OWL._
+import org.phenoscape.scowl.OWL._
 import org.semanticweb.owlapi.vocab.OWLRDFVocabulary
 import org.semanticweb.owlapi.vocab.DublinCoreVocabulary
 import org.phenoscape.owl.util.OBOUtil

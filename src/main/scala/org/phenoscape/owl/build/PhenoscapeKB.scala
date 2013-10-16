@@ -12,7 +12,7 @@ import org.apache.commons.io.FileUtils
 import org.apache.log4j.BasicConfigurator
 import org.apache.log4j.Level
 import org.apache.log4j.Logger
-import org.nescent.strix.OWL._
+import org.phenoscape.scowl.OWL._
 import org.obolibrary.obo2owl.Obo2Owl
 import org.obolibrary.oboformat.parser.OBOFormatParser
 import org.phenoscape.owl.AbsenceClassGenerator

@@ -4,7 +4,7 @@ import java.io.File
 import scala.collection.JavaConversions._
 import scala.collection.Set
 import scala.collection.mutable
-import org.nescent.strix.OWL._
+import org.phenoscape.scowl.OWL._
 import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model.IRI
 import org.semanticweb.owlapi.model.OWLClass

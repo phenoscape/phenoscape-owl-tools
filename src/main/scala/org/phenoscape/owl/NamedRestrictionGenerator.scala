@@ -9,7 +9,7 @@ import org.semanticweb.owlapi.model.OWLEquivalentClassesAxiom
 import org.semanticweb.owlapi.model.OWLObjectProperty
 import org.semanticweb.owlapi.model.OWLOntology
 import org.semanticweb.owlapi.model.OWLAxiom
-import org.nescent.strix.OWL._
+import org.phenoscape.scowl.OWL._
 
 object NamedRestrictionGenerator extends OWLTask {
 

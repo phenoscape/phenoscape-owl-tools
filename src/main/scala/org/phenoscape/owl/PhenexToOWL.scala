@@ -11,7 +11,7 @@ import org.jdom2.input.SAXBuilder
 import org.jdom2.Element
 import org.jdom2.Namespace
 import org.phenoscape.owl.util.OBOUtil
-import org.nescent.strix.OWL._
+import org.phenoscape.scowl.OWL._
 import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model.IRI
 import org.semanticweb.owlapi.model.OWLAnnotationSubject

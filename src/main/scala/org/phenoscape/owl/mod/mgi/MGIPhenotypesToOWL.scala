@@ -12,7 +12,7 @@ import org.phenoscape.owl.util.OBOUtil
 import org.phenoscape.owl.NamedRestrictionGenerator
 import org.phenoscape.owl.OWLTask
 import org.phenoscape.owl.Vocab
-import org.nescent.strix.OWL._
+import org.phenoscape.scowl.OWL._
 import org.semanticweb.owlapi.model.IRI
 import org.semanticweb.owlapi.model.OWLAxiom
 import org.semanticweb.owlapi.model.OWLClass

@@ -6,7 +6,7 @@ import scala.collection.mutable
 import scala.collection.Map
 import scala.collection.Set
 import scala.io.Source
-import org.nescent.strix.OWL._
+import org.phenoscape.scowl.OWL._
 import org.apache.commons.lang3.StringUtils
 import org.phenoscape.owl.mod.xenbase.XenbaseGenesToOWL
 import org.phenoscape.owl.util.OBOUtil

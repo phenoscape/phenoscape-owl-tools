@@ -1,7 +1,7 @@
 package org.phenoscape.owl.mod.zfin
 
 import org.phenoscape.owl.OWLTask
-import org.nescent.strix.OWL._
+import org.phenoscape.scowl.OWL._
 import scala.collection.JavaConversions._
 import scala.collection.mutable
 import scala.collection.Set
