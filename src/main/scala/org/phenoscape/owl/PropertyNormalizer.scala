@@ -13,6 +13,7 @@ object PropertyNormalizer extends OWLTask {
   val properties = Map(
     IRI.create("http://purl.obolibrary.org/obo/OBO_REL_part_of") -> IRI.create("http://purl.obolibrary.org/obo/BFO_0000050"),
     IRI.create("http://purl.obolibrary.org/obo/TODO_part_of") -> IRI.create("http://purl.obolibrary.org/obo/BFO_0000050"),
+    IRI.create("http://purl.obolibrary.org/obo/fma#part_of") -> IRI.create("http://purl.obolibrary.org/obo/BFO_0000050"),
     IRI.create("http://purl.obolibrary.org/obo/OBO_REL#_part_of") -> IRI.create("http://purl.obolibrary.org/obo/BFO_0000050"),
     IRI.create("http://purl.obolibrary.org/obo/OBO_REL_has_part") -> IRI.create("http://purl.obolibrary.org/obo/BFO_0000051"),
     IRI.create("http://purl.obolibrary.org/obo/TODO_has_part") -> IRI.create("http://purl.obolibrary.org/obo/BFO_0000051"),
