@@ -39,14 +39,14 @@ object Vocab {
   val LACKS_ALL_PARTS_OF_TYPE = IRI.create("http://purl.obolibrary.org/obo/PATO_0002000");
   val INVOLVES = IRI.create("http://purl.org/phenoscape/vocab.owl#involves");
   val GENE_EXPRESSION = IRI.create("http://purl.obolibrary.org/obo/GO_0010467");
-  val ANNOTATED_PHENOTYPE = IRI.create("http://purl.org/phenoscape/vocab.owl#PhenotypeAnnotation"); //FIXME change IRI
+  val ANNOTATED_PHENOTYPE = IRI.create("http://purl.org/phenoscape/vocab.owl#AnnotatedPhenotype");
   val OCCURS_IN = IRI.create("http://purl.obolibrary.org/obo/BFO_0000066");
   val GENE = IRI.create("http://purl.obolibrary.org/obo/SO_0000704");
-  val ASSOCIATED_WITH_GENE = IRI.create("http://purl.org/phenoscape/vocab.owl#annotated_gene"); //FIXME change IRI
+  val ASSOCIATED_WITH_GENE = IRI.create("http://purl.org/phenoscape/vocab.owl#associated_with_gene");
   val ANNOTATED_ORGANISM = IRI.create("http://purl.org/phenoscape/vocab.owl#annotated_organism");
   val HAS_EXACT_SYNONYM = IRI.create("http://www.geneontology.org/formats/oboInOwl#hasExactSynonym");
   val HAS_RELATED_SYNONYM = IRI.create("http://www.geneontology.org/formats/oboInOwl#hasRelatedSynonym");
-  val ASSOCIATED_WITH_TAXON = IRI.create("http://purl.org/phenoscape/vocab.owl#annotated_taxon"); //FIXME change IRI
+  val ASSOCIATED_WITH_TAXON = IRI.create("http://purl.org/phenoscape/vocab.owl#associated_with_taxon");
   val ZEBRAFISH = IRI.create("http://purl.obolibrary.org/obo/NCBITaxon_7955");
   val XENOPUS_LAEVIS = IRI.create("http://purl.obolibrary.org/obo/NCBITaxon_8355");
   val XENOPUS_TROPICALIS = IRI.create("http://purl.obolibrary.org/obo/NCBITaxon_8364");
@@ -64,8 +64,8 @@ object Vocab {
   val QUALITY = IRI.create("http://purl.obolibrary.org/obo/PATO_0000001");
   val PHP = IRI.create("http://example.org/php"); // part_of some homologous_to some part_of... experimental
   val MULTI_CELLULAR_ORGANISM = IRI.create("http://purl.obolibrary.org/obo/UBERON_0000468");
-  val ABSENCE_OF = IRI.create("http://purl.org/phenoscape/vocab.owl#absence_of"); //FIXME change IRI
-  val IMPLIES_PRESENCE_OF = IRI.create("http://purl.org/phenoscape/vocab.owl#implies_presence_of"); //FIXME change IRI
+  val ABSENCE_OF = IRI.create("http://purl.org/phenoscape/vocab.owl#absence_of");
+  val IMPLIES_PRESENCE_OF = IRI.create("http://purl.org/phenoscape/vocab.owl#implies_presence_of");
   val EQ_CHARACTER_TOKEN = IRI.create("http://purl.org/phenoscape/vocab.owl#EQCharacterToken");
   val HAS_NUMBER_OF = IRI.create("http://purl.obolibrary.org/obo/PATO_0001555");
 
