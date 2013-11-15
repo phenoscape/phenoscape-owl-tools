@@ -16,7 +16,7 @@ object EQCharactersGenerator {
   val factory = OWLManager.getOWLDataFactory
   val manager = OWLManager.createOWLOntologyManager()
   val partOf = ObjectProperty(Vocab.PART_OF)
-  val involves = ObjectProperty(Vocab.INVOLVES)
+  val inheresIn = ObjectProperty(Vocab.INHERES_IN)
   val eqCharacterToken = Class(Vocab.EQ_CHARACTER_TOKEN)
   val entityTerm = factory.getOWLAnnotationProperty(IRI.create("http://example.org/entity_term")) //FIXME better ID
   val qualityTerm = factory.getOWLAnnotationProperty(IRI.create("http://example.org/quality_term")) //FIXME better ID
@@ -38,14 +38,14 @@ object EQCharactersGenerator {
 
   def composeEntityAndQualityInvolves(entity: OWLClass, quality: OWLClass): OWLEquivalentClassesAxiom = {
     val composition = Class(compositionIRI(entity, quality))
-    composition EquivalentTo ((involves some entity) and (involves some quality) and eqCharacterToken)
+    composition EquivalentTo (quality and (inheresIn some entity) and eqCharacterToken)
   }
 
   def annotateComposedEntityAndQuality(entity: OWLClass, quality: OWLClass): Set[OWLAnnotationAssertionAxiom] = {
     val subject = compositionIRI(entity, quality)
-    val entityAxiom = subject Annotation (entityTerm, entity.getIRI)
-    val qualityAxiom = subject Annotation (qualityTerm, quality.getIRI)
-    Set(entityAxiom, qualityAxiom)
+    Set(
+      subject Annotation (entityTerm, entity.getIRI),
+      subject Annotation (qualityTerm, quality.getIRI))
   }
 
   def compositionIRI(entity: OWLClass, quality: OWLClass): IRI = {
