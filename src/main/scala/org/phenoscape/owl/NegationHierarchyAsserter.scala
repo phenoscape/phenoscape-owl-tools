@@ -35,13 +35,13 @@ object NegationHierarchyAsserter extends OWLTask {
       if annotationAxiom.getProperty() == negates
     } yield (annotationAxiom.getSubject().asInstanceOf[IRI], annotationAxiom.getValue().asInstanceOf[IRI])
     val emptyIndex = Map[IRI, Set[IRI]]().withDefaultValue(Set())
-    val negatesIndex = negatesPairs.foldLeft(emptyIndex)((in, item) => in.updated(item._1, (in(item._1) + item._2)))
-    val negatedByIndex = negatesPairs.foldLeft(emptyIndex)((in, item) => in.updated(item._2, (in(item._2) + item._1)))
+    val negatesIndex = negatesPairs.foldLeft(emptyIndex) { case (index, (negator, negated)) => index.updated(negator, (index(negator) + negated)) }
+    val negatedByIndex = negatesPairs.foldLeft(emptyIndex) { case (index, (negator, negated)) => index.updated(negated, (index(negated) + negator))}
     val axioms = allClasses.flatMap(createSubclassOfAxioms(_, negatesIndex, negatedByIndex, ontologies.toSet))
     axioms.toSet
   }
 
-  def createSubclassOfAxioms(ontClass: OWLClass, negatesIndex: Map[IRI, Set[IRI]], negatedByIndex: Map[IRI, Set[IRI]], ontologies: Set[OWLOntology]): Iterable[OWLSubClassOfAxiom] = {
+  def createSubclassOfAxioms(ontClass: OWLClass, negatesIndex: Map[IRI, Set[IRI]], negatedByIndex: Map[IRI, Set[IRI]], ontologies: Set[OWLOntology]): Set[OWLSubClassOfAxiom] = {
     for {
       negatedClassIRI <- negatesIndex.getOrElse(ontClass.getIRI, Set())
       subClassOfNegatedClass <- Class(negatedClassIRI).getSubClasses(ontologies)
