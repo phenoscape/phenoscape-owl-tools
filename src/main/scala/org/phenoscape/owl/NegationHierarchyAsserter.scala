@@ -43,10 +43,10 @@ object NegationHierarchyAsserter extends OWLTask {
 
   def createSubclassOfAxioms(ontClass: OWLClass, negatesIndex: Map[IRI, Set[IRI]], negatedByIndex: Map[IRI, Set[IRI]], ontologies: Set[OWLOntology]): Set[OWLSubClassOfAxiom] = {
     for {
-      negatedClassIRI <- negatesIndex.getOrElse(ontClass.getIRI, Set())
+      negatedClassIRI <- negatesIndex(ontClass.getIRI)
       subClassOfNegatedClass <- Class(negatedClassIRI).getSubClasses(ontologies)
       if !subClassOfNegatedClass.isAnonymous()
-      superClassOfOntClassIRI <- negatedByIndex.getOrElse(subClassOfNegatedClass.asOWLClass.getIRI, Set())
+      superClassOfOntClassIRI <- negatedByIndex(subClassOfNegatedClass.asOWLClass.getIRI)
     } yield ontClass SubClassOf Class(superClassOfOntClassIRI)
   }
 

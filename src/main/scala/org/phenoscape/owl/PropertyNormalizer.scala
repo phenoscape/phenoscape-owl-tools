@@ -29,28 +29,27 @@ object PropertyNormalizer extends OWLTask {
     IRI.create("http://purl.obolibrary.org/obo/towards") -> IRI.create("http://purl.obolibrary.org/obo/pato#towards"),
     IRI.create("http://purl.obolibrary.org/obo/OBO_REL_towards") -> IRI.create("http://purl.obolibrary.org/obo/pato#towards"),
     IRI.create("http://purl.obolibrary.org/obo/TODO_towards") -> IRI.create("http://purl.obolibrary.org/obo/pato#towards"),
-    IRI.create("http://purl.obolibrary.org/obo/hp/hp-logical-definitions#involves") -> Vocab.INVOLVES);
+    IRI.create("http://purl.obolibrary.org/obo/hp/hp-logical-definitions#involves") -> Vocab.INVOLVES)
 
   def main(args: Array[String]): Unit = {
-    val manager = this.getOWLOntologyManager();
-    val ontology = manager.loadOntologyFromOntologyDocument(new File(args(0)));
-    normalize(ontology);
+    val manager = this.getOWLOntologyManager()
+    val ontology = manager.loadOntologyFromOntologyDocument(new File(args(0)))
+    normalize(ontology)
     if (args.size > 1) {
-      manager.saveOntology(ontology, new RDFXMLOntologyFormat(), IRI.create(new File(args(1))));
+      manager.saveOntology(ontology, new RDFXMLOntologyFormat(), IRI.create(new File(args(1))))
     } else {
-      manager.saveOntology(ontology, new RDFXMLOntologyFormat());
+      manager.saveOntology(ontology, new RDFXMLOntologyFormat())
     }
   }
 
   def normalize(ontology: OWLOntology): OWLOntology = {
-    val manager = ontology.getOWLOntologyManager();
-    val factory = manager.getOWLDataFactory();
-    manager.applyChange(new AddImport(ontology, factory.getOWLImportsDeclaration(IRI.create("http://purl.obolibrary.org/obo/ro.owl"))));
-    val renamer = new OWLEntityRenamer(ontology.getOWLOntologyManager(), Set(ontology));
+    val manager = ontology.getOWLOntologyManager
+    manager.applyChange(new AddImport(ontology, factory.getOWLImportsDeclaration(IRI.create("http://purl.obolibrary.org/obo/ro.owl"))))
+    val renamer = new OWLEntityRenamer(ontology.getOWLOntologyManager(), Set(ontology))
     for ((key, value) <- properties) {
-      ontology.getOWLOntologyManager().applyChanges(renamer.changeIRI(key, value));
+      manager.applyChanges(renamer.changeIRI(key, value))
     }
-    return ontology;
+    return ontology
   }
 
 }

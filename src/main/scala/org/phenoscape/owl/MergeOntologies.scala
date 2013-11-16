@@ -1,14 +1,15 @@
 package org.phenoscape.owl
 
 import java.io.File
+
 import scala.Array.canBuildFrom
 import scala.collection.JavaConversions._
 import scala.collection.Set
+
+import org.phenoscape.owl.util.NullIRIMapper
 import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model.IRI
 import org.semanticweb.owlapi.model.OWLAxiom
-import org.semanticweb.owlapi.model.OWLOntologyIRIMapper
-import org.phenoscape.owl.util.NullIRIMapper
 
 object MergeOntologies {
 
@@ -20,7 +21,7 @@ object MergeOntologies {
 
   def process(path: String): Set[OWLAxiom] = {
     val f = new File(path);
-    if (f.isDirectory()) {
+    if (f.isDirectory) {
       processFolder(f);
     } else {
       processFile(f);
@@ -28,16 +29,16 @@ object MergeOntologies {
   }
 
   def processFile(file: File): Set[OWLAxiom] = {
-    val manager = OWLManager.createOWLOntologyManager();
+    val manager = OWLManager.createOWLOntologyManager;
     manager.clearIRIMappers();
     manager.addIRIMapper(NullIRIMapper);
     manager.setSilentMissingImportsHandling(true);
     val ontology = manager.loadOntologyFromOntologyDocument(file);
-    ontology.getAxioms();
+    ontology.getAxioms;
   }
 
   def processFolder(folder: File): Set[OWLAxiom] = {
-    folder.listFiles().flatMap(processFile(_)).toSet;
+    (folder.listFiles flatMap processFile).toSet;
   }
 
 }

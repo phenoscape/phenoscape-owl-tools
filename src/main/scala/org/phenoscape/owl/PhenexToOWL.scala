@@ -213,7 +213,7 @@ object PhenexToOWL extends OWLTask {
       case (null, null, _) => null;
       case (entity: OWLClass, null, null) => (present and (inheres_in some entity));
       case (entity: OWLClass, null, relatedEntity: OWLClass) => {
-        log().warn("Related entity with no quality.");
+        logger.warn("Related entity with no quality.");
         (present and (inheres_in some entity));
       }
       case (entity: OWLClass, `absent`, null) => (lacksAllPartsOfType and (inheres_in some organism) and (towards value Individual(entity.getIRI())));
