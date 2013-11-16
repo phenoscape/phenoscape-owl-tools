@@ -35,8 +35,8 @@ object NegationHierarchyAsserter extends OWLTask {
       if annotationAxiom.getProperty() == negates
     } yield (annotationAxiom.getSubject().asInstanceOf[IRI], annotationAxiom.getValue().asInstanceOf[IRI])
     val emptyIndex = Map[IRI, Set[IRI]]().withDefaultValue(Set())
-    val negatesIndex = negatesPairs.foldLeft(emptyIndex) { case (index, (negator, negated)) => index.updated(negator, (index(negator) + negated)) }
-    val negatedByIndex = negatesPairs.foldLeft(emptyIndex) { case (index, (negator, negated)) => index.updated(negated, (index(negated) + negator))}
+    val negatesIndex = buildIndex(negatesPairs)
+    val negatedByIndex = buildReverseIndex(negatesPairs)
     val axioms = allClasses.flatMap(createSubclassOfAxioms(_, negatesIndex, negatedByIndex, ontologies.toSet))
     axioms.toSet
   }
@@ -48,6 +48,16 @@ object NegationHierarchyAsserter extends OWLTask {
       if !subClassOfNegatedClass.isAnonymous()
       superClassOfOntClassIRI <- negatedByIndex.getOrElse(subClassOfNegatedClass.asOWLClass.getIRI, Set())
     } yield ontClass SubClassOf Class(superClassOfOntClassIRI)
+  }
+
+  def buildIndex[A, B](pairs: Iterable[(A, B)]): Map[A, Set[B]] = {
+    val emptyIndex = Map[A, Set[B]]().withDefaultValue(Set())
+    pairs.foldLeft(emptyIndex) { case (index, (a, b)) => index.updated(a, (index(a) + b)) }
+  }
+
+  def buildReverseIndex[A, B](pairs: Iterable[(A, B)]): Map[B, Set[A]] = {
+    val emptyIndex = Map[B, Set[A]]().withDefaultValue(Set())
+    pairs.foldLeft(emptyIndex) { case (index, (a, b)) => index.updated(b, (index(b) + a)) }
   }
 
 }
