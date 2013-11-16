@@ -51,12 +51,12 @@ object NegationHierarchyAsserter extends OWLTask {
   }
 
   def buildIndex[A, B](pairs: Iterable[(A, B)]): Map[A, Set[B]] = {
-    val emptyIndex = Map[A, Set[B]]().withDefaultValue(Set())
+    val emptyIndex: Map[A, Set[B]] = Map().withDefaultValue(Set())
     pairs.foldLeft(emptyIndex) { case (index, (a, b)) => index.updated(a, (index(a) + b)) }
   }
 
   def buildReverseIndex[A, B](pairs: Iterable[(A, B)]): Map[B, Set[A]] = {
-    val emptyIndex = Map[B, Set[A]]().withDefaultValue(Set())
+    val emptyIndex: Map[B, Set[A]] = Map().withDefaultValue(Set())
     pairs.foldLeft(emptyIndex) { case (index, (a, b)) => index.updated(b, (index(b) + a)) }
   }
 
