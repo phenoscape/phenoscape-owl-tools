@@ -13,7 +13,7 @@ import org.phenoscape.scowl.OWL._
 
 object NamedRestrictionGenerator extends OWLTask {
 
-  val manager = this.getOWLOntologyManager
+  val manager = this.createOWLOntologyManager
 
   def main(args: Array[String]): Unit = {
     val ontology = manager.loadOntologyFromOntologyDocument(new File(args(0)))

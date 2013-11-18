@@ -17,7 +17,7 @@ import java.util.UUID
 
 object HomologyTableToOWL extends OWLTask {
 
-  val manager = this.getOWLOntologyManager
+  val manager = this.createOWLOntologyManager
   val homologousTo = ObjectProperty(Vocab.HOMOLOGOUS_TO)
   val hasEvidence = factory.getOWLAnnotationProperty(Vocab.EVIDENCE)
   val source = factory.getOWLAnnotationProperty(DublinCoreVocabulary.SOURCE.getIRI)

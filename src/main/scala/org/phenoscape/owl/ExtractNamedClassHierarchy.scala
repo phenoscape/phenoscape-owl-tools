@@ -10,7 +10,7 @@ import org.semanticweb.owlapi.model.OWLAxiom
 
 object ExtractNamedClassHierarchy extends OWLTask {
 
-  val manager = this.getOWLOntologyManager
+  val manager = this.createOWLOntologyManager
 
   def main(args: Array[String]): Unit = {
     val ontology = manager.loadOntologyFromOntologyDocument(new File(args(0)))

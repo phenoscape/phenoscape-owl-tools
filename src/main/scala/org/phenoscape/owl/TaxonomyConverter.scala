@@ -19,7 +19,7 @@ object TaxonomyConverter extends OWLTask {
   val taxon = OWLManager.getOWLDataFactory().getOWLClass(Vocab.TAXON);
 
   def main(args: Array[String]): Unit = {
-    val manager = this.getOWLOntologyManager();
+    val manager = this.createOWLOntologyManager();
     val classOntology = manager.loadOntologyFromOntologyDocument(new File(args(0)));
     val instanceOntology = createInstanceOntology(classOntology);
     manager.saveOntology(instanceOntology, IRI.create(new File(args(1))));

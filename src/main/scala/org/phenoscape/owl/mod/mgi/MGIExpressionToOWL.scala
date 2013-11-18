@@ -28,7 +28,7 @@ object MGIExpressionToOWL extends OWLTask {
   val associatedWithTaxon = ObjectProperty(Vocab.ASSOCIATED_WITH_TAXON);
   val geneExpression = Class(Vocab.GENE_EXPRESSION);
   val mouse = Individual(Vocab.MOUSE);
-  val manager = this.getOWLOntologyManager();
+  val manager = this.createOWLOntologyManager();
 
   def main(args: Array[String]): Unit = {
     val mgiExpressionFile = Source.fromFile(args(0), "utf-8");

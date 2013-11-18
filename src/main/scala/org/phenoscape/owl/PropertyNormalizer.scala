@@ -32,7 +32,7 @@ object PropertyNormalizer extends OWLTask {
     IRI.create("http://purl.obolibrary.org/obo/hp/hp-logical-definitions#involves") -> Vocab.INVOLVES)
 
   def main(args: Array[String]): Unit = {
-    val manager = this.getOWLOntologyManager()
+    val manager = this.createOWLOntologyManager()
     val ontology = manager.loadOntologyFromOntologyDocument(new File(args(0)))
     normalize(ontology)
     if (args.size > 1) {

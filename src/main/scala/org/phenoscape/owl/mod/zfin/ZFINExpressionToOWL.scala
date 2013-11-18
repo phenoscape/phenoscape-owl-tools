@@ -26,7 +26,7 @@ object ZFINExpressionToOWL extends OWLTask {
   val associatedWithTaxon = ObjectProperty(Vocab.ASSOCIATED_WITH_TAXON);
   val geneExpression = Class(Vocab.GENE_EXPRESSION);
   val zebrafish = Individual(Vocab.ZEBRAFISH);
-  val manager = this.getOWLOntologyManager();
+  val manager = this.createOWLOntologyManager();
 
   def main(args: Array[String]): Unit = {
     val file = Source.fromFile(args(0), "ISO-8859-1");

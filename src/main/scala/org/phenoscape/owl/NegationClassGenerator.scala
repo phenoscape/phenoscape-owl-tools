@@ -16,7 +16,7 @@ object NegationClassGenerator extends OWLTask {
   val negates = OWLManager.getOWLDataFactory().getOWLAnnotationProperty(Vocab.NEGATES)
 
   def main(args: Array[String]): Unit = {
-    val manager = this.getOWLOntologyManager()
+    val manager = this.createOWLOntologyManager()
     val ontology = manager.loadOntologyFromOntologyDocument(new File(args(0)))
     val negationsOntology = generateNegationClasses(ontology)
     manager.saveOntology(negationsOntology, IRI.create(new File(args(1))))

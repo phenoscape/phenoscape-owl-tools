@@ -18,7 +18,7 @@ import org.semanticweb.owlapi.vocab.DublinCoreVocabulary
 
 object HomologyTableToOWLWithAncestralStructure extends OWLTask {
 
-  val manager = this.getOWLOntologyManager
+  val manager = this.createOWLOntologyManager
   val derivedByDescentFrom = ObjectProperty(Vocab.DERIVED_BY_DESCENT_FROM)
   val hasDerivedByDescendant = ObjectProperty(Vocab.HAS_DERIVED_BY_DESCENDANT)
   val hasEvidence = ObjectProperty(Vocab.EVIDENCE)

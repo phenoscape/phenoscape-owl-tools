@@ -27,7 +27,7 @@ object MaterializeInferences extends OWLTask {
   val PROPERTIES_ONLY = "org.phenoscape.owl.reasoner.propertiesonly"
 
   def main(args: Array[String]): Unit = {
-    val manager = this.getOWLOntologyManager()
+    val manager = this.createOWLOntologyManager()
     val ontology = manager.loadOntologyFromOntologyDocument(new File(args(0)))
     materializeInferences(ontology)
     if (args.size > 1) {

@@ -17,7 +17,7 @@ object DevelopsFromRuleGenerator extends OWLTask {
   val developsFrom = ObjectProperty(Vocab.DEVELOPS_FROM)
 
   def main(args: Array[String]): Unit = {
-    val manager = this.getOWLOntologyManager()
+    val manager = this.createOWLOntologyManager()
     val ontology = manager.loadOntologyFromOntologyDocument(new File(args(0)))
     val developsFromOntology = generateDevelopsFromRules(ontology)
     manager.saveOntology(developsFromOntology, IRI.create(new File(args(1))))

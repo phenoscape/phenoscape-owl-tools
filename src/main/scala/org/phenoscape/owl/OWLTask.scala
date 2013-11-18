@@ -13,11 +13,11 @@ import org.apache.log4j.Logger
 class OWLTask {
 
   val ONTOLOGY_FILES = "org.phenoscape.owl.files"
-  var uuid: String = UUID.randomUUID.toString
-  var nodeIncrementer: Int = 0
+  //val uuid: String = UUID.randomUUID.toString
+  //var nodeIncrementer: Int = 0
   val factory = OWLManager.getOWLDataFactory
 
-  def getOWLOntologyManager(): OWLOntologyManager = {
+  def createOWLOntologyManager(): OWLOntologyManager = {
     val manager = OWLManager.createOWLOntologyManager()
     if (System.getProperties().containsKey(ONTOLOGY_FILES)) {
       val downloadsFolder = new File(System.getProperty(ONTOLOGY_FILES))
@@ -36,8 +36,9 @@ class OWLTask {
   }
 
   def nextIRI(): IRI = {
-    this.nodeIncrementer += 1
-    val id = "http://purl.org/phenoscape/uuid/" + this.uuid + "-" + this.nodeIncrementer
+    //this.nodeIncrementer += 1
+    val uuid = UUID.randomUUID.toString
+    val id = "http://purl.org/phenoscape/uuid/" + uuid //+ "-" + this.nodeIncrementer
     IRI.create(id)
   }
 

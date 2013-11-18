@@ -22,7 +22,7 @@ object AbsenceClassGenerator extends OWLTask {
   val towards = ObjectProperty(Vocab.TOWARDS)
   val absenceOf = factory.getOWLAnnotationProperty(Vocab.ABSENCE_OF)
   val involves = ObjectProperty(Vocab.INVOLVES)
-  val manager = this.getOWLOntologyManager
+  val manager = this.createOWLOntologyManager
 
   def main(args: Array[String]): Unit = {
     val ontology = manager.loadOntologyFromOntologyDocument(new File(args(0)))
