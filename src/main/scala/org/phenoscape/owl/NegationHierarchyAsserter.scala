@@ -32,9 +32,8 @@ object NegationHierarchyAsserter extends OWLTask {
     val negatesPairs = for {
       ont <- ontologies
       annotationAxiom <- ont.getAxioms(AxiomType.ANNOTATION_ASSERTION, false)
-      if annotationAxiom.getProperty() == negates
+      if annotationAxiom.getProperty == negates
     } yield (annotationAxiom.getSubject().asInstanceOf[IRI], annotationAxiom.getValue().asInstanceOf[IRI])
-    val emptyIndex = Map[IRI, Set[IRI]]().withDefaultValue(Set())
     val negatesIndex = buildIndex(negatesPairs)
     val negatedByIndex = buildReverseIndex(negatesPairs)
     val axioms = allClasses.flatMap(createSubclassOfAxioms(_, negatesIndex, negatedByIndex, ontologies.toSet))
