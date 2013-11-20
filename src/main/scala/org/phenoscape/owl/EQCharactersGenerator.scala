@@ -2,7 +2,6 @@ package org.phenoscape.owl
 
 import org.semanticweb.owlapi.model.OWLClass
 import org.semanticweb.owlapi.model.OWLAxiom
-import scala.collection.Set
 import scala.collection.JavaConversions._
 import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model.IRI
@@ -24,12 +23,13 @@ object EQCharactersGenerator {
   val mayHaveState = factory.getOWLObjectProperty(Vocab.MAY_HAVE_STATE_VALUE)
   val dcDescription = factory.getOWLAnnotationProperty(DublinCoreVocabulary.DESCRIPTION.getIRI)
 
-  def generateEQCharacters(entities: Set[OWLClass], qualities: Set[OWLClass]): Set[OWLAxiom] = {
-    for {
+  def generateEQCharacters(entities: Iterable[OWLClass], qualities: Iterable[OWLClass]): Set[OWLAxiom] = {
+    val axioms = for {
       entity <- entities
       quality <- qualities
       axiom <- composeEntityAndQuality(entity, quality)
     } yield axiom
+    axioms.toSet
   }
 
   def composeEntityAndQuality(entity: OWLClass, quality: OWLClass): Set[OWLAxiom] = {

@@ -20,7 +20,7 @@ import java.io.OutputStreamWriter
 
 object MaterializeSubClassOfClosureToNTriples extends OWLTask {
 
-  val manager = this.getOWLOntologyManager();
+  val manager = this.createOWLOntologyManager();
 
   def main(args: Array[String]): Unit = {
     val targetFile = new File(System.getProperty("org.phenoscape.owl.MaterializeSubClassOfClosure.target"));

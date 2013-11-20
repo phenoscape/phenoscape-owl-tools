@@ -35,7 +35,7 @@ object MGIPhenotypesToOWL extends OWLTask {
   val absent = Class(Vocab.ABSENT);
   val lacksAllPartsOfType = Class(Vocab.LACKS_ALL_PARTS_OF_TYPE);
   val organism = Class(Vocab.MULTI_CELLULAR_ORGANISM);
-  val manager = this.getOWLOntologyManager();
+  val manager = this.createOWLOntologyManager();
 
   def main(args: Array[String]): Unit = {
     val file = Source.fromFile(args(0), "utf-8");
@@ -68,7 +68,7 @@ object MGIPhenotypesToOWL extends OWLTask {
         case (null, null, _) => null;
         case (entity: OWLClass, null, null) => (present and (inheres_in some entity));
         case (entity: OWLClass, null, relatedEntity: OWLClass) => {
-          log().warn("Related entity with no quality.");
+          logger.warn("Related entity with no quality.");
           (present and (inheres_in some entity));
         }
         case (entity: OWLClass, `absent`, null) => (lacksAllPartsOfType and (inheres_in some organism) and (towards value Individual(entity.getIRI())));

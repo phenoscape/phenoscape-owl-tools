@@ -132,11 +132,12 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     FileUtils.listFiles(new File(cwd + "/staging/nexml/fin_limb-incomplete-files"), Array("xml"), true)).filterNot(_.getName() == "catalog-v001.xml");
   cd(KB);
   val nexmlTBoxAxioms: mutable.Set[OWLAxiom] = mutable.Set();
-  filesToConvert.foreach(file => {
-    val nexOntology = PropertyNormalizer.normalize(PhenexToOWL.convert(file));
+  for (file <- filesToConvert) {
+    val converter = new PhenexToOWL()
+    val nexOntology = PropertyNormalizer.normalize(converter.convert(file));
     nexmlTBoxAxioms.addAll(nexOntology.getTBoxAxioms(false));
     write(nexOntology, cwd + "/staging/kb/" + file.getName().replaceAll(".xml$", ".owl"));
-  });
+  }
 
   step("Converting ZFIN data");
   val zfinGenes = PropertyNormalizer.normalize(ZFINGeneticMarkersToOWL.convert(Source.fromFile(new File(cwd + "/staging/sources/zfin_genetic_markers.txt"), "ISO-8859-1")));

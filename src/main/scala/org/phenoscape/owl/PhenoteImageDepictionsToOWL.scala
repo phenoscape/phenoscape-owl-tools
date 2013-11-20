@@ -15,7 +15,7 @@ object PhenoteImageDepictionsToOWL extends OWLTask {
   val hasDescription = factory.getOWLAnnotationProperty(DublinCoreVocabulary.DESCRIPTION.getIRI());
 
   def main(args: Array[String]): Unit = {
-    val manager = this.getOWLOntologyManager();
+    val manager = this.createOWLOntologyManager();
     val depictionsOntology = manager.createOntology();
     val annotations = Source.fromFile(args(0), "utf-8").getLines();
     val targetFile = new File(args(1));

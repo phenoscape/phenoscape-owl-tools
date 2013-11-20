@@ -18,7 +18,7 @@ import org.semanticweb.owlapi.vocab.OWLRDFVocabulary
 
 object MGIGeneticMarkersToOWL extends OWLTask {
 
-  val manager = this.getOWLOntologyManager();
+  val manager = this.createOWLOntologyManager();
   val rdfsLabel = factory.getOWLAnnotationProperty(OWLRDFVocabulary.RDFS_LABEL.getIRI());
   val hasExactSynonym = factory.getOWLAnnotationProperty(Vocab.HAS_EXACT_SYNONYM);
   val hasRelatedSynonym = factory.getOWLAnnotationProperty(Vocab.HAS_RELATED_SYNONYM);

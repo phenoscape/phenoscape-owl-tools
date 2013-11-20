@@ -27,7 +27,7 @@ object HumanPhenotypesToOWL extends OWLTask {
   val human = factory.getOWLNamedIndividual(Vocab.HUMAN);
   val geneClass = factory.getOWLClass(Vocab.GENE);
   val annotationClass = factory.getOWLClass(Vocab.ANNOTATED_PHENOTYPE);
-  val manager = this.getOWLOntologyManager();
+  val manager = this.createOWLOntologyManager();
 
   def main(args: Array[String]): Unit = {
     val file = Source.fromFile(args(0), "utf-8");

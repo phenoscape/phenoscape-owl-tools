@@ -15,7 +15,7 @@ import org.apache.commons.lang3.StringUtils
 
 object ZFINPreviousGeneNamesToOWL extends OWLTask {
 
-  val manager = this.getOWLOntologyManager();
+  val manager = this.createOWLOntologyManager();
   val hasRelatedSynonym = factory.getOWLAnnotationProperty(Vocab.HAS_RELATED_SYNONYM);
 
   def main(args: Array[String]): Unit = {
