@@ -68,7 +68,7 @@ class PhenexToOWL extends OWLTask {
   }
 
   def convert(root: Element, matrixLabel: String): Unit = {
-    val nexml = root
+    nexml = root
     val matrix = this.nextIndividual()
     addAnnotation(OWLRDFVocabulary.RDFS_LABEL.getIRI(), matrix.getIRI(), factory.getOWLLiteral(matrixLabel))
     this.addClass(matrix, this.factory.getOWLClass(Vocab.CHARACTER_STATE_DATA_MATRIX))
