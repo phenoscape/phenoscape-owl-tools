@@ -18,6 +18,7 @@ import org.semanticweb.owlapi.model.OWLAxiom
 import org.semanticweb.owlapi.model.OWLClass
 import org.semanticweb.owlapi.model.OWLOntology
 import org.semanticweb.owlapi.model.AddImport
+import org.semanticweb.owlapi.apibinding.OWLManager
 
 object MGIPhenotypesToOWL extends OWLTask {
 
@@ -35,7 +36,7 @@ object MGIPhenotypesToOWL extends OWLTask {
   val absent = Class(Vocab.ABSENT);
   val lacksAllPartsOfType = Class(Vocab.LACKS_ALL_PARTS_OF_TYPE);
   val organism = Class(Vocab.MULTI_CELLULAR_ORGANISM);
-  val manager = this.createOWLOntologyManager();
+  val manager = OWLManager.createOWLOntologyManager();
 
   def main(args: Array[String]): Unit = {
     val file = Source.fromFile(args(0), "utf-8");

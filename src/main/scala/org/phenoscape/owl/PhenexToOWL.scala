@@ -55,7 +55,7 @@ class PhenexToOWL extends OWLTask {
   val taxonOTUToOWLMap = mutable.Map[String, OWLNamedIndividual]()
   val taxonOTUToValidTaxonMap = mutable.Map[String, OWLNamedIndividual]()
   val stateToOWLPhenotypeMap = mutable.Map[String, mutable.Set[OWLClass]]()
-  val manager = this.createOWLOntologyManager
+  val manager = OWLManager.createOWLOntologyManager
   val ontology = manager.createOntology(IRI.create("http://example.org/" + UUID.randomUUID().toString()))
   var nexml: Element = null
   //nodeIncrementer = 0

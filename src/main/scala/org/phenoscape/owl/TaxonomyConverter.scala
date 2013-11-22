@@ -15,11 +15,11 @@ import org.semanticweb.owlapi.apibinding.OWLManager
 
 object TaxonomyConverter extends OWLTask {
 
-  val subcladeOf = OWLManager.getOWLDataFactory().getOWLObjectProperty(Vocab.SUBCLADE_OF);
-  val taxon = OWLManager.getOWLDataFactory().getOWLClass(Vocab.TAXON);
+  val subcladeOf = factory.getOWLObjectProperty(Vocab.SUBCLADE_OF);
+  val taxon = factory.getOWLClass(Vocab.TAXON);
 
   def main(args: Array[String]): Unit = {
-    val manager = this.createOWLOntologyManager();
+    val manager = OWLManager.createOWLOntologyManager();
     val classOntology = manager.loadOntologyFromOntologyDocument(new File(args(0)));
     val instanceOntology = createInstanceOntology(classOntology);
     manager.saveOntology(instanceOntology, IRI.create(new File(args(1))));

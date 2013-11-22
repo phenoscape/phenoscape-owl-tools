@@ -13,10 +13,11 @@ import org.semanticweb.owlapi.reasoner.OWLReasoner
 import org.semanticweb.owlapi.model.OWLOntology
 import org.semanticweb.elk.owlapi.ElkReasonerFactory
 import org.semanticweb.owlapi.vocab.OWLRDFVocabulary
+import org.semanticweb.owlapi.apibinding.OWLManager
 
 object MaterializeSubClassOfClosure extends OWLTask {
 
-  val manager = this.createOWLOntologyManager()
+  val manager = OWLManager.createOWLOntologyManager
 
   def main(args: Array[String]): Unit = {
     val targetFile = new File(System.getProperty("org.phenoscape.owl.MaterializeSubClassOfClosure.target"))

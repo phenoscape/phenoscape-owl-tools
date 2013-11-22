@@ -1,31 +1,16 @@
 package org.phenoscape.owl
 
-import java.io.File
-import org.semanticweb.owlapi.apibinding.OWLManager
-import org.semanticweb.owlapi.model.OWLOntologyManager
-import org.semanticweb.owlapi.util.AutoIRIMapper
-import org.semanticweb.owlapi.model.OWLClass
-import org.semanticweb.owlapi.model.IRI
 import java.util.UUID
-import org.semanticweb.owlapi.model.OWLNamedIndividual
+
 import org.apache.log4j.Logger
+import org.semanticweb.owlapi.apibinding.OWLManager
+import org.semanticweb.owlapi.model.IRI
+import org.semanticweb.owlapi.model.OWLClass
+import org.semanticweb.owlapi.model.OWLNamedIndividual
 
 class OWLTask {
 
-  val ONTOLOGY_FILES = "org.phenoscape.owl.files"
-  //val uuid: String = UUID.randomUUID.toString
-  //var nodeIncrementer: Int = 0
   val factory = OWLManager.getOWLDataFactory
-
-  def createOWLOntologyManager(): OWLOntologyManager = {
-    val manager = OWLManager.createOWLOntologyManager()
-    if (System.getProperties().containsKey(ONTOLOGY_FILES)) {
-      val downloadsFolder = new File(System.getProperty(ONTOLOGY_FILES))
-      manager.clearIRIMappers()
-      manager.addIRIMapper(new BuilderIRIMapper(downloadsFolder))
-    }
-    manager
-  }
 
   def nextIndividual(): OWLNamedIndividual = {
     factory.getOWLNamedIndividual(nextIRI())
@@ -36,7 +21,6 @@ class OWLTask {
   }
 
   def nextIRI(): IRI = {
-    //this.nodeIncrementer += 1
     val uuid = UUID.randomUUID.toString
     val id = "http://purl.org/phenoscape/uuid/" + uuid //+ "-" + this.nodeIncrementer
     IRI.create(id)

@@ -19,6 +19,7 @@ import org.semanticweb.owlapi.model.OWLNamedIndividual
 import org.semanticweb.owlapi.model.OWLOntology
 import org.semanticweb.owlapi.vocab.OWLRDFVocabulary
 import org.semanticweb.owlapi.model.AddImport
+import org.semanticweb.owlapi.apibinding.OWLManager
 
 object MGIExpressionToOWL extends OWLTask {
 
@@ -28,7 +29,7 @@ object MGIExpressionToOWL extends OWLTask {
   val associatedWithTaxon = ObjectProperty(Vocab.ASSOCIATED_WITH_TAXON);
   val geneExpression = Class(Vocab.GENE_EXPRESSION);
   val mouse = Individual(Vocab.MOUSE);
-  val manager = this.createOWLOntologyManager();
+  val manager = OWLManager.createOWLOntologyManager();
 
   def main(args: Array[String]): Unit = {
     val mgiExpressionFile = Source.fromFile(args(0), "utf-8");

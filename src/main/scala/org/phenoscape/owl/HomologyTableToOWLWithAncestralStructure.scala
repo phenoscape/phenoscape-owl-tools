@@ -2,11 +2,9 @@ package org.phenoscape.owl
 
 import java.io.File
 import java.util.UUID
-
 import scala.collection.JavaConversions._
 import scala.collection.TraversableOnce.flattenTraversableOnce
 import scala.io.Source
-
 import org.phenoscape.scowl.OWL._
 import org.phenoscape.owl.util.OBOUtil
 import org.semanticweb.owlapi.model.AddImport
@@ -15,10 +13,11 @@ import org.semanticweb.owlapi.model.IRI
 import org.semanticweb.owlapi.model.OWLAxiom
 import org.semanticweb.owlapi.model.OWLOntology
 import org.semanticweb.owlapi.vocab.DublinCoreVocabulary
+import org.semanticweb.owlapi.apibinding.OWLManager
 
 object HomologyTableToOWLWithAncestralStructure extends OWLTask {
 
-  val manager = this.createOWLOntologyManager
+  val manager = OWLManager.createOWLOntologyManager
   val derivedByDescentFrom = ObjectProperty(Vocab.DERIVED_BY_DESCENT_FROM)
   val hasDerivedByDescendant = ObjectProperty(Vocab.HAS_DERIVED_BY_DESCENDANT)
   val hasEvidence = ObjectProperty(Vocab.EVIDENCE)

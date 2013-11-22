@@ -1,7 +1,6 @@
 package org.phenoscape.owl.mod.human
 
 import java.io.File
-
 import scala.collection.JavaConversions._
 import scala.collection.TraversableOnce.flattenTraversableOnce
 import scala.collection.Set
@@ -17,6 +16,7 @@ import org.semanticweb.owlapi.model.IRI
 import org.semanticweb.owlapi.model.OWLAxiom
 import org.semanticweb.owlapi.model.OWLOntology
 import org.semanticweb.owlapi.vocab.OWLRDFVocabulary
+import org.semanticweb.owlapi.apibinding.OWLManager
 
 object HumanPhenotypesToOWL extends OWLTask {
 
@@ -27,7 +27,7 @@ object HumanPhenotypesToOWL extends OWLTask {
   val human = factory.getOWLNamedIndividual(Vocab.HUMAN);
   val geneClass = factory.getOWLClass(Vocab.GENE);
   val annotationClass = factory.getOWLClass(Vocab.ANNOTATED_PHENOTYPE);
-  val manager = this.createOWLOntologyManager();
+  val manager = OWLManager.createOWLOntologyManager();
 
   def main(args: Array[String]): Unit = {
     val file = Source.fromFile(args(0), "utf-8");

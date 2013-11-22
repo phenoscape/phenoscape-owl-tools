@@ -17,6 +17,7 @@ import org.phenoscape.owl.NamedRestrictionGenerator
 import org.semanticweb.owlapi.model.OWLClass
 import org.phenoscape.owl.util.ExpressionUtil
 import org.semanticweb.owlapi.model.AddImport
+import org.semanticweb.owlapi.apibinding.OWLManager
 
 object ZFINPhenotypesToOWL extends OWLTask {
 
@@ -35,7 +36,7 @@ object ZFINPhenotypesToOWL extends OWLTask {
   val absent = Class(Vocab.ABSENT)
   val lacksAllPartsOfType = Class(Vocab.LACKS_ALL_PARTS_OF_TYPE)
   val organism = Class(Vocab.MULTI_CELLULAR_ORGANISM)
-  val manager = this.createOWLOntologyManager()
+  val manager = OWLManager.createOWLOntologyManager()
 
   def main(args: Array[String]): Unit = {
     val file = Source.fromFile(args(0), "ISO-8859-1")

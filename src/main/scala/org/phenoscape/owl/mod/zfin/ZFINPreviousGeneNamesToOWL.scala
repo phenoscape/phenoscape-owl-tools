@@ -12,10 +12,11 @@ import org.semanticweb.owlapi.vocab.OWLRDFVocabulary
 import org.phenoscape.owl.Vocab
 import java.io.File
 import org.apache.commons.lang3.StringUtils
+import org.semanticweb.owlapi.apibinding.OWLManager
 
 object ZFINPreviousGeneNamesToOWL extends OWLTask {
 
-  val manager = this.createOWLOntologyManager();
+  val manager = OWLManager.createOWLOntologyManager();
   val hasRelatedSynonym = factory.getOWLAnnotationProperty(Vocab.HAS_RELATED_SYNONYM);
 
   def main(args: Array[String]): Unit = {

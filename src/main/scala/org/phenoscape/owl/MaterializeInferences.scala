@@ -20,6 +20,7 @@ import eu.trowl.owlapi3.rel.reasoner.dl.RELReasonerFactory
 import uk.ac.manchester.cs.factplusplus.owlapiv3.FaCTPlusPlusReasonerFactory
 import org.semanticweb.owlapi.model.OWLAxiom
 import org.semanticweb.elk.owlapi.ElkReasoner
+import org.semanticweb.owlapi.apibinding.OWLManager
 
 object MaterializeInferences extends OWLTask {
 
@@ -27,7 +28,7 @@ object MaterializeInferences extends OWLTask {
   val PROPERTIES_ONLY = "org.phenoscape.owl.reasoner.propertiesonly"
 
   def main(args: Array[String]): Unit = {
-    val manager = this.createOWLOntologyManager()
+    val manager = OWLManager.createOWLOntologyManager
     val ontology = manager.loadOntologyFromOntologyDocument(new File(args(0)))
     materializeInferences(ontology)
     if (args.size > 1) {

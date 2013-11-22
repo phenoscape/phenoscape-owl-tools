@@ -1,13 +1,11 @@
 package org.phenoscape.owl.mod.zfin
 
 import java.io.File
-
 import scala.collection.JavaConversions._
 import scala.collection.TraversableOnce.flattenTraversableOnce
 import scala.collection.Set
 import scala.collection.mutable
 import scala.io.Source
-
 import org.apache.commons.lang3.StringUtils
 import org.phenoscape.owl.OWLTask
 import org.phenoscape.owl.Vocab
@@ -15,10 +13,11 @@ import org.semanticweb.owlapi.model.IRI
 import org.semanticweb.owlapi.model.OWLAxiom
 import org.semanticweb.owlapi.model.OWLOntology
 import org.semanticweb.owlapi.vocab.OWLRDFVocabulary
+import org.semanticweb.owlapi.apibinding.OWLManager
 
 object ZFINGeneticMarkersToOWL extends OWLTask {
 
-  val manager = this.createOWLOntologyManager();
+  val manager = OWLManager.createOWLOntologyManager();
   val rdfsLabel = factory.getOWLAnnotationProperty(OWLRDFVocabulary.RDFS_LABEL.getIRI());
   val hasExactSynonym = factory.getOWLAnnotationProperty(Vocab.HAS_EXACT_SYNONYM);
   val geneClass = factory.getOWLClass(Vocab.GENE);

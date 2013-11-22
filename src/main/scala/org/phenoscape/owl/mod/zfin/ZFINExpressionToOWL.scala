@@ -1,13 +1,11 @@
 package org.phenoscape.owl.mod.zfin
 
 import java.io.File
-
 import scala.collection.JavaConversions._
 import scala.collection.Set
 import scala.collection.TraversableOnce.flattenTraversableOnce
 import scala.collection.mutable
 import scala.io.Source
-
 import org.apache.commons.lang3.StringUtils
 import org.phenoscape.scowl.OWL._
 import org.phenoscape.owl.OWLTask
@@ -17,6 +15,7 @@ import org.semanticweb.owlapi.model.AddImport
 import org.semanticweb.owlapi.model.IRI
 import org.semanticweb.owlapi.model.OWLAxiom
 import org.semanticweb.owlapi.model.OWLOntology
+import org.semanticweb.owlapi.apibinding.OWLManager
 
 object ZFINExpressionToOWL extends OWLTask {
 
@@ -26,7 +25,7 @@ object ZFINExpressionToOWL extends OWLTask {
   val associatedWithTaxon = ObjectProperty(Vocab.ASSOCIATED_WITH_TAXON);
   val geneExpression = Class(Vocab.GENE_EXPRESSION);
   val zebrafish = Individual(Vocab.ZEBRAFISH);
-  val manager = this.createOWLOntologyManager();
+  val manager = OWLManager.createOWLOntologyManager();
 
   def main(args: Array[String]): Unit = {
     val file = Source.fromFile(args(0), "ISO-8859-1");
