@@ -34,8 +34,7 @@ object PropertyNormalizer extends OWLTask {
 
   def normalize(ontology: OWLOntology): OWLOntology = {
     val manager = ontology.getOWLOntologyManager
-    manager.applyChange(new AddImport(ontology, factory.getOWLImportsDeclaration(IRI.create("http://purl.obolibrary.org/obo/ro.owl"))))
-    val renamer = new OWLEntityRenamer(ontology.getOWLOntologyManager(), Set(ontology))
+    val renamer = new OWLEntityRenamer(manager, Set(ontology))
     for ((key, value) <- properties) {
       manager.applyChanges(renamer.changeIRI(key, value))
     }

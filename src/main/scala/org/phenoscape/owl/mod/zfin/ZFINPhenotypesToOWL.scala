@@ -18,6 +18,7 @@ import org.semanticweb.owlapi.model.OWLClass
 import org.phenoscape.owl.util.ExpressionUtil
 import org.semanticweb.owlapi.model.AddImport
 import org.semanticweb.owlapi.apibinding.OWLManager
+import org.apache.log4j.Logger
 
 object ZFINPhenotypesToOWL extends OWLTask {
 

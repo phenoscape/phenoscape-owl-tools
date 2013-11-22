@@ -5,11 +5,10 @@ import org.semanticweb.owlapi.model.IRI
 object OBOUtil {
 
   def iriForTermID(id: String): IRI = {
-    return if (id.startsWith("http://")) {
-      IRI.create(id);
-    } else {
-      IRI.create("http://purl.obolibrary.org/obo/" + id.replaceAll(":", "_"));
-    }
+    if (id.startsWith("http://"))
+      IRI.create(id)
+    else
+      IRI.create("http://purl.obolibrary.org/obo/" + id.replaceAll(":", "_"))
   }
 
 }

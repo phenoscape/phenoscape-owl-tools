@@ -29,6 +29,7 @@ import org.semanticweb.owlapi.vocab.OWLRDFVocabulary
 import org.semanticweb.owlapi.model.OWLOntology
 import scala.io.Source
 import org.semanticweb.owlapi.io.RDFXMLOntologyFormat
+import org.apache.log4j.Logger
 
 class PhenexToOWL extends OWLTask {
 

@@ -10,24 +10,17 @@ import org.semanticweb.owlapi.model.OWLNamedIndividual
 
 class OWLTask {
 
+  lazy val logger = Logger.getLogger(this.getClass)
   val factory = OWLManager.getOWLDataFactory
 
-  def nextIndividual(): OWLNamedIndividual = {
-    factory.getOWLNamedIndividual(nextIRI())
-  }
+  def nextIndividual(): OWLNamedIndividual = factory.getOWLNamedIndividual(this.nextIRI)
 
-  def nextClass(): OWLClass = {
-    factory.getOWLClass(this.nextIRI())
-  }
+  def nextClass(): OWLClass = factory.getOWLClass(this.nextIRI)
 
   def nextIRI(): IRI = {
     val uuid = UUID.randomUUID.toString
-    val id = "http://purl.org/phenoscape/uuid/" + uuid //+ "-" + this.nodeIncrementer
+    val id = "http://purl.org/phenoscape/uuid/" + uuid
     IRI.create(id)
-  }
-
-  def logger: Logger = {
-    Logger.getLogger(this.getClass)
   }
 
 }
