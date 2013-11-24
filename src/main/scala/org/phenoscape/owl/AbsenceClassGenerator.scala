@@ -17,11 +17,8 @@ import org.semanticweb.owlapi.model.OWLClassExpression
 
 object AbsenceClassGenerator extends OWLTask {
 
-  val hasPart = OWLManager.getOWLDataFactory().getOWLObjectProperty(Vocab.HAS_PART)
   val lacksAllPartsOfType = Class(Vocab.LACKS_ALL_PARTS_OF_TYPE)
-  val towards = ObjectProperty(Vocab.TOWARDS)
   val absenceOf = factory.getOWLAnnotationProperty(Vocab.ABSENCE_OF)
-  val involves = ObjectProperty(Vocab.INVOLVES)
   val manager = OWLManager.createOWLOntologyManager
 
   def generateAbsenceClasses(ontology: OWLOntology): OWLOntology = {
@@ -37,10 +34,10 @@ object AbsenceClassGenerator extends OWLTask {
   def createAbsenceClass(ontClass: OWLClass): Set[OWLAxiom] = {
     val classIRI = ontClass.getIRI
     val absenceClass = Class(getAbsenceIRI(classIRI))
-    val notHasPartClass = Class(NegationClassGenerator.getNegationIRI(NamedRestrictionGenerator.getRestrictionIRI(hasPart.getIRI, classIRI)))
+    val notHasPartClass = Class(NegationClassGenerator.getNegationIRI(NamedRestrictionGenerator.getRestrictionIRI(Vocab.HAS_PART.getIRI, classIRI)))
     Set(
       factory.getOWLDeclarationAxiom(absenceClass),
-      absenceClass EquivalentTo (lacksAllPartsOfType and (towards value Individual(classIRI))),
+      absenceClass EquivalentTo (lacksAllPartsOfType and (Vocab.TOWARDS value Individual(classIRI))),
       absenceClass EquivalentTo notHasPartClass,
       absenceClass Annotation (absenceOf, ontClass.getIRI))
     //absenceClass SubClassOf (involves some ontClass) //this is dangerous
@@ -55,9 +52,9 @@ object AbsenceClassGenerator extends OWLTask {
   }
 
   def generateAllAbsenceAxiomsForEntity(ontClass: OWLClass): Set[OWLAxiom] = {
-    val hasPartAxioms = NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.HAS_PART), ontClass)
+    val hasPartAxioms = NamedRestrictionGenerator.createRestriction(Vocab.HAS_PART, ontClass)
     val tempOntology = manager.createOntology(hasPartAxioms)
-    val namedHasPartClass = Class(NamedRestrictionGenerator.getRestrictionIRI(Vocab.HAS_PART, ontClass.getIRI()))
+    val namedHasPartClass = Class(NamedRestrictionGenerator.getRestrictionIRI(Vocab.HAS_PART.getIRI, ontClass.getIRI()))
     hasPartAxioms ++
       createAbsenceClass(ontClass) ++
       NegationClassGenerator.createNegationClassAxioms(namedHasPartClass, tempOntology)

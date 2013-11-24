@@ -11,6 +11,7 @@ import org.apache.commons.lang3.StringUtils
 import org.phenoscape.owl.util.OBOUtil
 import org.phenoscape.owl.OWLTask
 import org.phenoscape.owl.Vocab
+import org.phenoscape.owl.Vocab._
 import org.semanticweb.owlapi.model.AddImport
 import org.semanticweb.owlapi.model.IRI
 import org.semanticweb.owlapi.model.OWLAxiom
@@ -21,9 +22,6 @@ import org.semanticweb.owlapi.apibinding.OWLManager
 object HumanPhenotypesToOWL extends OWLTask {
 
   val rdfsLabel = factory.getOWLAnnotationProperty(OWLRDFVocabulary.RDFS_LABEL.getIRI());
-  val involves = factory.getOWLObjectProperty(Vocab.INVOLVES);
-  val associatedWithGene = factory.getOWLObjectProperty(Vocab.ASSOCIATED_WITH_GENE);
-  val associatedWithTaxon = factory.getOWLObjectProperty(Vocab.ASSOCIATED_WITH_TAXON);
   val human = factory.getOWLNamedIndividual(Vocab.HUMAN);
   val geneClass = factory.getOWLClass(Vocab.GENE);
   val annotationClass = factory.getOWLClass(Vocab.ANNOTATED_PHENOTYPE);
@@ -57,8 +55,8 @@ object HumanPhenotypesToOWL extends OWLTask {
     val gene = Individual(geneIRI);
     axioms.add(gene Type geneClass);
     axioms.add(factory.getOWLDeclarationAxiom(gene));
-    axioms.add(phenotype Fact (associatedWithGene, gene));
-    axioms.add(phenotype Fact (associatedWithTaxon, human));
+    axioms.add(phenotype Fact (ASSOCIATED_WITH_GENE, gene));
+    axioms.add(phenotype Fact (ASSOCIATED_WITH_TAXON, human));
     return axioms;
   }
 

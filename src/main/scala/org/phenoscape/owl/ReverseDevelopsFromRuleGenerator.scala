@@ -9,14 +9,11 @@ import org.semanticweb.owlapi.model.OWLClass
 import org.semanticweb.owlapi.model.OWLOntology
 import org.semanticweb.owlapi.model.OWLSubClassOfAxiom
 import org.semanticweb.owlapi.model.OWLAxiom
+import org.phenoscape.owl.Vocab._
 
 object ReverseDevelopsFromRuleGenerator extends OWLTask {
 
   //FIXME rename to reverse absence rules
-
-  val hasPart = ObjectProperty(Vocab.HAS_PART)
-  val partOf = ObjectProperty(Vocab.PART_OF)
-  val developsFrom = ObjectProperty(Vocab.DEVELOPS_FROM)
 
   def main(args: Array[String]): Unit = {
     val manager = OWLManager.createOWLOntologyManager
@@ -34,8 +31,8 @@ object ReverseDevelopsFromRuleGenerator extends OWLTask {
 
   def createRules(ontClass: OWLClass): Set[OWLSubClassOfAxiom] = {
     Set(
-      (hasPart some (developsFrom some ontClass)) SubClassOf (hasPart some ontClass),
-      (hasPart some (partOf some ontClass)) SubClassOf (hasPart some ontClass))
+      (HAS_PART some (DEVELOPS_FROM some ontClass)) SubClassOf (HAS_PART some ontClass),
+      (HAS_PART some (PART_OF some ontClass)) SubClassOf (HAS_PART some ontClass))
   }
 
 }

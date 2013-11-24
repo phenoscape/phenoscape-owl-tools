@@ -14,11 +14,11 @@ import org.semanticweb.owlapi.model.OWLAxiom
 import org.semanticweb.owlapi.model.OWLOntology
 import org.semanticweb.owlapi.vocab.DublinCoreVocabulary
 import org.semanticweb.owlapi.apibinding.OWLManager
+import Vocab._
 
 object HomologyTableToOWLAsAnnotations extends OWLTask {
 
   val manager = OWLManager.createOWLOntologyManager
-  val homologousTo = ObjectProperty(Vocab.HOMOLOGOUS_TO)
   val hasEvidence = ObjectProperty(Vocab.EVIDENCE)
   val source = factory.getOWLAnnotationProperty(DublinCoreVocabulary.SOURCE.getIRI)
   val description = factory.getOWLAnnotationProperty(DublinCoreVocabulary.DESCRIPTION.getIRI)

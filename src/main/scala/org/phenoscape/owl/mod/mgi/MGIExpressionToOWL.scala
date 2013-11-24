@@ -20,13 +20,10 @@ import org.semanticweb.owlapi.model.OWLOntology
 import org.semanticweb.owlapi.vocab.OWLRDFVocabulary
 import org.semanticweb.owlapi.model.AddImport
 import org.semanticweb.owlapi.apibinding.OWLManager
+import Vocab._
 
 object MGIExpressionToOWL extends OWLTask {
 
-  val occursIn = ObjectProperty(Vocab.OCCURS_IN);
-  val partOf = ObjectProperty(Vocab.PART_OF);
-  val associatedWithGene = ObjectProperty(Vocab.ASSOCIATED_WITH_GENE);
-  val associatedWithTaxon = ObjectProperty(Vocab.ASSOCIATED_WITH_TAXON);
   val geneExpression = Class(Vocab.GENE_EXPRESSION);
   val mouse = Individual(Vocab.MOUSE);
   val manager = OWLManager.createOWLOntologyManager();
@@ -57,15 +54,15 @@ object MGIExpressionToOWL extends OWLTask {
       axioms.add(expression Type geneExpression);
       val structure = nextIndividual();
       axioms.add(factory.getOWLDeclarationAxiom(structure));
-      axioms.add(expression Fact (occursIn, structure));
+      axioms.add(expression Fact (OCCURS_IN, structure));
       val structureID = StringUtils.stripToNull(items(5));
       val structureType = Class(OBOUtil.iriForTermID("UBERON:" + structureID));
       axioms.add(structure Type structureType);
       val geneIRI = MGIGeneticMarkersToOWL.getGeneIRI(StringUtils.stripToNull(items(0)));
       val gene = Individual(geneIRI);
       axioms.add(factory.getOWLDeclarationAxiom(gene));
-      axioms.add(expression Fact (associatedWithGene, gene));
-      axioms.add(expression Fact (associatedWithTaxon, mouse));
+      axioms.add(expression Fact (ASSOCIATED_WITH_GENE, gene));
+      axioms.add(expression Fact (ASSOCIATED_WITH_TAXON, mouse));
       return axioms;
     }
   }

@@ -30,7 +30,7 @@ object PropertyNormalizer extends OWLTask {
     IRI.create("http://purl.obolibrary.org/obo/towards") -> IRI.create("http://purl.obolibrary.org/obo/pato#towards"),
     IRI.create("http://purl.obolibrary.org/obo/OBO_REL_towards") -> IRI.create("http://purl.obolibrary.org/obo/pato#towards"),
     IRI.create("http://purl.obolibrary.org/obo/TODO_towards") -> IRI.create("http://purl.obolibrary.org/obo/pato#towards"),
-    IRI.create("http://purl.obolibrary.org/obo/hp/hp-logical-definitions#involves") -> Vocab.INVOLVES)
+    IRI.create("http://purl.obolibrary.org/obo/hp/hp-logical-definitions#involves") -> Vocab.INVOLVES.getIRI)
 
   def normalize(ontology: OWLOntology): OWLOntology = {
     val manager = ontology.getOWLOntologyManager

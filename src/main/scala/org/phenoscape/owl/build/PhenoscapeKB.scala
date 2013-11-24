@@ -40,6 +40,7 @@ import org.phenoscape.owl.mod.zfin.ZFINGeneticMarkersToOWL
 import org.phenoscape.owl.mod.zfin.ZFINPhenotypesToOWL
 import org.phenoscape.owl.mod.zfin.ZFINPreviousGeneNamesToOWL
 import org.semanticweb.owlapi.model.OWLAxiom
+import org.phenoscape.owl.Vocab._
 
 object PhenoscapeKB extends KnowledgeBaseBuilder {
 
@@ -185,15 +186,15 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
       nexmlTBoxAxioms);
 
   //val parts = manager.createOntology(anatomicalEntities.map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.PART_OF), _)).flatten);
-  val hasParts = manager.createOntology(anatomicalEntities.map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.HAS_PART), _)).flatten);
-  val presences = manager.createOntology(anatomicalEntities.map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.IMPLIES_PRESENCE_OF), _)).flatten)
+  val hasParts = manager.createOntology(anatomicalEntities.map(NamedRestrictionGenerator.createRestriction(Vocab.HAS_PART, _)).flatten);
+  val presences = manager.createOntology(anatomicalEntities.map(NamedRestrictionGenerator.createRestriction(Vocab.IMPLIES_PRESENCE_OF, _)).flatten)
   //val inherers = manager.createOntology(anatomicalEntities.map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.INHERES_IN), _)).flatten);
   //val inherersInPartOf = manager.createOntology(anatomicalEntities.map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.INHERES_IN_PART_OF), _)).flatten);
   //val towards = manager.createOntology(qualities.map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.TOWARDS), _)).flatten);
   //val involvers = manager.createOntology((anatomicalEntities ++ qualities).map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.INVOLVES), _)).flatten);
   //val homologies = manager.createOntology(anatomicalEntities.map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.PHP), _)).flatten);
   val absences = manager.createOntology(anatomicalEntities.flatMap(AbsenceClassGenerator.createAbsenceClass(_)));
-  val namedHasPartClasses = anatomicalEntities.map(_.getIRI()).map(NamedRestrictionGenerator.getRestrictionIRI(Vocab.HAS_PART, _)).map(Class(_));
+  val namedHasPartClasses = anatomicalEntities.map(_.getIRI()).map(NamedRestrictionGenerator.getRestrictionIRI(Vocab.HAS_PART.getIRI, _)).map(Class(_));
   val absenceNegationEquivalences = manager.createOntology(namedHasPartClasses.flatMap(NegationClassGenerator.createNegationClassAxioms(_, hasParts)));
   val developsFromRulesForAbsence = manager.createOntology(anatomicalEntities.flatMap(ReverseDevelopsFromRuleGenerator.createRules(_)).toSet[OWLAxiom]);
 

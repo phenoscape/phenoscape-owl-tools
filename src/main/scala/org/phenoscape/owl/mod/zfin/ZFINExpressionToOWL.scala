@@ -10,6 +10,7 @@ import org.apache.commons.lang3.StringUtils
 import org.phenoscape.scowl.OWL._
 import org.phenoscape.owl.OWLTask
 import org.phenoscape.owl.Vocab
+import org.phenoscape.owl.Vocab._
 import org.phenoscape.owl.util.OBOUtil
 import org.semanticweb.owlapi.model.AddImport
 import org.semanticweb.owlapi.model.IRI
@@ -19,10 +20,6 @@ import org.semanticweb.owlapi.apibinding.OWLManager
 
 object ZFINExpressionToOWL extends OWLTask {
 
-  val occursIn = ObjectProperty(Vocab.OCCURS_IN);
-  val partOf = ObjectProperty(Vocab.PART_OF);
-  val associatedWithGene = ObjectProperty(Vocab.ASSOCIATED_WITH_GENE);
-  val associatedWithTaxon = ObjectProperty(Vocab.ASSOCIATED_WITH_TAXON);
   val geneExpression = Class(Vocab.GENE_EXPRESSION);
   val zebrafish = Individual(Vocab.ZEBRAFISH);
   val manager = OWLManager.createOWLOntologyManager();
@@ -51,7 +48,7 @@ object ZFINExpressionToOWL extends OWLTask {
       axioms.add(expression Type geneExpression);
       val structure = nextIndividual();
       axioms.add(factory.getOWLDeclarationAxiom(structure));
-      axioms.add(expression Fact (occursIn, structure));
+      axioms.add(expression Fact (OCCURS_IN, structure));
       val superStructureID = StringUtils.stripToNull(items(3));
       val subStructureID = StringUtils.stripToNull(items(5));
       if (subStructureID == null) {
@@ -61,14 +58,14 @@ object ZFINExpressionToOWL extends OWLTask {
         val superStructure = Class(OBOUtil.iriForTermID(superStructureID));
         val subStructure = Class(OBOUtil.iriForTermID(subStructureID));
         val structureType = nextClass();
-        axioms.add(structureType SubClassOf (subStructure and (partOf some superStructure)));
+        axioms.add(structureType SubClassOf (subStructure and (PART_OF some superStructure)));
         axioms.add(structure Type structureType);
       }
       val geneIRI = IRI.create("http://zfin.org/" + StringUtils.stripToNull(items(0)));
       val gene = Individual(geneIRI);
       axioms.add(factory.getOWLDeclarationAxiom(gene));
-      axioms.add(expression Fact (associatedWithGene, gene));
-      axioms.add(expression Fact (associatedWithTaxon, zebrafish));
+      axioms.add(expression Fact (ASSOCIATED_WITH_GENE, gene));
+      axioms.add(expression Fact (ASSOCIATED_WITH_TAXON, zebrafish));
       return axioms;
     }
   }

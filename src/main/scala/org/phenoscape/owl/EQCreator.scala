@@ -19,13 +19,10 @@ import java.io.BufferedOutputStream
 import java.util.zip.GZIPOutputStream
 import org.semanticweb.owlapi.model.AddImport
 import org.semanticweb.owlapi.reasoner.InferenceType
+import Vocab._
 
 //takes at least 200 GB memory
 object EQCreator {
-
-  val bearerOf = ObjectProperty(Vocab.BEARER_OF);
-  val hasPart = ObjectProperty(Vocab.HAS_PART);
-  val partOf = ObjectProperty(Vocab.PART_OF);
 
   def main(args: Array[String]): Unit = {
     BasicConfigurator.configure();
@@ -34,11 +31,11 @@ object EQCreator {
     val manager = OWLManager.createOWLOntologyManager();
     val factory = manager.getOWLDataFactory();
     val eqs = manager.createOntology();
-    manager.addAxiom(eqs, factory.getOWLTransitiveObjectPropertyAxiom(hasPart));
-    manager.addAxiom(eqs, factory.getOWLReflexiveObjectPropertyAxiom(hasPart));
-    manager.addAxiom(eqs, factory.getOWLTransitiveObjectPropertyAxiom(partOf));
-    manager.addAxiom(eqs, factory.getOWLReflexiveObjectPropertyAxiom(partOf));
-    manager.addAxiom(eqs, factory.getOWLInverseObjectPropertiesAxiom(hasPart, partOf));
+    manager.addAxiom(eqs, factory.getOWLTransitiveObjectPropertyAxiom(HAS_PART));
+    manager.addAxiom(eqs, factory.getOWLReflexiveObjectPropertyAxiom(HAS_PART));
+    manager.addAxiom(eqs, factory.getOWLTransitiveObjectPropertyAxiom(PART_OF));
+    manager.addAxiom(eqs, factory.getOWLReflexiveObjectPropertyAxiom(PART_OF));
+    manager.addAxiom(eqs, factory.getOWLInverseObjectPropertiesAxiom(HAS_PART, PART_OF));
     val uberon = manager.loadOntologyFromOntologyDocument(new File("uberon.owl"));
     val pato = manager.loadOntologyFromOntologyDocument(new File("pato.owl"));
     manager.applyChange(new AddImport(eqs, factory.getOWLImportsDeclaration(uberon.getOntologyID().getOntologyIRI())));
@@ -83,8 +80,8 @@ object EQCreator {
 
   def createEQ(entity: OWLClass, quality: OWLClass): OWLAxiom = {
     val eqClass = Class(IRI.create(entity.getIRI().toString() + "+" + quality.getIRI().toString()));
-    val expression = factory.getOWLObjectIntersectionOf(entity, factory.getOWLObjectSomeValuesFrom(bearerOf, quality));
-    eqClass EquivalentTo (hasPart some ((partOf some entity) and (bearerOf some quality)));
+    val expression = factory.getOWLObjectIntersectionOf(entity, factory.getOWLObjectSomeValuesFrom(BEARER_OF, quality));
+    eqClass EquivalentTo (HAS_PART some ((PART_OF some entity) and (BEARER_OF some quality)));
   }
 
 }

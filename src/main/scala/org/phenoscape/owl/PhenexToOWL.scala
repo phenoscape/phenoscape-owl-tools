@@ -30,6 +30,7 @@ import org.semanticweb.owlapi.model.OWLOntology
 import scala.io.Source
 import org.semanticweb.owlapi.io.RDFXMLOntologyFormat
 import org.apache.log4j.Logger
+import Vocab._
 
 class PhenexToOWL extends OWLTask {
 
@@ -39,13 +40,6 @@ class PhenexToOWL extends OWLTask {
   val phenoNS = Namespace.getNamespace("http://www.bioontologies.org/obd/schema/pheno")
   val rdfsNS = Namespace.getNamespace("http://www.w3.org/2000/01/rdf-schema#")
   val phenoscapeComplement = IRI.create("http://purl.obolibrary.org/obo/PHENOSCAPE_complement_of")
-  val towards = ObjectProperty(Vocab.TOWARDS)
-  val hasPart = ObjectProperty(Vocab.HAS_PART)
-  val bearerOf = ObjectProperty(Vocab.BEARER_OF)
-  val inheres_in = ObjectProperty(Vocab.INHERES_IN)
-  val exhibits = ObjectProperty(Vocab.EXHIBITS)
-  val denotes = ObjectProperty(Vocab.DENOTES)
-  val denotes_exhibiting = ObjectProperty(Vocab.DENOTES_EXHIBITING)
   val present = Class(Vocab.PRESENT)
   val absent = Class(Vocab.ABSENT)
   val eqCharacterToken = Class(Vocab.EQ_CHARACTER_TOKEN)
@@ -170,9 +164,9 @@ class PhenexToOWL extends OWLTask {
     stateToOWLPhenotypeMap.getOrElseUpdate(stateID, mutable.Set()).add(owlPhenotype)
     translatePhenotypeSemantics(phenotype, owlPhenotype, owlState)
     //TODO perhaps state should denote phenotype, not organism modify property chain
-    manager.addAxiom(ontology, owlState Type (denotes only (exhibits some owlPhenotype)))
+    manager.addAxiom(ontology, owlState Type (DENOTES only (EXHIBITS some owlPhenotype)))
     val phenotypeInstance = nextIndividual()
-    manager.addAxiom(ontology, owlState Fact (denotes_exhibiting, phenotypeInstance))
+    manager.addAxiom(ontology, owlState Fact (DENOTES_EXHIBITING, phenotypeInstance))
     manager.addAxiom(ontology, phenotypeInstance Type owlPhenotype)
   }
 
@@ -207,17 +201,17 @@ class PhenexToOWL extends OWLTask {
     } else { null }
     val eq_phenotype = (entityTerm, qualityTerm, relatedEntityTerm) match {
       case (null, null, _) => null
-      case (entity: OWLClass, null, null) => (present and (inheres_in some entity))
+      case (entity: OWLClass, null, null) => (present and (INHERES_IN some entity))
       case (entity: OWLClass, null, relatedEntity: OWLClass) => {
         logger.warn("Related entity with no quality.")
-        (present and (inheres_in some entity))
+        (present and (INHERES_IN some entity))
       }
-      case (entity: OWLClass, `absent`, null) => (lacksAllPartsOfType and (inheres_in some organism) and (towards value Individual(entity.getIRI())))
-      case (entity: OWLClass, `lacksAllPartsOfType`, relatedEntity: OWLClass) => (lacksAllPartsOfType and (inheres_in some entity) and (towards value Individual(relatedEntity.getIRI())))
+      case (entity: OWLClass, `absent`, null) => (lacksAllPartsOfType and (INHERES_IN some organism) and (TOWARDS value Individual(entity.getIRI)))
+      case (entity: OWLClass, `lacksAllPartsOfType`, relatedEntity: OWLClass) => (lacksAllPartsOfType and (INHERES_IN some entity) and (TOWARDS value Individual(relatedEntity.getIRI)))
       case (null, quality: OWLClass, null) => quality
-      case (null, quality: OWLClass, relatedEntity: OWLClass) => (quality and (towards some relatedEntity))
-      case (entity: OWLClass, quality: OWLClass, null) => (quality and (inheres_in some entity))
-      case (entity: OWLClass, quality: OWLClass, relatedEntity: OWLClass) => (quality and (inheres_in some entity) and (towards some relatedEntity))
+      case (null, quality: OWLClass, relatedEntity: OWLClass) => (quality and (TOWARDS some relatedEntity))
+      case (entity: OWLClass, quality: OWLClass, null) => (quality and (INHERES_IN some entity))
+      case (entity: OWLClass, quality: OWLClass, relatedEntity: OWLClass) => (quality and (INHERES_IN some entity) and (TOWARDS some relatedEntity))
       //TODO comparisons, etc.
     }
     if (eq_phenotype == null) {

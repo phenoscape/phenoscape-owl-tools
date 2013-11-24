@@ -20,19 +20,12 @@ import org.semanticweb.owlapi.model.OWLOntology
 import org.semanticweb.owlapi.model.AddImport
 import org.semanticweb.owlapi.apibinding.OWLManager
 import org.apache.log4j.Logger
+import Vocab._
 
 object MGIPhenotypesToOWL extends OWLTask {
 
-  val involves = ObjectProperty(Vocab.INVOLVES);
-  val partOf = ObjectProperty(Vocab.PART_OF);
-  val hasPart = ObjectProperty(Vocab.HAS_PART);
-  val associatedWithGene = ObjectProperty(Vocab.ASSOCIATED_WITH_GENE);
-  val associatedWithTaxon = ObjectProperty(Vocab.ASSOCIATED_WITH_TAXON);
   val annotationClass = Class(Vocab.ANNOTATED_PHENOTYPE);
   val mouse = Individual(Vocab.MOUSE);
-  val towards = ObjectProperty(Vocab.TOWARDS);
-  val bearerOf = ObjectProperty(Vocab.BEARER_OF);
-  val inheres_in = ObjectProperty(Vocab.INHERES_IN);
   val present = Class(Vocab.PRESENT);
   val absent = Class(Vocab.ABSENT);
   val lacksAllPartsOfType = Class(Vocab.LACKS_ALL_PARTS_OF_TYPE);
@@ -68,17 +61,17 @@ object MGIPhenotypesToOWL extends OWLTask {
       val relatedEntityTerm = if (relatedStructureID != null) Class(OBOUtil.iriForTermID(relatedStructureID)) else null;
       val eq_phenotype = (entityTerm, qualityTerm, relatedEntityTerm) match {
         case (null, null, _) => null;
-        case (entity: OWLClass, null, null) => (present and (inheres_in some entity));
+        case (entity: OWLClass, null, null) => (present and (INHERES_IN some entity));
         case (entity: OWLClass, null, relatedEntity: OWLClass) => {
           logger.warn("Related entity with no quality.");
-          (present and (inheres_in some entity));
+          (present and (INHERES_IN some entity));
         }
-        case (entity: OWLClass, `absent`, null) => (lacksAllPartsOfType and (inheres_in some organism) and (towards value Individual(entity.getIRI())));
-        case (entity: OWLClass, `lacksAllPartsOfType`, relatedEntity: OWLClass) => (lacksAllPartsOfType and (inheres_in some entity) and (towards value Individual(relatedEntity.getIRI())));
+        case (entity: OWLClass, `absent`, null) => (lacksAllPartsOfType and (INHERES_IN some organism) and (TOWARDS value Individual(entity.getIRI())));
+        case (entity: OWLClass, `lacksAllPartsOfType`, relatedEntity: OWLClass) => (lacksAllPartsOfType and (INHERES_IN some entity) and (TOWARDS value Individual(relatedEntity.getIRI())));
         case (null, quality: OWLClass, null) => quality;
-        case (null, quality: OWLClass, relatedEntity: OWLClass) => (quality and (towards some relatedEntity));
-        case (entity: OWLClass, quality: OWLClass, null) => (quality and (inheres_in some entity));
-        case (entity: OWLClass, quality: OWLClass, relatedEntity: OWLClass) => (quality and (inheres_in some entity) and (towards some relatedEntity));
+        case (null, quality: OWLClass, relatedEntity: OWLClass) => (quality and (TOWARDS some relatedEntity));
+        case (entity: OWLClass, quality: OWLClass, null) => (quality and (INHERES_IN some entity));
+        case (entity: OWLClass, quality: OWLClass, relatedEntity: OWLClass) => (quality and (INHERES_IN some entity) and (TOWARDS some relatedEntity));
       }
       if (eq_phenotype != null) {
         val phenotypeClass = nextClass();
@@ -88,8 +81,8 @@ object MGIPhenotypesToOWL extends OWLTask {
         val geneIRI = MGIGeneticMarkersToOWL.getGeneIRI(StringUtils.stripToNull(items(1)));
         val gene = Individual(geneIRI);
         axioms.add(factory.getOWLDeclarationAxiom(gene));
-        axioms.add(phenotype Fact (associatedWithGene, gene));
-        axioms.add(phenotype Fact (associatedWithTaxon, mouse));
+        axioms.add(phenotype Fact (ASSOCIATED_WITH_GENE, gene));
+        axioms.add(phenotype Fact (ASSOCIATED_WITH_TAXON, mouse));
       }
     }
     return axioms;

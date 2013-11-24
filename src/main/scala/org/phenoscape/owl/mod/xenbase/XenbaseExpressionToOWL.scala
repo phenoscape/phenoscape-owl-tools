@@ -11,6 +11,7 @@ import org.apache.commons.lang3.StringUtils
 import org.phenoscape.scowl.OWL._
 import org.phenoscape.owl.OWLTask
 import org.phenoscape.owl.Vocab
+import org.phenoscape.owl.Vocab._
 import org.phenoscape.owl.util.OBOUtil
 import org.semanticweb.owlapi.model.IRI
 import org.semanticweb.owlapi.model.OWLAxiom
@@ -20,10 +21,6 @@ import org.semanticweb.owlapi.apibinding.OWLManager
 
 object XenbaseExpressionToOWL extends OWLTask {
 
-  val occursIn = ObjectProperty(Vocab.OCCURS_IN);
-  val partOf = ObjectProperty(Vocab.PART_OF);
-  val associatedWithGene = ObjectProperty(Vocab.ASSOCIATED_WITH_GENE);
-  val associatedWithTaxon = ObjectProperty(Vocab.ASSOCIATED_WITH_TAXON);
   val geneExpression = Class(Vocab.GENE_EXPRESSION);
   val laevis = Individual(Vocab.XENOPUS_LAEVIS);
   val tropicalis = Individual(Vocab.XENOPUS_TROPICALIS);
@@ -81,7 +78,7 @@ object XenbaseExpressionToOWL extends OWLTask {
       axioms.add(expression Type geneExpression);
       val structure = nextIndividual();
       axioms.add(factory.getOWLDeclarationAxiom(structure));
-      axioms.add(expression Fact (occursIn, structure));
+      axioms.add(expression Fact (OCCURS_IN, structure));
       val structureID = StringUtils.stripToNull(items(3).trim().split(" ")(0));
       val structureType = Class(OBOUtil.iriForTermID(structureID));
       axioms.add(structure Type structureType);
@@ -89,8 +86,8 @@ object XenbaseExpressionToOWL extends OWLTask {
       val geneIRI = XenbaseGenesToOWL.getGeneIRI(genepageID);
       val gene = Individual(geneIRI);
       axioms.add(factory.getOWLDeclarationAxiom(gene));
-      axioms.add(expression Fact (associatedWithGene, gene));
-      axioms.add(expression Fact (associatedWithTaxon, species));
+      axioms.add(expression Fact (ASSOCIATED_WITH_GENE, gene));
+      axioms.add(expression Fact (ASSOCIATED_WITH_TAXON, species));
       return axioms;
     }
   }
