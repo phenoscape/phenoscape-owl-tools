@@ -14,6 +14,7 @@ import org.semanticweb.owlapi.model.OWLAxiom
 import org.semanticweb.owlapi.model.OWLClass
 import org.semanticweb.owlapi.model.OWLOntology
 import org.semanticweb.owlapi.model.OWLClassExpression
+import org.phenoscape.owl.Vocab._
 
 object AbsenceClassGenerator extends OWLTask {
 
@@ -34,7 +35,7 @@ object AbsenceClassGenerator extends OWLTask {
   def createAbsenceClass(ontClass: OWLClass): Set[OWLAxiom] = {
     val classIRI = ontClass.getIRI
     val absenceClass = Class(getAbsenceIRI(classIRI))
-    val notHasPartClass = Class(NegationClassGenerator.getNegationIRI(NamedRestrictionGenerator.getRestrictionIRI(Vocab.HAS_PART.getIRI, classIRI)))
+    val notHasPartClass = Class(NegationClassGenerator.getNegationIRI(NamedRestrictionGenerator.getRestrictionIRI(has_part.getIRI, classIRI)))
     Set(
       factory.getOWLDeclarationAxiom(absenceClass),
       absenceClass EquivalentTo (lacksAllPartsOfType and (Vocab.TOWARDS value Individual(classIRI))),
@@ -52,9 +53,9 @@ object AbsenceClassGenerator extends OWLTask {
   }
 
   def generateAllAbsenceAxiomsForEntity(ontClass: OWLClass): Set[OWLAxiom] = {
-    val hasPartAxioms = NamedRestrictionGenerator.createRestriction(Vocab.HAS_PART, ontClass)
+    val hasPartAxioms = NamedRestrictionGenerator.createRestriction(has_part, ontClass)
     val tempOntology = manager.createOntology(hasPartAxioms)
-    val namedHasPartClass = Class(NamedRestrictionGenerator.getRestrictionIRI(Vocab.HAS_PART.getIRI, ontClass.getIRI()))
+    val namedHasPartClass = Class(NamedRestrictionGenerator.getRestrictionIRI(has_part.getIRI, ontClass.getIRI()))
     hasPartAxioms ++
       createAbsenceClass(ontClass) ++
       NegationClassGenerator.createNegationClassAxioms(namedHasPartClass, tempOntology)

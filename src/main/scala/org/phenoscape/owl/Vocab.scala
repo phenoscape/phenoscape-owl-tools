@@ -5,11 +5,11 @@ import org.phenoscape.scowl.OWL._
 
 object Vocab {
 
-  val HAS_PART = ObjectProperty("http://purl.obolibrary.org/obo/BFO_0000051")
-  val PART_OF = ObjectProperty("http://purl.obolibrary.org/obo/BFO_0000050")
-  val BEARER_OF = ObjectProperty("http://purl.obolibrary.org/obo/BFO_0000053")
-  val INHERES_IN = ObjectProperty("http://purl.obolibrary.org/obo/BFO_0000052")
-  val INHERES_IN_PART_OF = ObjectProperty("http://purl.obolibrary.org/obo/RO_0002314")
+  val has_part = ObjectProperty("http://purl.obolibrary.org/obo/BFO_0000051")
+  val part_of = ObjectProperty("http://purl.obolibrary.org/obo/BFO_0000050")
+  val bearer_of = ObjectProperty("http://purl.obolibrary.org/obo/BFO_0000053")
+  val inheres_in = ObjectProperty("http://purl.obolibrary.org/obo/BFO_0000052")
+  val inheres_in_part_of = ObjectProperty("http://purl.obolibrary.org/obo/RO_0002314")
   val EXHIBITS = ObjectProperty("http://purl.org/phenoscape/vocab.owl#exhibits")
   val DEVELOPS_FROM = ObjectProperty("http://purl.obolibrary.org/obo/RO_0002202")
   val NEGATES = IRI.create("http://purl.org/phenoscape/vocab.owl#negation_of_class")

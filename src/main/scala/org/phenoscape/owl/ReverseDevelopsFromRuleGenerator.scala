@@ -31,8 +31,8 @@ object ReverseDevelopsFromRuleGenerator extends OWLTask {
 
   def createRules(ontClass: OWLClass): Set[OWLSubClassOfAxiom] = {
     Set(
-      (HAS_PART some (DEVELOPS_FROM some ontClass)) SubClassOf (HAS_PART some ontClass),
-      (HAS_PART some (PART_OF some ontClass)) SubClassOf (HAS_PART some ontClass))
+      (has_part some (DEVELOPS_FROM some ontClass)) SubClassOf (has_part some ontClass),
+      (has_part some (part_of some ontClass)) SubClassOf (has_part some ontClass))
   }
 
 }

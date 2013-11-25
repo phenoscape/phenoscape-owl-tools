@@ -58,7 +58,7 @@ object ZFINExpressionToOWL extends OWLTask {
         val superStructure = Class(OBOUtil.iriForTermID(superStructureID));
         val subStructure = Class(OBOUtil.iriForTermID(subStructureID));
         val structureType = nextClass();
-        axioms.add(structureType SubClassOf (subStructure and (PART_OF some superStructure)));
+        axioms.add(structureType SubClassOf (subStructure and (part_of some superStructure)));
         axioms.add(structure Type structureType);
       }
       val geneIRI = IRI.create("http://zfin.org/" + StringUtils.stripToNull(items(0)));

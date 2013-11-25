@@ -31,11 +31,11 @@ object EQCreator {
     val manager = OWLManager.createOWLOntologyManager();
     val factory = manager.getOWLDataFactory();
     val eqs = manager.createOntology();
-    manager.addAxiom(eqs, factory.getOWLTransitiveObjectPropertyAxiom(HAS_PART));
-    manager.addAxiom(eqs, factory.getOWLReflexiveObjectPropertyAxiom(HAS_PART));
-    manager.addAxiom(eqs, factory.getOWLTransitiveObjectPropertyAxiom(PART_OF));
-    manager.addAxiom(eqs, factory.getOWLReflexiveObjectPropertyAxiom(PART_OF));
-    manager.addAxiom(eqs, factory.getOWLInverseObjectPropertiesAxiom(HAS_PART, PART_OF));
+    manager.addAxiom(eqs, factory.getOWLTransitiveObjectPropertyAxiom(has_part));
+    manager.addAxiom(eqs, factory.getOWLReflexiveObjectPropertyAxiom(has_part));
+    manager.addAxiom(eqs, factory.getOWLTransitiveObjectPropertyAxiom(part_of));
+    manager.addAxiom(eqs, factory.getOWLReflexiveObjectPropertyAxiom(part_of));
+    manager.addAxiom(eqs, factory.getOWLInverseObjectPropertiesAxiom(has_part, part_of));
     val uberon = manager.loadOntologyFromOntologyDocument(new File("uberon.owl"));
     val pato = manager.loadOntologyFromOntologyDocument(new File("pato.owl"));
     manager.applyChange(new AddImport(eqs, factory.getOWLImportsDeclaration(uberon.getOntologyID().getOntologyIRI())));
@@ -80,8 +80,7 @@ object EQCreator {
 
   def createEQ(entity: OWLClass, quality: OWLClass): OWLAxiom = {
     val eqClass = Class(IRI.create(entity.getIRI().toString() + "+" + quality.getIRI().toString()));
-    val expression = factory.getOWLObjectIntersectionOf(entity, factory.getOWLObjectSomeValuesFrom(BEARER_OF, quality));
-    eqClass EquivalentTo (HAS_PART some ((PART_OF some entity) and (BEARER_OF some quality)));
+    eqClass EquivalentTo (has_part some ((part_of some entity) and (bearer_of some quality)));
   }
 
 }

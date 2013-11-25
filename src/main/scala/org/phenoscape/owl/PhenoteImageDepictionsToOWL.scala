@@ -36,8 +36,8 @@ object PhenoteImageDepictionsToOWL extends OWLTask {
       manager.addAxiom(depictionsOntology, factory.getOWLDeclarationAxiom(image));
       manager.addAxiom(depictionsOntology, factory.getOWLClassAssertionAxiom(imageClass, image));
       val depictedClass = locatorOption match {
-        case Some(locator) => factory.getOWLObjectIntersectionOf(depictedStructure, factory.getOWLObjectSomeValuesFrom(PART_OF, locator), factory.getOWLObjectSomeValuesFrom(PART_OF, taxon));
-        case None => factory.getOWLObjectIntersectionOf(depictedStructure, factory.getOWLObjectSomeValuesFrom(PART_OF, taxon));
+        case Some(locator) => factory.getOWLObjectIntersectionOf(depictedStructure, factory.getOWLObjectSomeValuesFrom(part_of, locator), factory.getOWLObjectSomeValuesFrom(part_of, taxon));
+        case None => factory.getOWLObjectIntersectionOf(depictedStructure, factory.getOWLObjectSomeValuesFrom(part_of, taxon));
       }
       manager.addAxiom(depictionsOntology, factory.getOWLClassAssertionAxiom(factory.getOWLObjectSomeValuesFrom(DEPICTS, depictedClass), image));
       descriptionOption.foreach(description => {

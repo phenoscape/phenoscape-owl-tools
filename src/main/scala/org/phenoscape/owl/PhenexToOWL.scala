@@ -201,17 +201,17 @@ class PhenexToOWL extends OWLTask {
     } else { null }
     val eq_phenotype = (entityTerm, qualityTerm, relatedEntityTerm) match {
       case (null, null, _) => null
-      case (entity: OWLClass, null, null) => (present and (INHERES_IN some entity))
+      case (entity: OWLClass, null, null) => (present and (inheres_in some entity))
       case (entity: OWLClass, null, relatedEntity: OWLClass) => {
         logger.warn("Related entity with no quality.")
-        (present and (INHERES_IN some entity))
+        (present and (inheres_in some entity))
       }
-      case (entity: OWLClass, `absent`, null) => (lacksAllPartsOfType and (INHERES_IN some organism) and (TOWARDS value Individual(entity.getIRI)))
-      case (entity: OWLClass, `lacksAllPartsOfType`, relatedEntity: OWLClass) => (lacksAllPartsOfType and (INHERES_IN some entity) and (TOWARDS value Individual(relatedEntity.getIRI)))
+      case (entity: OWLClass, `absent`, null) => (lacksAllPartsOfType and (inheres_in some organism) and (TOWARDS value Individual(entity.getIRI)))
+      case (entity: OWLClass, `lacksAllPartsOfType`, relatedEntity: OWLClass) => (lacksAllPartsOfType and (inheres_in some entity) and (TOWARDS value Individual(relatedEntity.getIRI)))
       case (null, quality: OWLClass, null) => quality
       case (null, quality: OWLClass, relatedEntity: OWLClass) => (quality and (TOWARDS some relatedEntity))
-      case (entity: OWLClass, quality: OWLClass, null) => (quality and (INHERES_IN some entity))
-      case (entity: OWLClass, quality: OWLClass, relatedEntity: OWLClass) => (quality and (INHERES_IN some entity) and (TOWARDS some relatedEntity))
+      case (entity: OWLClass, quality: OWLClass, null) => (quality and (inheres_in some entity))
+      case (entity: OWLClass, quality: OWLClass, relatedEntity: OWLClass) => (quality and (inheres_in some entity) and (TOWARDS some relatedEntity))
       //TODO comparisons, etc.
     }
     if (eq_phenotype == null) {
