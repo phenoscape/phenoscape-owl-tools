@@ -20,6 +20,8 @@ import org.phenoscape.owl.util.ExpressionUtil
 import org.semanticweb.owlapi.model.AddImport
 import org.semanticweb.owlapi.apibinding.OWLManager
 import org.apache.log4j.Logger
+import org.semanticweb.owlapi.vocab.OWLRDFVocabulary
+import org.semanticweb.owlapi.vocab.DublinCoreVocabulary
 
 object ZFINPhenotypesToOWL extends OWLTask {
 
@@ -106,6 +108,9 @@ object ZFINPhenotypesToOWL extends OWLTask {
       axioms.add(phenotype Fact (ASSOCIATED_WITH_GENE, gene))
       axioms.add(phenotype Fact (ASSOCIATED_WITH_TAXON, zebrafish))
     }
+    val figureID = StringUtils.stripToNull(items(25))
+    val figure = Individual(OBOUtil.zfinIRI(figureID))
+    axioms.add(phenotype Fact (dcSource, figure))
     return axioms
   }
 

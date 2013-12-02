@@ -11,4 +11,6 @@ object OBOUtil {
       IRI.create("http://purl.obolibrary.org/obo/" + id.replaceAll(":", "_"))
   }
 
+  def zfinIRI(identifier: String): IRI = IRI.create("http://zfin.org/" + identifier)
+
 }

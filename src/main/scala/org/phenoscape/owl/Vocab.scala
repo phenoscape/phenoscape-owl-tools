@@ -69,5 +69,6 @@ object Vocab {
   val IMPLIES_PRESENCE_OF = ObjectProperty("http://purl.org/phenoscape/vocab.owl#implies_presence_of")
   val EQ_CHARACTER_TOKEN = IRI.create("http://purl.org/phenoscape/vocab.owl#EQCharacterToken")
   val HAS_NUMBER_OF = IRI.create("http://purl.obolibrary.org/obo/PATO_0001555")
+  val dcSource = ObjectProperty(IRI.create("http://purl.org/dc/terms/source"))
 
 }

@@ -66,6 +66,9 @@ object ZFINExpressionToOWL extends OWLTask {
       axioms.add(factory.getOWLDeclarationAxiom(gene));
       axioms.add(expression Fact (ASSOCIATED_WITH_GENE, gene));
       axioms.add(expression Fact (ASSOCIATED_WITH_TAXON, zebrafish));
+      val publicationID = StringUtils.stripToNull(items(25))
+      val publication = Individual(OBOUtil.zfinIRI(publicationID))
+      axioms.add(expression Fact (dcSource, publication))
       return axioms;
     }
   }
