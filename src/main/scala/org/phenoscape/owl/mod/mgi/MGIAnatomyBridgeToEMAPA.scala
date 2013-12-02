@@ -10,6 +10,7 @@ import org.semanticweb.owlapi.model.OWLAxiom
 import org.phenoscape.owl.util.OBOUtil
 import org.apache.commons.lang3.StringUtils
 import org.phenoscape.scowl.OWL._
+import java.io.File
 
 object MGIAnatomyBridgeToEMAPA extends OWLTask {
 
@@ -28,7 +29,14 @@ object MGIAnatomyBridgeToEMAPA extends OWLTask {
     Set(
       factory.getOWLDeclarationAxiom(mgiTerm),
       factory.getOWLDeclarationAxiom(emapaTerm),
-      mgiTerm EquivalentTo emapaTerm)
+      mgiTerm SubClassOf emapaTerm)
+  }
+
+  def main(args: Array[String]): Unit = {
+    val mappingFile = Source.fromFile(args(0), "utf-8")
+    val ontology = convert(mappingFile)
+    mappingFile.close()
+    manager.saveOntology(ontology, IRI.create(new File(args(1))))
   }
 
 }
