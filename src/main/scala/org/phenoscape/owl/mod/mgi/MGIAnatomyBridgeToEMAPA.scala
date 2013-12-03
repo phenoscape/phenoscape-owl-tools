@@ -23,7 +23,7 @@ object MGIAnatomyBridgeToEMAPA extends OWLTask {
   }
 
   def translate(mapping: String): Set[OWLAxiom] = {
-    val items = mapping.split("\t")
+    val items = mapping.split("\t", -1)
     val mgiTerm = Class(OBOUtil.mgiAnatomyIRI(StringUtils.stripToNull(items(0))))
     val emapaTerm = Class(OBOUtil.iriForTermID(StringUtils.stripToNull(items(1))))
     Set(

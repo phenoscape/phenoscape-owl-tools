@@ -38,7 +38,7 @@ object ZFINExpressionToOWL extends OWLTask {
   }
 
   def translate(expressionLine: String): Set[OWLAxiom] = {
-    val items = expressionLine.split("\t");
+    val items = expressionLine.split("\t", -1);
     val axioms = mutable.Set[OWLAxiom]();
     if (items(0).startsWith("ZDB-EFG")) {
       return axioms;
