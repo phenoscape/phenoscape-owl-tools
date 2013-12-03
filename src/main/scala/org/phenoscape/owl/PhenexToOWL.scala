@@ -339,7 +339,11 @@ class PhenexToOWL extends OWLTask {
   }
 
   def getElementByID(id: String): Element = {
-    return nexml.getDescendants(new ElementFilter()).iterator().filter(id == _.getAttributeValue("id")).next()
+    val iter = nexml.getDescendants(new ElementFilter()).iterator().filter(id == _.getAttributeValue("id"))
+    if (iter.isEmpty) {
+      logger.error("No element in NeXML doc with id: " + id)
+    }
+    iter.next()
   }
 
   def instantiateClassAssertion(individual: OWLIndividual, aClass: OWLClassExpression, expandNamedClass: Boolean): Unit = {
