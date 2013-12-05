@@ -40,6 +40,7 @@ import org.phenoscape.owl.mod.zfin.ZFINPreviousGeneNamesToOWL
 import org.semanticweb.owlapi.model.OWLAxiom
 import org.phenoscape.owl.Vocab._
 import java.io.FileReader
+import org.phenoscape.owl.util.OntologyUtil
 
 object PhenoscapeKB extends KnowledgeBaseBuilder {
 
@@ -101,11 +102,11 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
 
   val hpEQOBO = Source.fromFile(new File(cwd + "/staging/sources/hp-equivalence-axioms.obo"), "utf-8").mkString
   //val hpEQOBOInvolves = hpEQOBO.replaceFirst("ontology: hp/hp-logical-definitions", "ontology: hp/hp-logical-definitions\nlogical-definition-view-relation: involves")
-  val hpEQ = new Obo2Owl().convert(new OBOFormatParser().parse(new BufferedReader(new StringReader(hpEQOBO))))
+  val hpEQ = PropertyNormalizer.normalize(new Obo2Owl().convert(new OBOFormatParser().parse(new BufferedReader(new StringReader(hpEQOBO)))))
   write(hpEQ, cwd + "/staging/kb/hp-logical-definitions.owl")
   // Should switch to OWL version, but need to work around "subq" model
   val mpEQOBO = new File(cwd + "/staging/sources/hp-equivalence-axioms.obo")
-  val mpEQ = new Obo2Owl().convert(new OBOFormatParser().parse(new BufferedReader(new FileReader(mpEQOBO))))
+  val mpEQ = PropertyNormalizer.normalize(new Obo2Owl().convert(new OBOFormatParser().parse(new BufferedReader(new FileReader(mpEQOBO)))))
   write(mpEQ, cwd + "/staging/kb/mp-logical-definitions.owl")
 
   val zfaToUberon = load(new File(cwd + "/staging/sources/uberon-ext-bridge-to-zfa.owl"))
@@ -213,17 +214,20 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     hpEQ, mpEQ, zfaToUberon, xaoToUberon, fmaToUberon, mgiToEMAPA, emapaToUberon, hasParts, presences, absences, absenceNegationEquivalences, developsFromRulesForAbsence, tboxFromData, ro, phenoscapeVocab, eqCharacters)
   println("tbox class count: " + allTBox.getClassesInSignature().size())
   println("tbox logical axiom count: " + allTBox.getLogicalAxiomCount())
+  val tBoxWithoutDisjoints = OntologyUtil.ontologyWithoutDisjointAxioms(allTBox)
+  //write(allTBox, cwd + "/staging/kb/asserted_tbox.owl")
+  //write(tBoxWithoutDisjoints, cwd + "/staging/kb/asserted_tbox_no_disjoints.owl")
 
   step("Materializing tbox classification")
-  val tboxReasoner = reasoner(allTBox)
+  val tboxReasoner = reasoner(tBoxWithoutDisjoints)
   val inferredAxioms = manager.createOntology()
   MaterializeInferences.materializeInferences(inferredAxioms, tboxReasoner)
   tboxReasoner.dispose()
 
   step("Asserting reverse negation hierarchy")
-  val hierarchyAxioms = NegationHierarchyAsserter.assertNegationHierarchy(allTBox, inferredAxioms)
+  val hierarchyAxioms = NegationHierarchyAsserter.assertNegationHierarchy(tBoxWithoutDisjoints, inferredAxioms)
   manager.addAxioms(inferredAxioms, hierarchyAxioms)
-  val negationReasoner = reasoner(allTBox, inferredAxioms)
+  val negationReasoner = reasoner(tBoxWithoutDisjoints, inferredAxioms)
   MaterializeInferences.materializeInferences(inferredAxioms, negationReasoner)
 
   if (negationReasoner.getUnsatisfiableClasses().getEntitiesMinusBottom().isEmpty()) {
@@ -238,7 +242,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
   write(combine(hasParts, presences, absences, absenceNegationEquivalences, developsFromRulesForAbsence, inferredAxioms, eqCharacters), cwd + "/staging/kb/generated.owl")
 
   step("Writing tbox axioms for ELK")
-  write(combine(allTBox, inferredAxioms), cwd + "/staging/kb/tbox.owl")
+  write(combine(tBoxWithoutDisjoints, inferredAxioms), cwd + "/staging/kb/tbox.owl")
   //step("Materializing subclass closure")
   //MaterializeSubClassOfClosureToNTriples.writeClosureToFile(tboxReasoner, new File(cwd + "/staging/kb/hierarchy_closure.nt"))
   tboxReasoner.dispose()
