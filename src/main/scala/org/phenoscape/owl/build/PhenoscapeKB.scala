@@ -105,7 +105,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
   val hpEQ = PropertyNormalizer.normalize(new Obo2Owl().convert(new OBOFormatParser().parse(new BufferedReader(new StringReader(hpEQOBO)))))
   write(hpEQ, cwd + "/staging/kb/hp-logical-definitions.owl")
   // Should switch to OWL version, but need to work around "subq" model
-  val mpEQOBO = new File(cwd + "/staging/sources/hp-equivalence-axioms.obo")
+  val mpEQOBO = new File(cwd + "/staging/sources/mp-equivalence-axioms.obo")
   val mpEQ = PropertyNormalizer.normalize(new Obo2Owl().convert(new OBOFormatParser().parse(new BufferedReader(new FileReader(mpEQOBO)))))
   write(mpEQ, cwd + "/staging/kb/mp-logical-definitions.owl")
 
@@ -211,7 +211,8 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
   val developsFromRulesForAbsence = manager.createOntology(anatomicalEntities.flatMap(ReverseDevelopsFromRuleGenerator.createRules(_)).toSet[OWLAxiom])
 
   val allTBox = combine(uberon, homology, pato, bspo, go, vto, zfa, xao, hp, mp,
-    hpEQ, mpEQ, zfaToUberon, xaoToUberon, fmaToUberon, mgiToEMAPA, emapaToUberon, hasParts, presences, absences, absenceNegationEquivalences, developsFromRulesForAbsence, tboxFromData, ro, phenoscapeVocab, eqCharacters)
+    hpEQ, mpEQ, zfaToUberon, xaoToUberon, fmaToUberon, mgiToEMAPA, emapaToUberon,
+    hasParts, presences, absences, absenceNegationEquivalences, developsFromRulesForAbsence, tboxFromData, ro, phenoscapeVocab, eqCharacters)
   println("tbox class count: " + allTBox.getClassesInSignature().size())
   println("tbox logical axiom count: " + allTBox.getLogicalAxiomCount())
   val tBoxWithoutDisjoints = OntologyUtil.ontologyWithoutDisjointAxioms(allTBox)
