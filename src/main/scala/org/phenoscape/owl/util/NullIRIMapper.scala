@@ -5,8 +5,6 @@ import org.semanticweb.owlapi.model.IRI
 
 object NullIRIMapper extends OWLOntologyIRIMapper {
 
-  override def getDocumentIRI(iri: IRI): IRI = {
-    return null;
-  }
+  override def getDocumentIRI(iri: IRI): IRI = null
 
 }

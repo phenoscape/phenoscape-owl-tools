@@ -12,14 +12,14 @@ import java.util.UUID
 import org.semanticweb.owlapi.model.OWLObjectPropertyAssertionAxiom
 import org.semanticweb.owlapi.model.OWLClassExpression
 import org.semanticweb.owlapi.apibinding.OWLManager
+import org.phenoscape.owl.Vocab._
 
 object TaxonomyConverter extends OWLTask {
 
-  val subcladeOf = OWLManager.getOWLDataFactory().getOWLObjectProperty(Vocab.SUBCLADE_OF);
-  val taxon = OWLManager.getOWLDataFactory().getOWLClass(Vocab.TAXON);
+  val taxon = factory.getOWLClass(Vocab.TAXON);
 
   def main(args: Array[String]): Unit = {
-    val manager = this.createOWLOntologyManager();
+    val manager = OWLManager.createOWLOntologyManager();
     val classOntology = manager.loadOntologyFromOntologyDocument(new File(args(0)));
     val instanceOntology = createInstanceOntology(classOntology);
     manager.saveOntology(instanceOntology, IRI.create(new File(args(1))));
@@ -47,7 +47,7 @@ object TaxonomyConverter extends OWLTask {
     val factory = OWLManager.getOWLDataFactory();
     val subcladeIndividual = factory.getOWLNamedIndividual(subclade.getIRI());
     val supercladeIndividual = factory.getOWLNamedIndividual(superclade.getIRI());
-    return factory.getOWLObjectPropertyAssertionAxiom(subcladeOf, subcladeIndividual, supercladeIndividual);
+    return factory.getOWLObjectPropertyAssertionAxiom(SUBCLADE_OF, subcladeIndividual, supercladeIndividual);
   }
 
   def onlyClasses(classes: Iterable[OWLClassExpression]): Iterable[OWLClass] = {

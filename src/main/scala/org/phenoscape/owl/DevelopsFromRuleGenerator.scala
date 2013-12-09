@@ -10,18 +10,9 @@ import org.semanticweb.owlapi.model.OWLClass
 import org.semanticweb.owlapi.model.OWLOntology
 import org.semanticweb.owlapi.model.OWLSubClassOfAxiom
 import org.semanticweb.owlapi.model.OWLAxiom
+import Vocab._
 
 object DevelopsFromRuleGenerator extends OWLTask {
-
-  val hasPart = ObjectProperty(Vocab.HAS_PART)
-  val developsFrom = ObjectProperty(Vocab.DEVELOPS_FROM)
-
-  def main(args: Array[String]): Unit = {
-    val manager = this.createOWLOntologyManager()
-    val ontology = manager.loadOntologyFromOntologyDocument(new File(args(0)))
-    val developsFromOntology = generateDevelopsFromRules(ontology)
-    manager.saveOntology(developsFromOntology, IRI.create(new File(args(1))))
-  }
 
   def generateDevelopsFromRules(ontology: OWLOntology): OWLOntology = {
     val manager = ontology.getOWLOntologyManager
@@ -31,6 +22,6 @@ object DevelopsFromRuleGenerator extends OWLTask {
   }
 
   def createRule(ontClass: OWLClass): OWLSubClassOfAxiom =
-    (not(hasPart some ontClass)) SubClassOf (not(hasPart some (developsFrom some ontClass)))
+    (not(has_part some ontClass)) SubClassOf (not(has_part some (DEVELOPS_FROM some ontClass)))
 
 }

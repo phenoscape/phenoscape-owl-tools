@@ -13,10 +13,10 @@ import org.semanticweb.owlapi.model.OWLAxiom
 
 object NegationClassGenerator extends OWLTask {
 
-  val negates = OWLManager.getOWLDataFactory().getOWLAnnotationProperty(Vocab.NEGATES)
+  val negates = factory.getOWLAnnotationProperty(Vocab.NEGATES)
 
   def main(args: Array[String]): Unit = {
-    val manager = this.createOWLOntologyManager()
+    val manager = OWLManager.createOWLOntologyManager
     val ontology = manager.loadOntologyFromOntologyDocument(new File(args(0)))
     val negationsOntology = generateNegationClasses(ontology)
     manager.saveOntology(negationsOntology, IRI.create(new File(args(1))))

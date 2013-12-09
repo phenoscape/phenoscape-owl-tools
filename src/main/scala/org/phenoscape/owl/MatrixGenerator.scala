@@ -15,16 +15,14 @@ import org.semanticweb.owlapi.model.OWLAxiom
 import org.semanticweb.owlapi.model.OWLClass
 import org.semanticweb.owlapi.model.OWLEquivalentClassesAxiom
 import org.semanticweb.owlapi.vocab.DublinCoreVocabulary
+import Vocab._
 
 object MatrixGenerator extends OWLTask {
 
   val manager = OWLManager.createOWLOntologyManager();
-  val partOf = ObjectProperty(Vocab.PART_OF);
-  val involves = ObjectProperty(Vocab.INVOLVES);
   val limbFin = Class(Vocab.LIMB_FIN);
   val entityTerm = factory.getOWLAnnotationProperty(IRI.create("http://example.org/entity_term"));
   val qualityTerm = factory.getOWLAnnotationProperty(IRI.create("http://example.org/quality_term"));
-  val mayHaveState = factory.getOWLObjectProperty(Vocab.MAY_HAVE_STATE_VALUE);
   val dcDescription = factory.getOWLAnnotationProperty(DublinCoreVocabulary.DESCRIPTION.getIRI());
 
   def main(args: Array[String]): Unit = {
@@ -78,7 +76,7 @@ object MatrixGenerator extends OWLTask {
 
   def composeEntityAndQualityInvolves(entity: OWLClass, quality: OWLClass): OWLEquivalentClassesAxiom = {
     val composition = Class(compositionIRI(entity, quality));
-    composition EquivalentTo ((involves some entity) and (involves some quality));
+    composition EquivalentTo ((INVOLVES some entity) and (INVOLVES some quality));
   }
 
   def compositionIRI(entity: OWLClass, quality: OWLClass): IRI = {

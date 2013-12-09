@@ -14,11 +14,11 @@ import org.phenoscape.owl.util.OBOUtil
 import org.semanticweb.owlapi.model.AddOntologyAnnotation
 import org.semanticweb.owlapi.model.AddImport
 import java.util.UUID
+import Vocab._
 
 object HomologyTableToOWL extends OWLTask {
 
-  val manager = this.createOWLOntologyManager
-  val homologousTo = ObjectProperty(Vocab.HOMOLOGOUS_TO)
+  val manager = OWLManager.createOWLOntologyManager
   val hasEvidence = factory.getOWLAnnotationProperty(Vocab.EVIDENCE)
   val source = factory.getOWLAnnotationProperty(DublinCoreVocabulary.SOURCE.getIRI)
   val description = factory.getOWLAnnotationProperty(DublinCoreVocabulary.DESCRIPTION.getIRI)
@@ -47,8 +47,8 @@ object HomologyTableToOWL extends OWLTask {
       val evidence = Individual("http://example.org/" + UUID.randomUUID().toString)
       val pub = factory.getOWLLiteral(items(11).trim)
       Set(
-        (structure1 SubClassOf (homologousTo some structure2)) Annotation (hasEvidence, evidence),
-        (structure2 SubClassOf (homologousTo some structure1)) Annotation (hasEvidence, evidence),
+        (structure1 SubClassOf (HOMOLOGOUS_TO some structure2)) Annotation (hasEvidence, evidence),
+        (structure2 SubClassOf (HOMOLOGOUS_TO some structure1)) Annotation (hasEvidence, evidence),
         evidence Type evidenceCode,
         evidence Annotation (source, pub))
     } else {

@@ -6,16 +6,16 @@ import org.semanticweb.owlapi.model.IRI
 import org.apache.commons.lang3.StringUtils
 import org.semanticweb.owlapi.vocab.DublinCoreVocabulary
 import java.io.File
+import org.semanticweb.owlapi.apibinding.OWLManager
+import org.phenoscape.owl.Vocab._
 
 object PhenoteImageDepictionsToOWL extends OWLTask {
 
   val imageClass = factory.getOWLClass(Vocab.IMAGE);
-  val depicts = factory.getOWLObjectProperty(Vocab.DEPICTS);
-  val partOf = factory.getOWLObjectProperty(Vocab.PART_OF);
   val hasDescription = factory.getOWLAnnotationProperty(DublinCoreVocabulary.DESCRIPTION.getIRI());
 
   def main(args: Array[String]): Unit = {
-    val manager = this.createOWLOntologyManager();
+    val manager = OWLManager.createOWLOntologyManager();
     val depictionsOntology = manager.createOntology();
     val annotations = Source.fromFile(args(0), "utf-8").getLines();
     val targetFile = new File(args(1));
@@ -36,10 +36,10 @@ object PhenoteImageDepictionsToOWL extends OWLTask {
       manager.addAxiom(depictionsOntology, factory.getOWLDeclarationAxiom(image));
       manager.addAxiom(depictionsOntology, factory.getOWLClassAssertionAxiom(imageClass, image));
       val depictedClass = locatorOption match {
-        case Some(locator) => factory.getOWLObjectIntersectionOf(depictedStructure, factory.getOWLObjectSomeValuesFrom(partOf, locator), factory.getOWLObjectSomeValuesFrom(partOf, taxon));
-        case None => factory.getOWLObjectIntersectionOf(depictedStructure, factory.getOWLObjectSomeValuesFrom(partOf, taxon));
+        case Some(locator) => factory.getOWLObjectIntersectionOf(depictedStructure, factory.getOWLObjectSomeValuesFrom(part_of, locator), factory.getOWLObjectSomeValuesFrom(part_of, taxon));
+        case None => factory.getOWLObjectIntersectionOf(depictedStructure, factory.getOWLObjectSomeValuesFrom(part_of, taxon));
       }
-      manager.addAxiom(depictionsOntology, factory.getOWLClassAssertionAxiom(factory.getOWLObjectSomeValuesFrom(depicts, depictedClass), image));
+      manager.addAxiom(depictionsOntology, factory.getOWLClassAssertionAxiom(factory.getOWLObjectSomeValuesFrom(DEPICTS, depictedClass), image));
       descriptionOption.foreach(description => {
         manager.addAxiom(depictionsOntology, factory.getOWLAnnotationAssertionAxiom(hasDescription, image.getIRI(), description));
       });

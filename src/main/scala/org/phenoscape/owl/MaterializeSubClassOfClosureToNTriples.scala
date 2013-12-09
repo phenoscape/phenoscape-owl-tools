@@ -17,10 +17,11 @@ import java.io.BufferedWriter
 import java.io.FileWriter
 import java.io.FileOutputStream
 import java.io.OutputStreamWriter
+import org.semanticweb.owlapi.apibinding.OWLManager
 
 object MaterializeSubClassOfClosureToNTriples extends OWLTask {
 
-  val manager = this.createOWLOntologyManager();
+  val manager = OWLManager.createOWLOntologyManager;
 
   def main(args: Array[String]): Unit = {
     val targetFile = new File(System.getProperty("org.phenoscape.owl.MaterializeSubClassOfClosure.target"));

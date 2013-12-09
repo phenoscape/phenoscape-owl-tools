@@ -9,7 +9,7 @@ import org.semanticweb.owlapi.apibinding.OWLManager
 object IterativeReasoner extends OWLTask {
 
   def main(args: Array[String]): Unit = {
-    val mainManager = this.createOWLOntologyManager();
+    val mainManager = OWLManager.createOWLOntologyManager();
     //val targetManager = this.getOWLOntologyManager();
     val mainOntology = mainManager.loadOntologyFromOntologyDocument(new File(args(0)));
     val targetOntologies = args.slice(1, args.length).map(file => OWLManager.createOWLOntologyManager().loadOntologyFromOntologyDocument(new File(file)));

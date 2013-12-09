@@ -17,7 +17,7 @@ object NegationHierarchyAsserter extends OWLTask {
   val negates = factory.getOWLAnnotationProperty(Vocab.NEGATES)
 
   def main(args: Array[String]): Unit = {
-    val manager = this.createOWLOntologyManager()
+    val manager = OWLManager.createOWLOntologyManager
     val ontology = manager.loadOntologyFromOntologyDocument(new File(args(0)))
     assertNegationHierarchy(ontology)
     if (args.size > 1) {

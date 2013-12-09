@@ -14,21 +14,13 @@ import org.semanticweb.owlapi.model.OWLAxiom
 import org.semanticweb.owlapi.model.OWLClass
 import org.semanticweb.owlapi.model.OWLOntology
 import org.semanticweb.owlapi.model.OWLClassExpression
+import org.phenoscape.owl.Vocab._
 
 object AbsenceClassGenerator extends OWLTask {
 
-  val hasPart = OWLManager.getOWLDataFactory().getOWLObjectProperty(Vocab.HAS_PART)
   val lacksAllPartsOfType = Class(Vocab.LACKS_ALL_PARTS_OF_TYPE)
-  val towards = ObjectProperty(Vocab.TOWARDS)
   val absenceOf = factory.getOWLAnnotationProperty(Vocab.ABSENCE_OF)
-  val involves = ObjectProperty(Vocab.INVOLVES)
-  val manager = this.createOWLOntologyManager
-
-  def main(args: Array[String]): Unit = {
-    val ontology = manager.loadOntologyFromOntologyDocument(new File(args(0)))
-    val absenceOntology = generateAbsenceClasses(ontology)
-    manager.saveOntology(absenceOntology, IRI.create(new File(args(1))))
-  }
+  val manager = OWLManager.createOWLOntologyManager
 
   def generateAbsenceClasses(ontology: OWLOntology): OWLOntology = {
     val manager = ontology.getOWLOntologyManager()
@@ -41,29 +33,29 @@ object AbsenceClassGenerator extends OWLTask {
   }
 
   def createAbsenceClass(ontClass: OWLClass): Set[OWLAxiom] = {
-    val classIRI = ontClass.getIRI()
+    val classIRI = ontClass.getIRI
     val absenceClass = Class(getAbsenceIRI(classIRI))
-    val notHasPartClass = Class(NegationClassGenerator.getNegationIRI(NamedRestrictionGenerator.getRestrictionIRI(hasPart.getIRI(), classIRI)))
+    val notHasPartClass = Class(NegationClassGenerator.getNegationIRI(NamedRestrictionGenerator.getRestrictionIRI(has_part.getIRI, classIRI)))
     Set(
       factory.getOWLDeclarationAxiom(absenceClass),
-      absenceClass EquivalentTo (lacksAllPartsOfType and (towards value Individual(classIRI))),
+      absenceClass EquivalentTo (lacksAllPartsOfType and (Vocab.TOWARDS value Individual(classIRI))),
       absenceClass EquivalentTo notHasPartClass,
-      absenceClass Annotation (absenceOf, ontClass.getIRI()))
+      absenceClass Annotation (absenceOf, ontClass.getIRI))
     //absenceClass SubClassOf (involves some ontClass) //this is dangerous
   }
 
   def getAbsenceIRI(classIRI: IRI): IRI = {
-    return IRI.create("http://purl.org/phenoscape/lacks/" + classIRI.toString())
+    return IRI.create("http://purl.org/phenoscape/lacks/" + classIRI.toString)
   }
 
   def getAbsenceOntologyIRI(ontology: OWLOntology): IRI = {
-    return IRI.create("http://phenoscape.org/not_has_part/" + ontology.getOntologyID().getOntologyIRI().toString())
+    return IRI.create("http://phenoscape.org/not_has_part/" + ontology.getOntologyID.getOntologyIRI.toString)
   }
 
   def generateAllAbsenceAxiomsForEntity(ontClass: OWLClass): Set[OWLAxiom] = {
-    val hasPartAxioms = NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.HAS_PART), ontClass)
+    val hasPartAxioms = NamedRestrictionGenerator.createRestriction(has_part, ontClass)
     val tempOntology = manager.createOntology(hasPartAxioms)
-    val namedHasPartClass = Class(NamedRestrictionGenerator.getRestrictionIRI(Vocab.HAS_PART, ontClass.getIRI()))
+    val namedHasPartClass = Class(NamedRestrictionGenerator.getRestrictionIRI(has_part.getIRI, ontClass.getIRI()))
     hasPartAxioms ++
       createAbsenceClass(ontClass) ++
       NegationClassGenerator.createNegationClassAxioms(namedHasPartClass, tempOntology)
