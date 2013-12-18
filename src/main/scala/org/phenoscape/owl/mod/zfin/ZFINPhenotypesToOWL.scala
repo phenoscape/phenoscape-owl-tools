@@ -25,7 +25,6 @@ import org.semanticweb.owlapi.vocab.DublinCoreVocabulary
 
 object ZFINPhenotypesToOWL extends OWLTask {
 
-  val annotationClass = Class(Vocab.ANNOTATED_PHENOTYPE)
   val zebrafish = Individual(Vocab.ZEBRAFISH)
   val present = Class(Vocab.PRESENT)
   val absent = Class(Vocab.ABSENT)
@@ -51,7 +50,7 @@ object ZFINPhenotypesToOWL extends OWLTask {
     val involved = mutable.Set[OWLClass]()
     val axioms = mutable.Set[OWLAxiom]()
     val phenotype = nextIndividual()
-    axioms.add(phenotype Type annotationClass)
+    axioms.add(phenotype Type AnnotatedPhenotype)
     axioms.add(factory.getOWLDeclarationAxiom(phenotype))
     val superStructureID = StringUtils.stripToNull(items(7))
     val subStructureID = StringUtils.stripToNull(items(3))
@@ -105,8 +104,8 @@ object ZFINPhenotypesToOWL extends OWLTask {
       val geneIRI = IRI.create("http://zfin.org/" + StringUtils.stripToNull(items(2)))
       val gene = Individual(geneIRI)
       axioms.add(factory.getOWLDeclarationAxiom(gene))
-      axioms.add(phenotype Fact (ASSOCIATED_WITH_GENE, gene))
-      axioms.add(phenotype Fact (ASSOCIATED_WITH_TAXON, zebrafish))
+      axioms.add(phenotype Fact (associated_with_gene, gene))
+      axioms.add(phenotype Fact (associated_with_taxon, zebrafish))
     }
     val figureID = StringUtils.stripToNull(items(25))
     val figure = Individual(OBOUtil.zfinIRI(figureID))

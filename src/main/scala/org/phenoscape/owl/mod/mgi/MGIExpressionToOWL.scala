@@ -20,11 +20,10 @@ import org.semanticweb.owlapi.model.OWLOntology
 import org.semanticweb.owlapi.vocab.OWLRDFVocabulary
 import org.semanticweb.owlapi.model.AddImport
 import org.semanticweb.owlapi.apibinding.OWLManager
-import Vocab._
+import org.phenoscape.owl.Vocab._
 
 object MGIExpressionToOWL extends OWLTask {
 
-  val geneExpression = Class(Vocab.GENE_EXPRESSION)
   val mouse = Individual(Vocab.MOUSE)
   val manager = OWLManager.createOWLOntologyManager()
 
@@ -51,7 +50,7 @@ object MGIExpressionToOWL extends OWLTask {
       val axioms = mutable.Set[OWLAxiom]()
       val expression = nextIndividual()
       axioms.add(factory.getOWLDeclarationAxiom(expression))
-      axioms.add(expression Type geneExpression)
+      axioms.add(expression Type GeneExpression)
       val structure = nextIndividual()
       axioms.add(factory.getOWLDeclarationAxiom(structure))
       axioms.add(expression Fact (OCCURS_IN, structure))
@@ -61,8 +60,8 @@ object MGIExpressionToOWL extends OWLTask {
       val geneIRI = MGIGeneticMarkersToOWL.getGeneIRI(StringUtils.stripToNull(items(1)))
       val gene = Individual(geneIRI)
       axioms.add(factory.getOWLDeclarationAxiom(gene))
-      axioms.add(expression Fact (ASSOCIATED_WITH_GENE, gene))
-      axioms.add(expression Fact (ASSOCIATED_WITH_TAXON, mouse))
+      axioms.add(expression Fact (associated_with_gene, gene))
+      axioms.add(expression Fact (associated_with_taxon, mouse))
       val publicationID = StringUtils.stripToNull(items(10))
       val publication = Individual(OBOUtil.mgiReferenceIRI(publicationID))
       axioms.add(expression Fact (dcSource, publication))

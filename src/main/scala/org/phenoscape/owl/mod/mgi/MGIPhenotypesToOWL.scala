@@ -24,7 +24,6 @@ import Vocab._
 
 object MGIPhenotypesToOWL extends OWLTask {
 
-  val annotationClass = Class(Vocab.ANNOTATED_PHENOTYPE)
   val mouse = Individual(Vocab.MOUSE)
   val present = Class(Vocab.PRESENT)
   val absent = Class(Vocab.ABSENT)
@@ -50,7 +49,7 @@ object MGIPhenotypesToOWL extends OWLTask {
     val involved = mutable.Set[OWLClass]()
     val axioms = mutable.Set[OWLAxiom]()
     val phenotype = nextIndividual()
-    axioms.add(phenotype Type annotationClass)
+    axioms.add(phenotype Type AnnotatedPhenotype)
     axioms.add(factory.getOWLDeclarationAxiom(phenotype))
     val phenotypeID = StringUtils.stripToNull(items(10))
     val phenotypeClass = Class(OBOUtil.iriForTermID(phenotypeID))
@@ -58,8 +57,8 @@ object MGIPhenotypesToOWL extends OWLTask {
     val geneIRI = MGIGeneticMarkersToOWL.getGeneIRI(StringUtils.stripToNull(items(0)))
     val gene = Individual(geneIRI)
     axioms.add(factory.getOWLDeclarationAxiom(gene))
-    axioms.add(phenotype Fact (ASSOCIATED_WITH_GENE, gene))
-    axioms.add(phenotype Fact (ASSOCIATED_WITH_TAXON, mouse))
+    axioms.add(phenotype Fact (associated_with_gene, gene))
+    axioms.add(phenotype Fact (associated_with_taxon, mouse))
     val publicationID = StringUtils.stripToNull(items(11))
     val publication = Individual(OBOUtil.mgiReferenceIRI(publicationID))
     axioms.add(phenotype Fact (dcSource, publication))

@@ -20,7 +20,6 @@ import org.semanticweb.owlapi.apibinding.OWLManager
 
 object ZFINExpressionToOWL extends OWLTask {
 
-  val geneExpression = Class(Vocab.GENE_EXPRESSION)
   val zebrafish = Individual(Vocab.ZEBRAFISH)
   val manager = OWLManager.createOWLOntologyManager()
 
@@ -44,7 +43,7 @@ object ZFINExpressionToOWL extends OWLTask {
     } else {
       val expression = nextIndividual()
       axioms.add(factory.getOWLDeclarationAxiom(expression))
-      axioms.add(expression Type geneExpression)
+      axioms.add(expression Type GeneExpression)
       val structure = nextIndividual()
       axioms.add(factory.getOWLDeclarationAxiom(structure))
       axioms.add(expression Fact (OCCURS_IN, structure))
@@ -63,8 +62,8 @@ object ZFINExpressionToOWL extends OWLTask {
       val geneIRI = OBOUtil.zfinIRI(StringUtils.stripToNull(items(0)))
       val gene = Individual(geneIRI)
       axioms.add(factory.getOWLDeclarationAxiom(gene))
-      axioms.add(expression Fact (ASSOCIATED_WITH_GENE, gene))
-      axioms.add(expression Fact (ASSOCIATED_WITH_TAXON, zebrafish))
+      axioms.add(expression Fact (associated_with_gene, gene))
+      axioms.add(expression Fact (associated_with_taxon, zebrafish))
       val publicationID = StringUtils.stripToNull(items(10))
       val publication = Individual(OBOUtil.zfinIRI(publicationID))
       axioms.add(expression Fact (dcSource, publication))

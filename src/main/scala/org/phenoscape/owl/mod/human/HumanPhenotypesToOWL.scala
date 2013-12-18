@@ -24,7 +24,6 @@ object HumanPhenotypesToOWL extends OWLTask {
   val rdfsLabel = factory.getOWLAnnotationProperty(OWLRDFVocabulary.RDFS_LABEL.getIRI());
   val human = factory.getOWLNamedIndividual(Vocab.HUMAN);
   val geneClass = factory.getOWLClass(Vocab.GENE);
-  val annotationClass = factory.getOWLClass(Vocab.ANNOTATED_PHENOTYPE);
   val manager = OWLManager.createOWLOntologyManager();
 
   def main(args: Array[String]): Unit = {
@@ -43,8 +42,8 @@ object HumanPhenotypesToOWL extends OWLTask {
   def translate(phenotypeLine: String): Set[OWLAxiom] = {
     val items = phenotypeLine.split("\t");
     val axioms = mutable.Set[OWLAxiom]();
-    val phenotype = nextIndividual();
-    axioms.add(phenotype Type annotationClass);
+    val phenotype = this.nextIndividual();
+    axioms.add(phenotype Type AnnotatedPhenotype);
     axioms.add(factory.getOWLDeclarationAxiom(phenotype));
     val phenotypeID = StringUtils.stripToNull(items(3));
     val phenotypeClass = Class(OBOUtil.iriForTermID(phenotypeID));
@@ -55,8 +54,8 @@ object HumanPhenotypesToOWL extends OWLTask {
     val gene = Individual(geneIRI);
     axioms.add(gene Type geneClass);
     axioms.add(factory.getOWLDeclarationAxiom(gene));
-    axioms.add(phenotype Fact (ASSOCIATED_WITH_GENE, gene));
-    axioms.add(phenotype Fact (ASSOCIATED_WITH_TAXON, human));
+    axioms.add(phenotype Fact (associated_with_gene, gene));
+    axioms.add(phenotype Fact (associated_with_taxon, human));
     return axioms;
   }
 

@@ -21,74 +21,73 @@ import org.semanticweb.owlapi.apibinding.OWLManager
 
 object XenbaseExpressionToOWL extends OWLTask {
 
-  val geneExpression = Class(Vocab.GENE_EXPRESSION);
-  val laevis = Individual(Vocab.XENOPUS_LAEVIS);
-  val tropicalis = Individual(Vocab.XENOPUS_TROPICALIS);
-  val manager = OWLManager.createOWLOntologyManager();
+  val laevis = Individual(Vocab.XENOPUS_LAEVIS)
+  val tropicalis = Individual(Vocab.XENOPUS_TROPICALIS)
+  val manager = OWLManager.createOWLOntologyManager()
 
   def main(args: Array[String]): Unit = {
-    val genepageMappingsFile = Source.fromFile(args(0), "utf-8");
-    val laevisExpressionFile = Source.fromFile(args(1), "utf-8");
-    val tropicalisExpressionFile = Source.fromFile(args(2));
-    val ontology = convert(genepageMappingsFile, laevisExpressionFile, tropicalisExpressionFile);
-    genepageMappingsFile.close();
-    laevisExpressionFile.close();
-    tropicalisExpressionFile.close();
-    manager.saveOntology(ontology, IRI.create(new File(args(3))));
+    val genepageMappingsFile = Source.fromFile(args(0), "utf-8")
+    val laevisExpressionFile = Source.fromFile(args(1), "utf-8")
+    val tropicalisExpressionFile = Source.fromFile(args(2))
+    val ontology = convert(genepageMappingsFile, laevisExpressionFile, tropicalisExpressionFile)
+    genepageMappingsFile.close()
+    laevisExpressionFile.close()
+    tropicalisExpressionFile.close()
+    manager.saveOntology(ontology, IRI.create(new File(args(3))))
   }
 
   def convert(genepageMappingsFile: Source, laevisExpressionFile: Source, tropicalisExpressionFile: Source): OWLOntology = {
-    val mappings = indexGenepageMappings(genepageMappingsFile);
-    val ontology = convert(laevisExpressionFile, mappings, laevis);
-    val tropicalisOntology = convert(tropicalisExpressionFile, mappings, tropicalis);
-    manager.addAxioms(ontology, tropicalisOntology.getAxioms());
-    return ontology;
+    val mappings = indexGenepageMappings(genepageMappingsFile)
+    val ontology = convert(laevisExpressionFile, mappings, laevis)
+    val tropicalisOntology = convert(tropicalisExpressionFile, mappings, tropicalis)
+    manager.addAxioms(ontology, tropicalisOntology.getAxioms())
+    return ontology
   }
 
   def indexGenepageMappings(mappings: Source): Map[String, String] = {
-    val index = mutable.Map[String, String]();
+    val index = mutable.Map[String, String]()
     for (mapping <- mappings.getLines()) {
-      val items = mapping.split("\t");
-      val genepageID = StringUtils.stripToNull(items(0));
+      val items = mapping.split("\t")
+      val genepageID = StringUtils.stripToNull(items(0))
       for (geneID <- items(1).split(",")) {
-        index(StringUtils.stripToNull(geneID)) = genepageID;
+        index(StringUtils.stripToNull(geneID)) = genepageID
       }
     }
-    return index;
+    return index
   }
 
   def convert(expressionData: Source, genepageMappings: Map[String, String], species: OWLNamedIndividual): OWLOntology = {
-    val id = if (species == laevis) "http://purl.obolibrary.org/obo/phenoscape/xenbase_gene_expression.owl" else "";
-    val ontology = manager.createOntology(IRI.create(id));
-    manager.addAxioms(ontology, expressionData.getLines.map(translate(_, genepageMappings, species)).flatten.toSet[OWLAxiom]);
-    val rdfsLabel = factory.getRDFSLabel();
-    manager.addAxiom(ontology, laevis Annotation (rdfsLabel, factory.getOWLLiteral("Xenopus laevis")));
-    manager.addAxiom(ontology, tropicalis Annotation (rdfsLabel, factory.getOWLLiteral("Xenopus tropicalis")));
-    return ontology;
+    val id = if (species == laevis) "http://purl.obolibrary.org/obo/phenoscape/xenbase_gene_expression.owl" else ""
+    val ontology = manager.createOntology(IRI.create(id))
+    manager.addAxioms(ontology, expressionData.getLines.map(translate(_, genepageMappings, species)).flatten.toSet[OWLAxiom])
+    val rdfsLabel = factory.getRDFSLabel()
+    manager.addAxiom(ontology, laevis Annotation (rdfsLabel, factory.getOWLLiteral("Xenopus laevis")))
+    manager.addAxiom(ontology, tropicalis Annotation (rdfsLabel, factory.getOWLLiteral("Xenopus tropicalis")))
+    return ontology
   }
 
   def translate(expressionLine: String, genepageMappings: Map[String, String], species: OWLNamedIndividual): Set[OWLAxiom] = {
-    val items = expressionLine.split("\t");
-    val axioms = mutable.Set[OWLAxiom]();
+    val items = expressionLine.split("\t")
+    val axioms = mutable.Set[OWLAxiom]()
     if (StringUtils.stripToEmpty(items(3)) == "unspecified") {
-      return axioms;
+      return axioms
     } else {
-      val expression = nextIndividual();
-      axioms.add(factory.getOWLDeclarationAxiom(expression));
-      axioms.add(expression Type geneExpression);
-      val structure = nextIndividual();
-      axioms.add(factory.getOWLDeclarationAxiom(structure));
-      axioms.add(expression Fact (OCCURS_IN, structure));
-      val structureID = StringUtils.stripToNull(items(3).trim().split(" ")(0));
-      val structureType = Class(OBOUtil.iriForTermID(structureID));
-      axioms.add(structure Type structureType);
-      val genepageID = genepageMappings(StringUtils.stripToNull(items(0)));
-      val geneIRI = XenbaseGenesToOWL.getGeneIRI(genepageID);
-      val gene = Individual(geneIRI);
-      axioms.add(factory.getOWLDeclarationAxiom(gene));
-      axioms.add(expression Fact (ASSOCIATED_WITH_GENE, gene));
-      axioms.add(expression Fact (ASSOCIATED_WITH_TAXON, species));
-      return axioms;
+      val expression = nextIndividual()
+      axioms.add(factory.getOWLDeclarationAxiom(expression))
+      axioms.add(expression Type GeneExpression)
+      val structure = nextIndividual()
+      axioms.add(factory.getOWLDeclarationAxiom(structure))
+      axioms.add(expression Fact (OCCURS_IN, structure))
+      val structureID = StringUtils.stripToNull(items(3).trim().split(" ")(0))
+      val structureType = Class(OBOUtil.iriForTermID(structureID))
+      axioms.add(structure Type structureType)
+      val genepageID = genepageMappings(StringUtils.stripToNull(items(0)))
+      val geneIRI = XenbaseGenesToOWL.getGeneIRI(genepageID)
+      val gene = Individual(geneIRI)
+      axioms.add(factory.getOWLDeclarationAxiom(gene))
+      axioms.add(expression Fact (associated_with_gene, gene))
+      axioms.add(expression Fact (associated_with_taxon, species))
+      return axioms
     }
   }
 
