@@ -2,9 +2,16 @@ package org.phenoscape.owl
 
 import org.semanticweb.owlapi.model.IRI
 import org.phenoscape.scowl.OWL._
+import org.semanticweb.owlapi.apibinding.OWLManager
+import org.semanticweb.owlapi.vocab.DublinCoreVocabulary
+import org.semanticweb.owlapi.vocab.OWLRDFVocabulary
 
 object Vocab {
 
+  val rdfType = OWLRDFVocabulary.RDF_TYPE.getIRI
+  val rdfsSubClassOf = OWLRDFVocabulary.RDFS_SUBCLASS_OF.getIRI
+  val rdfsLabel = OWLManager.getOWLDataFactory.getRDFSLabel
+  val dcDescription = DublinCoreVocabulary.DESCRIPTION.getIRI
   val has_part = ObjectProperty("http://purl.obolibrary.org/obo/BFO_0000051")
   val part_of = ObjectProperty("http://purl.obolibrary.org/obo/BFO_0000050")
   val bearer_of = ObjectProperty("http://purl.obolibrary.org/obo/BFO_0000053")
@@ -38,6 +45,7 @@ object Vocab {
   val ABSENT = IRI.create("http://purl.obolibrary.org/obo/PATO_0000462")
   val PRESENT = IRI.create("http://purl.obolibrary.org/obo/PATO_0000467")
   val LACKS_ALL_PARTS_OF_TYPE = IRI.create("http://purl.obolibrary.org/obo/PATO_0002000")
+  val LacksAllPartsOfType = Class(LACKS_ALL_PARTS_OF_TYPE)
   val INVOLVES = ObjectProperty("http://purl.org/phenoscape/vocab.owl#involves")
   val GeneExpression = Class("http://purl.obolibrary.org/obo/GO_0010467")
   val AnnotatedPhenotype = Class("http://purl.org/phenoscape/vocab.owl#AnnotatedPhenotype")
@@ -65,6 +73,7 @@ object Vocab {
   val QUALITY = IRI.create("http://purl.obolibrary.org/obo/PATO_0000001")
   val PHP = ObjectProperty("http://example.org/php") // part_of some homologous_to some part_of... experimental
   val MULTI_CELLULAR_ORGANISM = IRI.create("http://purl.obolibrary.org/obo/UBERON_0000468")
+  val MultiCellularOrganism = Class(MULTI_CELLULAR_ORGANISM)
   val ABSENCE_OF = IRI.create("http://purl.org/phenoscape/vocab.owl#absence_of")
   val IMPLIES_PRESENCE_OF = ObjectProperty("http://purl.org/phenoscape/vocab.owl#implies_presence_of")
   val EQ_CHARACTER_TOKEN = IRI.create("http://purl.org/phenoscape/vocab.owl#EQCharacterToken")
