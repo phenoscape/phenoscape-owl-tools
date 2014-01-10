@@ -67,31 +67,34 @@ object CharaparserEvaluationDB extends KnowledgeBaseBuilder {
   write(phenoscapeVocab, cwd + "/staging/kb/phenoscape-vocab.owl")
   val attributes = load(new File(cwd + "/staging/sources/character_slims.obo"))
   write(attributes, cwd + "/staging/kb/attributes.owl")
-  val uberonReferences = load(new File(cwd + "/staging/sources/references.owl"))
-  val uberonChebi = load(new File(cwd + "/staging/sources/chebi_import.owl"))
-  val uberonCL = load(new File(cwd + "/staging/sources/cl_import.owl"))
-  val uberonGO = load(new File(cwd + "/staging/sources/go_import.owl"))
-  val uberonTaxon = load(new File(cwd + "/staging/sources/ncbitaxon_import.owl"))
-  val uberonPATO = load(new File(cwd + "/staging/sources/pato_import.owl"))
-  val uberonPR = load(new File(cwd + "/staging/sources/pr_import.owl"))
-  val uberonENVO = load(new File(cwd + "/staging/sources/envo_import.owl"))
-  val uberonNBO = load(new File(cwd + "/staging/sources/nbo_import.owl"))
-  val ext = load(new File(cwd + "/staging/sources/ext.owl"))
-  val uberon = combine(ext, uberonReferences, uberonChebi, uberonGO, uberonTaxon, uberonPATO, uberonPR, uberonENVO, uberonNBO)
+  //  val uberonReferences = load(new File(cwd + "/staging/sources/references.owl"))
+  //  val uberonChebi = load(new File(cwd + "/staging/sources/chebi_import.owl"))
+  //  val uberonCL = load(new File(cwd + "/staging/sources/cl_import.owl"))
+  //  val uberonGO = load(new File(cwd + "/staging/sources/go_import.owl"))
+  //  val uberonTaxon = load(new File(cwd + "/staging/sources/ncbitaxon_import.owl"))
+  //  val uberonPATO = load(new File(cwd + "/staging/sources/pato_import.owl"))
+  //  val uberonPR = load(new File(cwd + "/staging/sources/pr_import.owl"))
+  //  val uberonENVO = load(new File(cwd + "/staging/sources/envo_import.owl"))
+  //  val uberonNBO = load(new File(cwd + "/staging/sources/nbo_import.owl"))
+  //  val ext = load(new File(cwd + "/staging/sources/ext.owl"))
+  //  val uberon = combine(ext, uberonReferences, uberonChebi, uberonGO, uberonTaxon, uberonPATO, uberonPR, uberonENVO, uberonNBO)
+  val ext = load(new File(cwd + "/staging/sources/phenoscape-ext-simple.owl"))
+  val termRequests = load(new File(cwd + "/staging/sources/term_requests_ALL.owl"))
+  val uberon = combine(ext, termRequests)
   write(uberon, cwd + "/staging/kb/uberon.owl")
   val pato = load(new File(cwd + "/staging/sources/pato.owl"))
   write(pato, cwd + "/staging/kb/pato.owl")
   val bspo = load(new File(cwd + "/staging/sources/bspo.owl"))
   write(bspo, cwd + "/staging/kb/bspo.owl")
-  val go = load(new File(cwd + "/staging/sources/go.owl"))
-  write(go, cwd + "/staging/kb/go.owl")
+//  val go = load(new File(cwd + "/staging/sources/go.owl"))
+//  write(go, cwd + "/staging/kb/go.owl")
   val taxrank = load(new File(cwd + "/staging/sources/taxrank.owl"))
   write(taxrank, cwd + "/staging/kb/taxrank.owl")
   val vto = load(new File(cwd + "/staging/sources/vto.owl"))
   write(vto, cwd + "/staging/kb/vto.owl")
 
   step("Querying entities and qualities")
-  val coreReasoner = reasoner(uberon, pato, bspo, go, ro, phenoscapeVocab)
+  val coreReasoner = reasoner(uberon, pato, bspo, ro, phenoscapeVocab)
   //FIXME may need more than just anatomical entities
   val anatomicalEntities = coreReasoner.getSubClasses(Class(Vocab.ANATOMICAL_ENTITY), false).getFlattened().filterNot(_.isOWLNothing())
   //val qualities = coreReasoner.getSubClasses(Class(Vocab.QUALITY), false).getFlattened().filterNot(_.isOWLNothing())
@@ -118,13 +121,14 @@ object CharaparserEvaluationDB extends KnowledgeBaseBuilder {
   val hasParts = manager.createOntology(anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(has_part, _)))
   val inherers = manager.createOntology(anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(inheres_in, _)))
   val inherersInPartOf = manager.createOntology(anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(inheres_in_part_of, _)))
+  val towardses = manager.createOntology(anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(TOWARDS, _)))
   val absences = manager.createOntology(anatomicalEntities.flatMap(AbsenceClassGenerator.createAbsenceClass(_)))
   val namedHasPartClasses = anatomicalEntities.map(_.getIRI()).map(NamedRestrictionGenerator.getRestrictionIRI(has_part.getIRI, _)).map(Class(_))
   val absenceNegationEquivalences = manager.createOntology(namedHasPartClasses.flatMap(NegationClassGenerator.createNegationClassAxioms(_, hasParts)))
   val developsFromRulesForAbsence = manager.createOntology(anatomicalEntities.flatMap(ReverseDevelopsFromRuleGenerator.createRules(_)).toSet[OWLAxiom])
 
-  val allTBox = combine(uberon, pato, bspo, go, vto,
-    hasParts, inherers, inherersInPartOf, absences, absenceNegationEquivalences, developsFromRulesForAbsence, tboxFromData, ro, phenoscapeVocab)
+  val allTBox = combine(uberon, pato, bspo, vto,
+    hasParts, inherers, inherersInPartOf, towardses, absences, absenceNegationEquivalences, developsFromRulesForAbsence, tboxFromData, ro, phenoscapeVocab)
   println("tbox class count: " + allTBox.getClassesInSignature().size())
   println("tbox logical axiom count: " + allTBox.getLogicalAxiomCount())
 
@@ -148,15 +152,15 @@ object CharaparserEvaluationDB extends KnowledgeBaseBuilder {
   }
 
   step("Writing generated and inferred tbox axioms")
-  write(combine(hasParts, inherers, inherersInPartOf, absences, absenceNegationEquivalences, developsFromRulesForAbsence, inferredAxioms), cwd + "/staging/kb/generated.owl")
+  write(combine(hasParts, inherers, inherersInPartOf, towardses, absences, absenceNegationEquivalences, developsFromRulesForAbsence, inferredAxioms), cwd + "/staging/kb/generated.owl")
 
   step("Writing tbox axioms for ELK")
   write(combine(allTBox, inferredAxioms), cwd + "/staging/kb/tbox.owl")
-  
+
   step("Materializing subclass closure")
   MaterializeSubClassOfClosureToNTriples.writeClosureToFile(negationReasoner, new File(cwd + "/staging/kb/hierarchy_closure.nt"))
   negationReasoner.dispose()
-  
+
   step("Done")
 
 }
