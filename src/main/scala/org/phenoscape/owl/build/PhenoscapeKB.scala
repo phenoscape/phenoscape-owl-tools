@@ -2,7 +2,9 @@ package org.phenoscape.owl.build
 
 import java.io.BufferedReader
 import java.io.File
+import java.io.FileReader
 import java.io.StringReader
+import java.util.Properties
 import scala.collection.JavaConversions._
 import scala.collection.mutable
 import scala.io.Source
@@ -10,15 +12,13 @@ import org.apache.commons.io.FileUtils
 import org.apache.log4j.BasicConfigurator
 import org.apache.log4j.Level
 import org.apache.log4j.Logger
-import org.phenoscape.scowl.OWL._
 import org.obolibrary.obo2owl.Obo2Owl
 import org.obolibrary.oboformat.parser.OBOFormatParser
+import org.openrdf.rio.RDFFormat
 import org.phenoscape.owl.AbsenceClassGenerator
 import org.phenoscape.owl.EQCharactersGenerator
 import org.phenoscape.owl.KnowledgeBaseBuilder
 import org.phenoscape.owl.MaterializeInferences
-import org.phenoscape.owl.MaterializeSubClassOfClosure
-import org.phenoscape.owl.MaterializeSubClassOfClosureToNTriples
 import org.phenoscape.owl.NamedRestrictionGenerator
 import org.phenoscape.owl.NegationClassGenerator
 import org.phenoscape.owl.NegationHierarchyAsserter
@@ -27,6 +27,7 @@ import org.phenoscape.owl.PropertyNormalizer
 import org.phenoscape.owl.ReverseDevelopsFromRuleGenerator
 import org.phenoscape.owl.TaxonomyConverter
 import org.phenoscape.owl.Vocab
+import org.phenoscape.owl.Vocab.has_part
 import org.phenoscape.owl.mod.human.HumanPhenotypesToOWL
 import org.phenoscape.owl.mod.mgi.MGIExpressionToOWL
 import org.phenoscape.owl.mod.mgi.MGIGeneticMarkersToOWL
@@ -37,10 +38,13 @@ import org.phenoscape.owl.mod.zfin.ZFINExpressionToOWL
 import org.phenoscape.owl.mod.zfin.ZFINGeneticMarkersToOWL
 import org.phenoscape.owl.mod.zfin.ZFINPhenotypesToOWL
 import org.phenoscape.owl.mod.zfin.ZFINPreviousGeneNamesToOWL
-import org.semanticweb.owlapi.model.OWLAxiom
-import org.phenoscape.owl.Vocab._
-import java.io.FileReader
 import org.phenoscape.owl.util.OntologyUtil
+import org.phenoscape.scowl.OWL.Class
+import org.semanticweb.owlapi.model.OWLAxiom
+import com.bigdata.journal.Options
+import com.bigdata.rdf.sail.BigdataSail
+import com.bigdata.rdf.sail.BigdataSailRepository
+import org.openrdf.model.impl.URIImpl
 
 object PhenoscapeKB extends KnowledgeBaseBuilder {
 
@@ -51,6 +55,8 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
   val STAGING = new File("staging")
   val KB = new File("staging/kb")
   val NEXML = new File("staging/nexml")
+  val BIGDATA_PROPERTIES = new File("bigdata.properties")
+  val BIGDATA_JOURNAL = new File("staging/bigdata.jnl")
   STAGING.mkdir()
   KB.mkdir()
   cd(KB)
@@ -247,6 +253,25 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
   //step("Materializing subclass closure")
   //MaterializeSubClassOfClosureToNTriples.writeClosureToFile(tboxReasoner, new File(cwd + "/staging/kb/hierarchy_closure.nt"))
   tboxReasoner.dispose()
+
+  val bigdataProperties = new Properties()
+  bigdataProperties.load(new FileReader(BIGDATA_PROPERTIES))
+  bigdataProperties.setProperty(Options.FILE, BIGDATA_JOURNAL.getAbsolutePath)
+  val sail = new BigdataSail(bigdataProperties)
+  val repository = new BigdataSailRepository(sail);
+  repository.initialize()
+  val connection = repository.getConnection;
+  connection.setAutoCommit(false);
+
+  val baseURI = ""
+  val graphURI = new URIImpl("http://kb.phenoscape.org/")
+  for (rdfFile <- FileUtils.listFiles(new File(cwd + "/staging/kb/"), Array("owl"), true)) {
+    connection.add(rdfFile, baseURI, RDFFormat.RDFXML, graphURI)
+  }
+  
+  connection.commit();
+  // close the repository connection
+  connection.close();
 
   step("Done")
 
