@@ -265,7 +265,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
 
   val baseURI = ""
   val graphURI = new URIImpl("http://kb.phenoscape.org/")
-  for (rdfFile <- FileUtils.listFiles(new File(cwd + "/staging/kb/"), Array("owl"), true)) {
+  for (rdfFile <- FileUtils.listFiles(KB, Array("owl"), true)) {
     connection.add(rdfFile, baseURI, RDFFormat.RDFXML, graphURI)
   }
   

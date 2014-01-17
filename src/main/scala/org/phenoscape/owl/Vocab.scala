@@ -80,5 +80,6 @@ object Vocab {
   val HAS_NUMBER_OF = IRI.create("http://purl.obolibrary.org/obo/PATO_0001555")
   val dcSource = ObjectProperty(IRI.create("http://purl.org/dc/terms/source"))
   val connected_to = ObjectProperty(IRI.create("http://purl.obolibrary.org/obo/core#connected_to"))
+  val list_index = factory.getOWLAnnotationProperty(IRI.create("http://purl.org/phenoscape/vocab.owl#list_index"))
 
 }

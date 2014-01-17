@@ -2,16 +2,21 @@ package org.phenoscape.owl
 
 import java.io.File
 import java.util.UUID
-import scala.Option.option2Iterable
+
 import scala.collection.JavaConversions._
 import scala.collection.mutable
+
 import org.apache.commons.lang3.StringUtils
-import org.jdom2.filter.ElementFilter
-import org.jdom2.input.SAXBuilder
 import org.jdom2.Element
 import org.jdom2.Namespace
+import org.jdom2.filter.ElementFilter
+import org.jdom2.input.SAXBuilder
 import org.phenoscape.owl.util.OBOUtil
-import org.phenoscape.scowl.OWL._
+import org.phenoscape.scowl.OWL.Class
+import org.phenoscape.scowl.OWL.Individual
+import org.phenoscape.scowl.OWL.OWLClassExpressionToClassExpression
+import org.phenoscape.scowl.OWL.OWLIndividualToIndividual
+import org.phenoscape.scowl.OWL.OWLObjectPropertyToProperty
 import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model.IRI
 import org.semanticweb.owlapi.model.OWLAnnotationSubject
@@ -23,14 +28,16 @@ import org.semanticweb.owlapi.model.OWLNamedIndividual
 import org.semanticweb.owlapi.model.OWLObjectIntersectionOf
 import org.semanticweb.owlapi.model.OWLObjectPropertyExpression
 import org.semanticweb.owlapi.model.OWLObjectSomeValuesFrom
+import org.semanticweb.owlapi.model.OWLOntology
 import org.semanticweb.owlapi.model.OWLQuantifiedObjectRestriction
 import org.semanticweb.owlapi.vocab.DublinCoreVocabulary
 import org.semanticweb.owlapi.vocab.OWLRDFVocabulary
-import org.semanticweb.owlapi.model.OWLOntology
-import scala.io.Source
-import org.semanticweb.owlapi.io.RDFXMLOntologyFormat
-import org.apache.log4j.Logger
-import Vocab._
+
+import Vocab.DENOTES
+import Vocab.DENOTES_EXHIBITING
+import Vocab.EXHIBITS
+import Vocab.TOWARDS
+import Vocab.inheres_in
 
 class PhenexToOWL extends OWLTask {
 
@@ -75,7 +82,8 @@ class PhenexToOWL extends OWLTask {
     val otus = nexml.getChild("otus", nexmlNS).getChildren("otu", nexmlNS)
     otus.foreach(translateOTU(_, matrix))
     val chars = nexml.getChild("characters", nexmlNS).getChild("format", nexmlNS).getChildren("char", nexmlNS)
-    chars.foreach(translateCharacter(_, matrix))
+    val charsWithIndex = chars.zipWithIndex
+    charsWithIndex.foreach { case (character, index) => translateCharacter(character, index, matrix) }
     val matrixRows = nexml.getChild("characters", nexmlNS).getChild("matrix", nexmlNS).getChildren("row", nexmlNS)
     matrixRows.foreach(translateMatrixRow(_))
   }
@@ -116,10 +124,11 @@ class PhenexToOWL extends OWLTask {
     })
   }
 
-  def translateCharacter(character: Element, matrix: OWLNamedIndividual): Unit = {
+  def translateCharacter(character: Element, index: Int, matrix: OWLNamedIndividual): Unit = {
     val owlCharacter = nextIndividual()
     val charID = character.getAttributeValue("id")
     characterToOWLMap.put(charID, owlCharacter)
+    addAnnotation(Vocab.list_index.getIRI, owlCharacter.getIRI, factory.getOWLLiteral(index))
     addPropertyAssertion(Vocab.HAS_CHARACTER, matrix, owlCharacter)
     addClass(owlCharacter, factory.getOWLClass(Vocab.STANDARD_CHARACTER))
     val label = character.getAttributeValue("label")
@@ -215,7 +224,7 @@ class PhenexToOWL extends OWLTask {
       //TODO comparisons, etc.
     }
     if (eq_phenotype == null) {
-      return 
+      return
     } else {
       manager.addAxiom(ontology, owlPhenotype SubClassOf eq_phenotype)
       manager.addAxiom(ontology, owlPhenotype SubClassOf eqCharacterToken)
