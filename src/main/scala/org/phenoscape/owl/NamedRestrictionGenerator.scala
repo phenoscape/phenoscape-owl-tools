@@ -32,7 +32,7 @@ object NamedRestrictionGenerator extends OWLTask {
   }
 
   def createRestriction(property: OWLObjectProperty, ontClass: OWLClass): Set[OWLAxiom] = {
-    val annotationProperty = factory.getOWLAnnotationProperty(IRI.create(property.getIRI.toString + "_some"))
+    val annotationProperty = factory.getOWLAnnotationProperty(getClassRelationIRI(property.getIRI))
     val newClassIRI = getRestrictionIRI(property.getIRI, ontClass.getIRI)
     val namedRestriction = factory.getOWLClass(newClassIRI)
     val equivAxiom = (namedRestriction EquivalentTo (property some ontClass))
@@ -43,5 +43,7 @@ object NamedRestrictionGenerator extends OWLTask {
   def getRestrictionIRI(propertyIRI: IRI, classIRI: IRI): IRI = {
     return IRI.create(propertyIRI.toString + "_some_" + classIRI.toString)
   }
+
+  def getClassRelationIRI(propertyIRI: IRI): IRI = IRI.create(propertyIRI.toString + "_some")
 
 }

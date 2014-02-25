@@ -12,11 +12,7 @@ import org.jdom2.Namespace
 import org.jdom2.filter.ElementFilter
 import org.jdom2.input.SAXBuilder
 import org.phenoscape.owl.util.OBOUtil
-import org.phenoscape.scowl.OWL.Class
-import org.phenoscape.scowl.OWL.Individual
-import org.phenoscape.scowl.OWL.OWLClassExpressionToClassExpression
-import org.phenoscape.scowl.OWL.OWLIndividualToIndividual
-import org.phenoscape.scowl.OWL.OWLObjectPropertyToProperty
+import org.phenoscape.scowl.OWL._
 import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model.IRI
 import org.semanticweb.owlapi.model.OWLAnnotationSubject

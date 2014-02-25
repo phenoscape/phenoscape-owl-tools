@@ -1,20 +1,18 @@
 package org.phenoscape.owl
 
-import java.io.File
 import scala.collection.JavaConversions._
+
+import org.phenoscape.owl.Vocab.has_part
 import org.phenoscape.scowl.OWL.Class
 import org.phenoscape.scowl.OWL.Individual
-import org.phenoscape.scowl.OWL.OWLClassExpressionToClassExpression
-import org.phenoscape.scowl.OWL.OWLNamedObjectToScowlNamedObject
-import org.phenoscape.scowl.OWL.OWLObjectPropertyToProperty
-import org.phenoscape.scowl.OWL.ObjectProperty
+import org.phenoscape.scowl.OWL.ScowlClassExpression
+import org.phenoscape.scowl.OWL.ScowlNamedObject
+import org.phenoscape.scowl.OWL.ScowlObjectProperty
 import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model.IRI
 import org.semanticweb.owlapi.model.OWLAxiom
 import org.semanticweb.owlapi.model.OWLClass
 import org.semanticweb.owlapi.model.OWLOntology
-import org.semanticweb.owlapi.model.OWLClassExpression
-import org.phenoscape.owl.Vocab._
 
 object AbsenceClassGenerator extends OWLTask {
 
