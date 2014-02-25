@@ -41,6 +41,12 @@ import org.semanticweb.owlapi.model.OWLAxiom
 import org.phenoscape.owl.Vocab._
 import java.io.FileReader
 import org.phenoscape.owl.util.OntologyUtil
+import com.bigdata.rdf.sail.BigdataSail
+import com.bigdata.rdf.sail.BigdataSailRepository
+import org.openrdf.model.impl.URIImpl
+import java.util.Properties
+import org.openrdf.rio.RDFFormat
+import com.bigdata.journal.Options
 
 object CharaparserEvaluationDB extends KnowledgeBaseBuilder {
 
@@ -51,6 +57,8 @@ object CharaparserEvaluationDB extends KnowledgeBaseBuilder {
   val STAGING = new File("staging")
   val KB = new File("staging/kb")
   val NEXML = new File("staging/nexml")
+  val BIGDATA_PROPERTIES = new File("bigdata.properties")
+  val BIGDATA_JOURNAL = new File("staging/bigdata.jnl")
   STAGING.mkdir()
   KB.mkdir()
   cd(KB)
@@ -147,6 +155,26 @@ object CharaparserEvaluationDB extends KnowledgeBaseBuilder {
   step("Materializing subclass closure")
   MaterializeSubClassOfClosureToNTriples.writeClosureToFile(negationReasoner, new File(cwd + "/staging/kb/hierarchy_closure.nt"))
   negationReasoner.dispose()
+
+  step("Creating Bigdata triplestore")
+  val bigdataProperties = new Properties()
+  bigdataProperties.load(new FileReader(BIGDATA_PROPERTIES))
+  bigdataProperties.setProperty(Options.FILE, BIGDATA_JOURNAL.getAbsolutePath)
+  val sail = new BigdataSail(bigdataProperties)
+  val repository = new BigdataSailRepository(sail);
+  repository.initialize()
+  val connection = repository.getConnection;
+  connection.setAutoCommit(false);
+
+  val baseURI = ""
+  val mainGraphURI = new URIImpl("http://kb.phenoscape.org/")
+  val closureURI = new URIImpl("http://kb.phenoscape.org/closure")
+  for (rdfFile <- FileUtils.listFiles(KB, Array("owl"), true)) {
+    connection.add(rdfFile, baseURI, RDFFormat.RDFXML, mainGraphURI)
+  }
+  connection.add(new File(cwd + "/staging/kb/hierarchy_closure.nt"), baseURI, RDFFormat.NTRIPLES, closureURI)
+  connection.commit();
+  connection.close();
 
   step("Done")
 
