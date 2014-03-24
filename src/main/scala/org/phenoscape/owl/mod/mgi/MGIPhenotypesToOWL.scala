@@ -1,34 +1,31 @@
 package org.phenoscape.owl.mod.mgi
 
 import java.io.File
+
 import scala.collection.JavaConversions._
-import scala.collection.TraversableOnce.flattenTraversableOnce
 import scala.collection.Set
+import scala.collection.TraversableOnce.flattenTraversableOnce
 import scala.collection.mutable
 import scala.io.Source
+
 import org.apache.commons.lang3.StringUtils
-import org.phenoscape.owl.util.ExpressionUtil
-import org.phenoscape.owl.util.OBOUtil
-import org.phenoscape.owl.NamedRestrictionGenerator
 import org.phenoscape.owl.OWLTask
 import org.phenoscape.owl.Vocab
+import org.phenoscape.owl.Vocab.AnnotatedPhenotype
+import org.phenoscape.owl.Vocab.associated_with_gene
+import org.phenoscape.owl.Vocab.associated_with_taxon
+import org.phenoscape.owl.Vocab.dcSource
+import org.phenoscape.owl.util.OBOUtil
 import org.phenoscape.scowl.OWL._
+import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model.IRI
 import org.semanticweb.owlapi.model.OWLAxiom
 import org.semanticweb.owlapi.model.OWLClass
 import org.semanticweb.owlapi.model.OWLOntology
-import org.semanticweb.owlapi.model.AddImport
-import org.semanticweb.owlapi.apibinding.OWLManager
-import org.apache.log4j.Logger
-import Vocab._
 
 object MGIPhenotypesToOWL extends OWLTask {
 
   val mouse = Individual(Vocab.MOUSE)
-  val present = Class(Vocab.PRESENT)
-  val absent = Class(Vocab.ABSENT)
-  val lacksAllPartsOfType = Class(Vocab.LACKS_ALL_PARTS_OF_TYPE)
-  val organism = Class(Vocab.MULTI_CELLULAR_ORGANISM)
   val manager = OWLManager.createOWLOntologyManager()
 
   def main(args: Array[String]): Unit = {
@@ -41,7 +38,7 @@ object MGIPhenotypesToOWL extends OWLTask {
   def convert(phenotypeData: Source): OWLOntology = {
     val ontology = manager.createOntology(IRI.create("http://purl.obolibrary.org/obo/phenoscape/mgi_phenotypes.owl"))
     manager.addAxioms(ontology, phenotypeData.getLines.drop(1).map(translate(_)).flatten.toSet[OWLAxiom])
-    return ontology
+    ontology
   }
 
   def translate(expressionLine: String): Set[OWLAxiom] = {
@@ -62,7 +59,7 @@ object MGIPhenotypesToOWL extends OWLTask {
     val publicationID = StringUtils.stripToNull(items(11))
     val publication = Individual(OBOUtil.mgiReferenceIRI(publicationID))
     axioms.add(phenotype Fact (dcSource, publication))
-    return axioms
+    axioms
   }
 
 }
