@@ -146,6 +146,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
   //write(materializedVTOIndividuals, cwd + "/staging/kb/vto-individuals-closure.owl")
 
   step("Converting NeXML to OWL")
+  val vocabForNeXML = combine(uberon, pato, bspo, go, ro, phenoscapeVocab)
   cd(NEXML)
   val filesToConvert = (FileUtils.listFiles(new File(cwd + "/staging/nexml/completed-phenex-files"), Array("xml"), true) ++
     FileUtils.listFiles(new File(cwd + "/staging/nexml/fin_limb-incomplete-files"), Array("xml"), true)).filterNot(_.getName() == "catalog-v001.xml")
@@ -153,7 +154,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
   val nexmlTBoxAxioms: mutable.Set[OWLAxiom] = mutable.Set()
   for (file <- filesToConvert) {
     val converter = new PhenexToOWL()
-    val nexOntology = PropertyNormalizer.normalize(converter.convert(file))
+    val nexOntology = PropertyNormalizer.normalize(converter.convert(file, vocabForNeXML))
     nexmlTBoxAxioms.addAll(nexOntology.getTBoxAxioms(false))
     write(nexOntology, cwd + "/staging/kb/" + file.getName().replaceAll(".xml$", ".owl"))
   }

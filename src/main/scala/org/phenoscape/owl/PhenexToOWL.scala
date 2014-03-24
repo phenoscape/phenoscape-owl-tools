@@ -31,6 +31,7 @@ import uk.ac.manchester.cs.owl.owlapi.mansyntaxrenderer.ManchesterOWLSyntaxOWLOb
 import org.semanticweb.owlapi.util.AnnotationValueShortFormProvider
 import org.semanticweb.owlapi.model.OWLAnnotationProperty
 import org.semanticweb.owlapi.model.OWLOntologySetProvider
+import org.phenoscape.owl.util.ExpressionUtil
 
 class PhenexToOWL extends OWLTask {
 
@@ -54,15 +55,12 @@ class PhenexToOWL extends OWLTask {
   val ontology = manager.createOntology(IRI.create("http://example.org/" + UUID.randomUUID().toString()))
   var nexml: Element = null
   var vocabOntology = manager.createOntology()
-  object OntologyProvider extends OWLOntologySetProvider {
-    override def getOntologies() = Set(vocabOntology)
-  }
-  val labelRenderer = new ManchesterOWLSyntaxOWLObjectRendererImpl()
-  labelRenderer.setShortFormProvider(new AnnotationValueShortFormProvider(List(factory.getRDFSLabel), mutable.HashMap[OWLAnnotationProperty, java.util.List[String]](), OntologyProvider));
+  var labelRenderer = ExpressionUtil.createEntityRenderer(factory.getRDFSLabel, vocabOntology)
   //nodeIncrementer = 0
 
   def convert(file: File, vocabulary: OWLOntology = manager.createOntology()): OWLOntology = {
     vocabOntology = vocabulary
+    labelRenderer = ExpressionUtil.createEntityRenderer(factory.getRDFSLabel, vocabOntology)
     val builder = new SAXBuilder()
     val nexml = builder.build(file)
     convert(nexml.getRootElement(), file.getName())
@@ -291,7 +289,7 @@ class PhenexToOWL extends OWLTask {
       case expression => {
         val named = nextClass()
         manager.addAxiom(ontology, (named SubClassOf expression))
-        val label = s"[${labelRenderer.render(expression)}]"
+        val label = s"[${labelRenderer(expression)}]"
         manager.addAxiom(ontology, named Annotation (factory.getRDFSLabel, label))
         named
       }

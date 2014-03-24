@@ -2,7 +2,6 @@ package org.phenoscape.owl
 
 import java.io.File
 import scala.collection.JavaConversions._
-import scala.collection.Set
 import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model.AxiomType
 import org.semanticweb.owlapi.model.IRI

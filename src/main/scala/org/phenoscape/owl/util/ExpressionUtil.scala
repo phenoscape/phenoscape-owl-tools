@@ -49,21 +49,24 @@ object ExpressionUtil {
     return axioms
   }
 
-  def labelFor(obj: OWLEntity, ont: OWLOntology): Option[String] =
-    obj.getAnnotations(ont, factory.getRDFSLabel).map(_.getValue).collect(
-      { case literal: OWLLiteral => literal.getLiteral.toString }).headOption
+  def annotationsFor(obj: OWLEntity, property: OWLAnnotationProperty, ont: OWLOntology): Iterable[String] =
+    obj.getAnnotations(ont, property).map(_.getValue).collect(
+      { case literal: OWLLiteral => literal.getLiteral.toString })
+
+  def labelFor(obj: OWLEntity, ont: OWLOntology): Option[String] = annotationsFor(obj, factory.getRDFSLabel, ont).headOption
 
   def labelFor(obj: OWLEntity, onts: Iterable[OWLOntology]): Option[String] = (onts flatMap (labelFor(obj, _))).headOption
 
   private class OntologyProvider(ont: OWLOntology) extends OWLOntologySetProvider {
-    lazy val onts = Set(ont)
+    val onts = Set(ont)
     override def getOntologies() = onts
   }
 
   def createEntityRenderer(property: OWLAnnotationProperty, ont: OWLOntology): OWLObject => String = {
     val shortFormProvider = new AnnotationValueShortFormProvider(List(property), Map[OWLAnnotationProperty, ArrayList[String]](), new OntologyProvider(ont))
     val renderer = new ManchesterOWLSyntaxOWLObjectRendererImpl()
-    entity => renderer.render(entity)
+    renderer.setShortFormProvider(shortFormProvider)
+    entity => renderer.render(entity).replaceAll("\n", " ").replaceAll("\\s+", " ")
   }
 
 }
