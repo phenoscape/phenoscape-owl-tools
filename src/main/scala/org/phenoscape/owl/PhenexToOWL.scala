@@ -147,6 +147,12 @@ class PhenexToOWL extends OWLTask {
     stateToOWLMap.put(stateID, owlState)
     addClass(owlState, factory.getOWLClass(Vocab.STANDARD_STATE))
     addPropertyAssertion(Vocab.MAY_HAVE_STATE_VALUE, owlCharacter, owlState)
+    val symbol = state.getAttributeValue("symbol")
+    if (StringUtils.isNotBlank(symbol)) {
+      addAnnotation(state_symbol.getIRI, owlState.getIRI(), factory.getOWLLiteral(symbol))
+    } else {
+      addAnnotation(state_symbol.getIRI, owlState.getIRI(), factory.getOWLLiteral("<?>"))
+    }
     val descBuffer = new StringBuffer()
     if (StringUtils.isNotBlank(characterLabel)) {
       descBuffer.append(characterLabel + ": ")
