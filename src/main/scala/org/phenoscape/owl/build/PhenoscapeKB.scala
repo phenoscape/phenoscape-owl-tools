@@ -39,7 +39,7 @@ import org.phenoscape.owl.mod.zfin.ZFINGeneticMarkersToOWL
 import org.phenoscape.owl.mod.zfin.ZFINPhenotypesToOWL
 import org.phenoscape.owl.mod.zfin.ZFINPreviousGeneNamesToOWL
 import org.phenoscape.owl.util.OntologyUtil
-import org.phenoscape.scowl.OWL.Class
+import org.phenoscape.scowl.OWL._
 import org.semanticweb.owlapi.model.OWLAxiom
 import com.bigdata.journal.Options
 import com.bigdata.rdf.sail.BigdataSail
@@ -207,9 +207,9 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
   //val parts = manager.createOntology(anatomicalEntities.map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.PART_OF), _)).flatten)
   val hasParts = manager.createOntology(anatomicalEntities.map(NamedRestrictionGenerator.createRestriction(has_part, _)).flatten)
   val presences = manager.createOntology(anatomicalEntities.map(NamedRestrictionGenerator.createRestriction(Vocab.IMPLIES_PRESENCE_OF, _)).flatten)
-  //val inherers = manager.createOntology(anatomicalEntities.map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.INHERES_IN), _)).flatten)
-  //val inherersInPartOf = manager.createOntology(anatomicalEntities.map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.INHERES_IN_PART_OF), _)).flatten)
-  //val towards = manager.createOntology(qualities.map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.TOWARDS), _)).flatten)
+  val inherers = manager.createOntology(anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(Vocab.inheres_in, _)))
+  val inherersInPartOf = manager.createOntology(anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(Vocab.inheres_in_part_of, _)))
+  val towards = manager.createOntology(anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(Vocab.TOWARDS, _)))
   //val involvers = manager.createOntology((anatomicalEntities ++ qualities).map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.INVOLVES), _)).flatten)
   //val homologies = manager.createOntology(anatomicalEntities.map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.PHP), _)).flatten)
   val absences = manager.createOntology(anatomicalEntities.flatMap(AbsenceClassGenerator.createAbsenceClass(_)))
@@ -269,7 +269,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
   for (rdfFile <- FileUtils.listFiles(KB, Array("owl"), true)) {
     connection.add(rdfFile, baseURI, RDFFormat.RDFXML, graphURI)
   }
-  
+
   connection.commit();
   // close the repository connection
   connection.close();

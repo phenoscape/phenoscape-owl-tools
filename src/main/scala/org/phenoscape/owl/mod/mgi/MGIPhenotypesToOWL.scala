@@ -35,11 +35,9 @@ object MGIPhenotypesToOWL extends OWLTask {
     manager.saveOntology(ontology, IRI.create(new File(args(1))))
   }
 
-  def convert(phenotypeData: Source): OWLOntology = {
-    val ontology = manager.createOntology(IRI.create("http://purl.obolibrary.org/obo/phenoscape/mgi_phenotypes.owl"))
-    manager.addAxioms(ontology, phenotypeData.getLines.drop(1).map(translate(_)).flatten.toSet[OWLAxiom])
-    ontology
-  }
+  def convert(phenotypeData: Source): OWLOntology = manager.createOntology(
+    phenotypeData.getLines.drop(1).map(translate).flatten.toSet[OWLAxiom],
+    IRI.create("http://purl.obolibrary.org/obo/phenoscape/mgi_phenotypes.owl"))
 
   def translate(expressionLine: String): Set[OWLAxiom] = {
     val items = expressionLine.split("\t", -1)

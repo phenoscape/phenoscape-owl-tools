@@ -14,6 +14,7 @@ import java.io.BufferedReader
 import java.net.URL
 import org.phenoscape.owl.util.NullIRIMapper
 import java.util.Date
+import org.phenoscape.owl.util.OBOUtil
 
 class KnowledgeBaseBuilder extends App {
 
@@ -44,6 +45,8 @@ class KnowledgeBaseBuilder extends App {
 
   def load(location: File): OWLOntology = {
     val ont = manager.loadOntologyFromOntologyDocument(location)
+    val definedByAxioms = ont.getClassesInSignature map OBOUtil.createDefinedByAnnotation flatMap (_.toSet)
+    manager.addAxioms(ont, definedByAxioms)
     PropertyNormalizer.normalize(ont)
   }
 
