@@ -205,8 +205,8 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
       nexmlTBoxAxioms)
 
   //val parts = manager.createOntology(anatomicalEntities.map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.PART_OF), _)).flatten)
-  val hasParts = manager.createOntology(anatomicalEntities.map(NamedRestrictionGenerator.createRestriction(has_part, _)).flatten)
-  val presences = manager.createOntology(anatomicalEntities.map(NamedRestrictionGenerator.createRestriction(Vocab.IMPLIES_PRESENCE_OF, _)).flatten)
+  val hasParts = manager.createOntology(anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(has_part, _)))
+  val presences = manager.createOntology(anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(Vocab.IMPLIES_PRESENCE_OF, _)))
   val inherers = manager.createOntology(anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(Vocab.inheres_in, _)))
   val inherersInPartOf = manager.createOntology(anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(Vocab.inheres_in_part_of, _)))
   val towards = manager.createOntology(anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(Vocab.TOWARDS, _)))
@@ -219,7 +219,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
 
   val allTBox = combine(uberon, homology, pato, bspo, go, vto, zfa, xao, hp, mp,
     hpEQ, mpEQ, zfaToUberon, xaoToUberon, fmaToUberon, mgiToEMAPA, emapaToUberon,
-    hasParts, presences, absences, absenceNegationEquivalences, developsFromRulesForAbsence, tboxFromData, ro, phenoscapeVocab, eqCharacters)
+    hasParts, inherers, inherersInPartOf, towards, presences, absences, absenceNegationEquivalences, developsFromRulesForAbsence, tboxFromData, ro, phenoscapeVocab, eqCharacters)
   println("tbox class count: " + allTBox.getClassesInSignature().size())
   println("tbox logical axiom count: " + allTBox.getLogicalAxiomCount())
   val tBoxWithoutDisjoints = OntologyUtil.ontologyWithoutDisjointAxioms(allTBox)
@@ -247,7 +247,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
   negationReasoner.dispose()
 
   step("Writing generated and inferred tbox axioms")
-  write(combine(hasParts, presences, absences, absenceNegationEquivalences, developsFromRulesForAbsence, inferredAxioms, eqCharacters), cwd + "/staging/kb/generated.owl")
+  write(combine(hasParts, inherers, inherersInPartOf, towards, presences, absences, absenceNegationEquivalences, developsFromRulesForAbsence, inferredAxioms, eqCharacters), cwd + "/staging/kb/generated.owl")
 
   step("Writing tbox axioms for ELK")
   write(combine(tBoxWithoutDisjoints, inferredAxioms), cwd + "/staging/kb/tbox.owl")
