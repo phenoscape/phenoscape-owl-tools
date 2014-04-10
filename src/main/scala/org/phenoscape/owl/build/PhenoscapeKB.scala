@@ -103,8 +103,8 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
   write(xao, cwd + "/staging/kb/xao.owl")
   val hp = load(new File(cwd + "/staging/sources/hp.owl"))
   write(hp, cwd + "/staging/kb/hp.owl")
-  val mp = load(new File(cwd + "/staging/sources/mp.owl"))
-  write(mp, cwd + "/staging/kb/mp.owl")
+//  val mp = load(new File(cwd + "/staging/sources/mp.owl"))
+//  write(mp, cwd + "/staging/kb/mp.owl")
 
   val hpEQOBO = Source.fromFile(new File(cwd + "/staging/sources/hp-equivalence-axioms.obo"), "utf-8").mkString
   //val hpEQOBOInvolves = hpEQOBO.replaceFirst("ontology: hp/hp-logical-definitions", "ontology: hp/hp-logical-definitions\nlogical-definition-view-relation: involves")
@@ -217,7 +217,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
   val absenceNegationEquivalences = manager.createOntology(namedHasPartClasses.flatMap(NegationClassGenerator.createNegationClassAxioms(_, hasParts)))
   val developsFromRulesForAbsence = manager.createOntology(anatomicalEntities.flatMap(ReverseDevelopsFromRuleGenerator.createRules(_)).toSet[OWLAxiom])
 
-  val allTBox = combine(uberon, homology, pato, bspo, go, vto, zfa, xao, hp, mp,
+  val allTBox = combine(uberon, homology, pato, bspo, go, vto, zfa, xao, hp, //mp,
     hpEQ, mpEQ, zfaToUberon, xaoToUberon, fmaToUberon, mgiToEMAPA, emapaToUberon,
     hasParts, inherers, inherersInPartOf, towards, presences, absences, absenceNegationEquivalences, developsFromRulesForAbsence, tboxFromData, ro, phenoscapeVocab, eqCharacters)
   println("tbox class count: " + allTBox.getClassesInSignature().size())
