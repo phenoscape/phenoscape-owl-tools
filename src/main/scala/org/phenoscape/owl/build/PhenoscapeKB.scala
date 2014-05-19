@@ -82,8 +82,9 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
   val uberonPR = load(new File(cwd + "/staging/sources/pr_import.owl"))
   val uberonENVO = load(new File(cwd + "/staging/sources/envo_import.owl"))
   val uberonNBO = load(new File(cwd + "/staging/sources/nbo_import.owl"))
+  val uberonRO = load(new File(cwd + "/staging/sources/ro_import.owl"))
   val ext = load(new File(cwd + "/staging/sources/ext.owl"))
-  val uberon = combine(ext, uberonReferences, uberonChebi, uberonGO, uberonTaxon, uberonPATO, uberonPR, uberonENVO, uberonNBO)
+  val uberon = combine(ext, uberonReferences, uberonChebi, uberonGO, uberonTaxon, uberonPATO, uberonPR, uberonENVO, uberonNBO, uberonRO)
   write(uberon, cwd + "/staging/kb/uberon.owl")
   val homology = load(new File(cwd + "/staging/sources/homology.owl"))
   write(homology, cwd + "/staging/kb/homology.owl")
@@ -103,8 +104,8 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
   write(xao, cwd + "/staging/kb/xao.owl")
   val hp = load(new File(cwd + "/staging/sources/hp.owl"))
   write(hp, cwd + "/staging/kb/hp.owl")
-//  val mp = load(new File(cwd + "/staging/sources/mp.owl"))
-//  write(mp, cwd + "/staging/kb/mp.owl")
+  //  val mp = load(new File(cwd + "/staging/sources/mp.owl"))
+  //  write(mp, cwd + "/staging/kb/mp.owl")
 
   val hpEQOBO = Source.fromFile(new File(cwd + "/staging/sources/hp-equivalence-axioms.obo"), "utf-8").mkString
   //val hpEQOBOInvolves = hpEQOBO.replaceFirst("ontology: hp/hp-logical-definitions", "ontology: hp/hp-logical-definitions\nlogical-definition-view-relation: involves")
@@ -132,9 +133,9 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
   //val qualities = coreReasoner.getSubClasses(Class(Vocab.QUALITY), false).getFlattened().filterNot(_.isOWLNothing())
   coreReasoner.dispose()
 
-  step("Generating EQ characters for analyses")
-  val attributeQualities = attributes.getClassesInSignature() + Class(Vocab.HAS_NUMBER_OF)
-  val eqCharacters = manager.createOntology(EQCharactersGenerator.generateEQCharacters(anatomicalEntities, attributeQualities))
+//  step("Generating EQ characters for analyses")
+//  val attributeQualities = attributes.getClassesInSignature() + Class(Vocab.HAS_NUMBER_OF)
+//  val eqCharacters = manager.createOntology(EQCharactersGenerator.generateEQCharacters(anatomicalEntities, attributeQualities))
 
   step("Creating VTO instances")
   val vtoIndividuals = TaxonomyConverter.createInstanceOntology(vto)
@@ -219,7 +220,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
 
   val allTBox = combine(uberon, homology, pato, bspo, go, vto, zfa, xao, hp, //mp,
     hpEQ, mpEQ, zfaToUberon, xaoToUberon, fmaToUberon, mgiToEMAPA, emapaToUberon,
-    hasParts, inherers, inherersInPartOf, towards, presences, absences, absenceNegationEquivalences, developsFromRulesForAbsence, tboxFromData, ro, phenoscapeVocab, eqCharacters)
+    hasParts, inherers, inherersInPartOf, towards, presences, absences, absenceNegationEquivalences, developsFromRulesForAbsence, tboxFromData, ro, phenoscapeVocab) // , eqCharacters
   println("tbox class count: " + allTBox.getClassesInSignature().size())
   println("tbox logical axiom count: " + allTBox.getLogicalAxiomCount())
   val tBoxWithoutDisjoints = OntologyUtil.ontologyWithoutDisjointAxioms(allTBox)
@@ -247,7 +248,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
   negationReasoner.dispose()
 
   step("Writing generated and inferred tbox axioms")
-  write(combine(hasParts, inherers, inherersInPartOf, towards, presences, absences, absenceNegationEquivalences, developsFromRulesForAbsence, inferredAxioms, eqCharacters), cwd + "/staging/kb/generated.owl")
+  write(combine(hasParts, inherers, inherersInPartOf, towards, presences, absences, absenceNegationEquivalences, developsFromRulesForAbsence, inferredAxioms), cwd + "/staging/kb/generated.owl") //, eqCharacters
 
   step("Writing tbox axioms for ELK")
   write(combine(tBoxWithoutDisjoints, inferredAxioms), cwd + "/staging/kb/tbox.owl")
