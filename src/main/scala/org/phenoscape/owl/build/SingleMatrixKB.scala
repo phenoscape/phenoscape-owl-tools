@@ -1,0 +1,166 @@
+package org.phenoscape.owl.build
+
+import java.io.BufferedReader
+import java.io.File
+import java.io.FileReader
+import java.io.StringReader
+import java.util.Properties
+import scala.collection.JavaConversions._
+import scala.collection.mutable
+import scala.io.Source
+import org.apache.commons.io.FileUtils
+import org.apache.log4j.BasicConfigurator
+import org.apache.log4j.Level
+import org.apache.log4j.Logger
+import org.obolibrary.obo2owl.Obo2Owl
+import org.obolibrary.oboformat.parser.OBOFormatParser
+import org.openrdf.rio.RDFFormat
+import org.phenoscape.owl.AbsenceClassGenerator
+import org.phenoscape.owl.EQCharactersGenerator
+import org.phenoscape.owl.KnowledgeBaseBuilder
+import org.phenoscape.owl.MaterializeInferences
+import org.phenoscape.owl.NamedRestrictionGenerator
+import org.phenoscape.owl.NegationClassGenerator
+import org.phenoscape.owl.NegationHierarchyAsserter
+import org.phenoscape.owl.PhenexToOWL
+import org.phenoscape.owl.PropertyNormalizer
+import org.phenoscape.owl.ReverseDevelopsFromRuleGenerator
+import org.phenoscape.owl.TaxonomyConverter
+import org.phenoscape.owl.Vocab
+import org.phenoscape.owl.Vocab.has_part
+import org.phenoscape.owl.mod.human.HumanPhenotypesToOWL
+import org.phenoscape.owl.mod.mgi.MGIExpressionToOWL
+import org.phenoscape.owl.mod.mgi.MGIGeneticMarkersToOWL
+import org.phenoscape.owl.mod.mgi.MGIPhenotypesToOWL
+import org.phenoscape.owl.mod.xenbase.XenbaseExpressionToOWL
+import org.phenoscape.owl.mod.xenbase.XenbaseGenesToOWL
+import org.phenoscape.owl.mod.zfin.ZFINExpressionToOWL
+import org.phenoscape.owl.mod.zfin.ZFINGeneticMarkersToOWL
+import org.phenoscape.owl.mod.zfin.ZFINPhenotypesToOWL
+import org.phenoscape.owl.mod.zfin.ZFINPreviousGeneNamesToOWL
+import org.phenoscape.owl.util.OntologyUtil
+import org.phenoscape.scowl.OWL._
+import org.semanticweb.owlapi.model.OWLAxiom
+import com.bigdata.journal.Options
+import com.bigdata.rdf.sail.BigdataSail
+import com.bigdata.rdf.sail.BigdataSailRepository
+import org.openrdf.model.impl.URIImpl
+import org.semanticweb.owlapi.model.OWLOntology
+import org.phenoscape.owl.util.OBOUtil
+import org.semanticweb.owlapi.apibinding.OWLManager
+import org.semanticweb.owlapi.model.IRI
+import org.semanticweb.owlapi.model.OWLOntologyFormat
+import org.semanticweb.owlapi.io.RDFXMLOntologyFormat
+import org.apache.commons.io.IOUtils
+import java.io.BufferedOutputStream
+import java.io.OutputStream
+import java.io.PipedOutputStream
+import java.io.ByteArrayOutputStream
+
+object SingleMatrixKB extends KnowledgeBaseBuilder {
+
+  override val manager = OWLManager.createOWLOntologyManager()
+
+  def buildKB(inputMatrix: File, inputBigdataProperties: File, outputBigdataJournal: File, outputTboxFile: File): Unit = {
+
+    step("Loading ontologies")
+    val ro = processOntology(manager.loadOntology(IRI.create("http://purl.obolibrary.org/obo/ro.owl")))
+    val phenoscapeVocab = processOntology(manager.loadOntology(IRI.create("http://purl.org/phenoscape/vocab.owl")))
+    val attributes = processOntology(manager.loadOntology(IRI.create("http://svn.code.sf.net/p/phenoscape/code/trunk/vocab/character_slims.obo")))
+    val uberon = processOntology(manager.loadOntology(IRI.create("http://purl.obolibrary.org/obo/uberon/ext.owl")))
+    val pato = processOntology(manager.loadOntology(IRI.create("http://purl.obolibrary.org/obo/pato.owl")))
+    val bspo = processOntology(manager.loadOntology(IRI.create("http://purl.obolibrary.org/obo/bspo.owl")))
+    val go = processOntology(manager.loadOntology(IRI.create("http://purl.obolibrary.org/obo/go.owl")))
+    val taxrank = processOntology(manager.loadOntology(IRI.create("http://purl.obolibrary.org/obo/taxrank.owl")))
+    val vto = processOntology(manager.loadOntology(IRI.create("http://purl.obolibrary.org/obo/vto.owl")))
+
+    step("Querying anatomical entities")
+    val coreReasoner = reasoner(uberon, pato, bspo, go, ro, phenoscapeVocab)
+    val anatomicalEntities = coreReasoner.getSubClasses(Class(Vocab.ANATOMICAL_ENTITY), false).getFlattened().filterNot(_.isOWLNothing())
+    coreReasoner.dispose()
+
+    step("Creating VTO instances")
+    val vtoIndividuals = TaxonomyConverter.createInstanceOntology(vto)
+
+    step("Converting NeXML to OWL")
+
+    val vocabForNeXML = combine(uberon, pato, bspo, go, ro, phenoscapeVocab)
+    val converter = new PhenexToOWL()
+    val nexOntology = PropertyNormalizer.normalize(converter.convert(inputMatrix, vocabForNeXML))
+    val nexmlTBoxAxioms = manager.createOntology(nexOntology.getTBoxAxioms(false))
+
+    val hasParts = manager.createOntology(anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(has_part, _)))
+    val presences = manager.createOntology(anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(Vocab.IMPLIES_PRESENCE_OF, _)))
+    val inherers = manager.createOntology(anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(Vocab.inheres_in, _)))
+    val inherersInPartOf = manager.createOntology(anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(Vocab.inheres_in_part_of, _)))
+    val towards = manager.createOntology(anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(Vocab.TOWARDS, _)))
+    val absences = manager.createOntology(anatomicalEntities.flatMap(AbsenceClassGenerator.createAbsenceClass(_)))
+    val namedHasPartClasses = anatomicalEntities.map(_.getIRI()).map(NamedRestrictionGenerator.getRestrictionIRI(has_part.getIRI, _)).map(Class(_))
+    val absenceNegationEquivalences = manager.createOntology(namedHasPartClasses.flatMap(NegationClassGenerator.createNegationClassAxioms(_, hasParts)))
+    val developsFromRulesForAbsence = manager.createOntology(anatomicalEntities.flatMap(ReverseDevelopsFromRuleGenerator.createRules(_)).toSet[OWLAxiom])
+
+    val allTBox = combine(uberon, pato, bspo, go, vto, ro, phenoscapeVocab,
+      hasParts, inherers, inherersInPartOf, towards, presences, absences, absenceNegationEquivalences, developsFromRulesForAbsence,
+      nexmlTBoxAxioms)
+    println("tbox class count: " + allTBox.getClassesInSignature().size())
+    println("tbox logical axiom count: " + allTBox.getLogicalAxiomCount())
+    val tBoxWithoutDisjoints = OntologyUtil.ontologyWithoutDisjointAxioms(allTBox)
+
+    step("Materializing tbox classification")
+    val tboxReasoner = reasoner(tBoxWithoutDisjoints)
+    val inferredAxioms = manager.createOntology()
+    MaterializeInferences.materializeInferences(inferredAxioms, tboxReasoner)
+    tboxReasoner.dispose()
+
+    step("Asserting reverse negation hierarchy")
+    val hierarchyAxioms = NegationHierarchyAsserter.assertNegationHierarchy(tBoxWithoutDisjoints, inferredAxioms)
+    manager.addAxioms(inferredAxioms, hierarchyAxioms)
+    val negationReasoner = reasoner(tBoxWithoutDisjoints, inferredAxioms)
+    MaterializeInferences.materializeInferences(inferredAxioms, negationReasoner)
+
+    if (negationReasoner.getUnsatisfiableClasses().getEntitiesMinusBottom().isEmpty()) {
+      println("SUCCESS: all classes are satisfiable.")
+    } else {
+      println("WARNING: some classes are unsatisfiable.")
+      println(negationReasoner.getUnsatisfiableClasses())
+    }
+    negationReasoner.dispose()
+
+    step("Writing tbox axioms for ELK")
+    write(combine(tBoxWithoutDisjoints, inferredAxioms), outputTboxFile.getAbsolutePath)
+    tboxReasoner.dispose()
+
+    val everything = combine(uberon, pato, bspo, go, vto, vtoIndividuals, taxrank, ro, phenoscapeVocab, attributes,
+      hasParts, inherers, inherersInPartOf, towards, presences, absences, absenceNegationEquivalences, developsFromRulesForAbsence,
+      nexOntology, inferredAxioms)
+    val bigdataProperties = new Properties()
+    bigdataProperties.load(new FileReader(inputBigdataProperties))
+    bigdataProperties.setProperty(Options.FILE, outputBigdataJournal.getAbsolutePath)
+    val sail = new BigdataSail(bigdataProperties)
+    val repository = new BigdataSailRepository(sail);
+    repository.initialize()
+    val connection = repository.getConnection;
+    connection.setAutoCommit(false);
+    val baseURI = ""
+    val graphURI = new URIImpl("http://kb.phenoscape.org/")
+
+    val rdfOutput = new ByteArrayOutputStream()
+    manager.saveOntology(everything, new RDFXMLOntologyFormat(), rdfOutput)
+    rdfOutput.close()
+    val rdfReader = new StringReader(rdfOutput.toString("utf-8"))
+    connection.add(rdfReader, baseURI, RDFFormat.RDFXML, graphURI)
+    connection.commit();
+    connection.close();
+    rdfReader.close()
+
+    step("Done")
+
+  }
+
+  def processOntology(ont: OWLOntology): OWLOntology = {
+    val definedByAxioms = ont.getClassesInSignature map OBOUtil.createDefinedByAnnotation flatMap (_.toSet)
+    manager.addAxioms(ont, definedByAxioms)
+    PropertyNormalizer.normalize(ont)
+  }
+
+}
