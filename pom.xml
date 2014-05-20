@@ -77,47 +77,12 @@
 			<artifactId>owlapi-distribution</artifactId>
 			<version>3.5.0</version>
 		</dependency>
-		<dependency>
-			<groupId>uk.ac.manchester.cs</groupId>
-			<artifactId>factplusplus-owlapi</artifactId>
-			<version>1.5.3</version>
-		</dependency>
 		<!-- <dependency> <groupId>org.semanticweb</groupId> <artifactId>HermiT</artifactId> 
 			<version>1.3.6</version> </dependency> -->
 		<dependency>
 			<groupId>org.semanticweb.elk</groupId>
 			<artifactId>elk-owlapi</artifactId>
 			<version>0.4.0</version>
-		</dependency>
-		<dependency>
-			<groupId>pellet</groupId>
-			<artifactId>pellet-core</artifactId>
-			<version>2.2.2</version>
-		</dependency>
-		<dependency>
-			<groupId>aterm</groupId>
-			<artifactId>aterm</artifactId>
-			<version>1.6</version>
-		</dependency>
-		<dependency>
-			<groupId>pellet</groupId>
-			<artifactId>pellet-owlapiv3</artifactId>
-			<version>2.2.2</version>
-		</dependency>
-		<dependency>
-			<groupId>pellet</groupId>
-			<artifactId>pellet-el</artifactId>
-			<version>2.2.2</version>
-		</dependency>
-		<dependency>
-			<groupId>pellet</groupId>
-			<artifactId>pellet-datatypes</artifactId>
-			<version>2.2.2</version>
-		</dependency>
-		<dependency>
-			<groupId>pellet</groupId>
-			<artifactId>pellet-rules</artifactId>
-			<version>2.2.2</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.ant</groupId>
@@ -139,17 +104,9 @@
 			<artifactId>scowl</artifactId>
 			<version>1.0-SNAPSHOT</version>
 		</dependency>
-		<dependency>
-			<groupId>org.bbop</groupId>
-			<artifactId>oboformat</artifactId>
-			<version>0.5.4</version>
-			<exclusions>
-				<exclusion>
-					<groupId>owlapi</groupId>
-					<artifactId>owlapi</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
+		<!-- <dependency> <groupId>org.bbop</groupId> <artifactId>oboformat</artifactId> 
+			<version>0.5.4</version> <exclusions> <exclusion> <groupId>owlapi</groupId> 
+			<artifactId>owlapi</artifactId> </exclusion> </exclusions> </dependency> -->
 		<dependency>
 			<groupId>org.scala-lang.modules</groupId>
 			<artifactId>scala-async_2.10</artifactId>

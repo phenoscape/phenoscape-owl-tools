@@ -3,7 +3,9 @@ package org.phenoscape.owl
 import java.io.File
 import scala.collection.JavaConversions._
 import scala.collection.mutable.ListBuffer
+import org.semanticweb.elk.owlapi.ElkReasoner
 import org.semanticweb.elk.owlapi.ElkReasonerFactory
+import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model.IRI
 import org.semanticweb.owlapi.model.OWLOntology
 import org.semanticweb.owlapi.reasoner.InferenceType
@@ -15,12 +17,8 @@ import org.semanticweb.owlapi.util.InferredOntologyGenerator
 import org.semanticweb.owlapi.util.InferredPropertyAssertionGenerator
 import org.semanticweb.owlapi.util.InferredSubClassAxiomGenerator
 import org.semanticweb.owlapi.util.OWLEntityRemover
-import com.clarkparsia.pellet.owlapiv3.PelletReasonerFactory
 import eu.trowl.owlapi3.rel.reasoner.dl.RELReasonerFactory
-import uk.ac.manchester.cs.factplusplus.owlapiv3.FaCTPlusPlusReasonerFactory
 import org.semanticweb.owlapi.model.OWLAxiom
-import org.semanticweb.elk.owlapi.ElkReasoner
-import org.semanticweb.owlapi.apibinding.OWLManager
 
 object MaterializeInferences extends OWLTask {
 
@@ -79,8 +77,6 @@ object MaterializeInferences extends OWLTask {
   def createReasoner(ontology: OWLOntology, kind: String): OWLReasoner = {
     kind match {
       //case "hermit" => new ReasonerFactory().createReasoner(ontology)
-      case "fact++" => new FaCTPlusPlusReasonerFactory().createReasoner(ontology)
-      case "pellet" => new PelletReasonerFactory().createReasoner(ontology)
       case "elk" => new ElkReasonerFactory().createReasoner(ontology)
       case "trowl" => new RELReasonerFactory().createReasoner(ontology)
     }

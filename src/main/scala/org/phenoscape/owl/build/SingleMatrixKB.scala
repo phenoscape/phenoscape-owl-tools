@@ -1,22 +1,17 @@
 package org.phenoscape.owl.build
 
-import java.io.BufferedReader
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileReader
 import java.io.StringReader
 import java.util.Properties
+
+import scala.Option.option2Iterable
 import scala.collection.JavaConversions._
-import scala.collection.mutable
-import scala.io.Source
-import org.apache.commons.io.FileUtils
-import org.apache.log4j.BasicConfigurator
-import org.apache.log4j.Level
-import org.apache.log4j.Logger
-import org.obolibrary.obo2owl.Obo2Owl
-import org.obolibrary.oboformat.parser.OBOFormatParser
+
+import org.openrdf.model.impl.URIImpl
 import org.openrdf.rio.RDFFormat
 import org.phenoscape.owl.AbsenceClassGenerator
-import org.phenoscape.owl.EQCharactersGenerator
 import org.phenoscape.owl.KnowledgeBaseBuilder
 import org.phenoscape.owl.MaterializeInferences
 import org.phenoscape.owl.NamedRestrictionGenerator
@@ -28,34 +23,18 @@ import org.phenoscape.owl.ReverseDevelopsFromRuleGenerator
 import org.phenoscape.owl.TaxonomyConverter
 import org.phenoscape.owl.Vocab
 import org.phenoscape.owl.Vocab.has_part
-import org.phenoscape.owl.mod.human.HumanPhenotypesToOWL
-import org.phenoscape.owl.mod.mgi.MGIExpressionToOWL
-import org.phenoscape.owl.mod.mgi.MGIGeneticMarkersToOWL
-import org.phenoscape.owl.mod.mgi.MGIPhenotypesToOWL
-import org.phenoscape.owl.mod.xenbase.XenbaseExpressionToOWL
-import org.phenoscape.owl.mod.xenbase.XenbaseGenesToOWL
-import org.phenoscape.owl.mod.zfin.ZFINExpressionToOWL
-import org.phenoscape.owl.mod.zfin.ZFINGeneticMarkersToOWL
-import org.phenoscape.owl.mod.zfin.ZFINPhenotypesToOWL
-import org.phenoscape.owl.mod.zfin.ZFINPreviousGeneNamesToOWL
+import org.phenoscape.owl.util.OBOUtil
 import org.phenoscape.owl.util.OntologyUtil
 import org.phenoscape.scowl.OWL._
+import org.semanticweb.owlapi.apibinding.OWLManager
+import org.semanticweb.owlapi.io.RDFXMLOntologyFormat
+import org.semanticweb.owlapi.model.IRI
 import org.semanticweb.owlapi.model.OWLAxiom
+import org.semanticweb.owlapi.model.OWLOntology
+
 import com.bigdata.journal.Options
 import com.bigdata.rdf.sail.BigdataSail
 import com.bigdata.rdf.sail.BigdataSailRepository
-import org.openrdf.model.impl.URIImpl
-import org.semanticweb.owlapi.model.OWLOntology
-import org.phenoscape.owl.util.OBOUtil
-import org.semanticweb.owlapi.apibinding.OWLManager
-import org.semanticweb.owlapi.model.IRI
-import org.semanticweb.owlapi.model.OWLOntologyFormat
-import org.semanticweb.owlapi.io.RDFXMLOntologyFormat
-import org.apache.commons.io.IOUtils
-import java.io.BufferedOutputStream
-import java.io.OutputStream
-import java.io.PipedOutputStream
-import java.io.ByteArrayOutputStream
 
 object SingleMatrixKB extends KnowledgeBaseBuilder {
 

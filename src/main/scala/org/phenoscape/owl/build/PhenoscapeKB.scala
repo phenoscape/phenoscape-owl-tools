@@ -12,7 +12,6 @@ import org.apache.commons.io.FileUtils
 import org.apache.log4j.BasicConfigurator
 import org.apache.log4j.Level
 import org.apache.log4j.Logger
-import org.obolibrary.obo2owl.Obo2Owl
 import org.obolibrary.oboformat.parser.OBOFormatParser
 import org.openrdf.rio.RDFFormat
 import org.phenoscape.owl.AbsenceClassGenerator
@@ -45,6 +44,8 @@ import com.bigdata.journal.Options
 import com.bigdata.rdf.sail.BigdataSail
 import com.bigdata.rdf.sail.BigdataSailRepository
 import org.openrdf.model.impl.URIImpl
+import org.semanticweb.owlapi.io.OWLOntologyDocumentSource
+import org.semanticweb.owlapi.io.ReaderDocumentSource
 
 object PhenoscapeKB extends KnowledgeBaseBuilder {
 
@@ -109,11 +110,12 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
 
   val hpEQOBO = Source.fromFile(new File(cwd + "/staging/sources/hp-equivalence-axioms.obo"), "utf-8").mkString
   //val hpEQOBOInvolves = hpEQOBO.replaceFirst("ontology: hp/hp-logical-definitions", "ontology: hp/hp-logical-definitions\nlogical-definition-view-relation: involves")
-  val hpEQ = PropertyNormalizer.normalize(new Obo2Owl().convert(new OBOFormatParser().parse(new BufferedReader(new StringReader(hpEQOBO)))))
+
+  val hpEQ = PropertyNormalizer.normalize(manager.loadOntologyFromOntologyDocument(new ReaderDocumentSource(new StringReader(hpEQOBO))))
   write(hpEQ, cwd + "/staging/kb/hp-logical-definitions.owl")
   // Should switch to OWL version, but need to work around "subq" model
   val mpEQOBO = new File(cwd + "/staging/sources/mp-equivalence-axioms.obo")
-  val mpEQ = PropertyNormalizer.normalize(new Obo2Owl().convert(new OBOFormatParser().parse(new BufferedReader(new FileReader(mpEQOBO)))))
+  val mpEQ = load(mpEQOBO)
   write(mpEQ, cwd + "/staging/kb/mp-logical-definitions.owl")
 
   val zfaToUberon = load(new File(cwd + "/staging/sources/uberon-ext-bridge-to-zfa.owl"))
@@ -133,9 +135,9 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
   //val qualities = coreReasoner.getSubClasses(Class(Vocab.QUALITY), false).getFlattened().filterNot(_.isOWLNothing())
   coreReasoner.dispose()
 
-//  step("Generating EQ characters for analyses")
-//  val attributeQualities = attributes.getClassesInSignature() + Class(Vocab.HAS_NUMBER_OF)
-//  val eqCharacters = manager.createOntology(EQCharactersGenerator.generateEQCharacters(anatomicalEntities, attributeQualities))
+  //  step("Generating EQ characters for analyses")
+  //  val attributeQualities = attributes.getClassesInSignature() + Class(Vocab.HAS_NUMBER_OF)
+  //  val eqCharacters = manager.createOntology(EQCharactersGenerator.generateEQCharacters(anatomicalEntities, attributeQualities))
 
   step("Creating VTO instances")
   val vtoIndividuals = TaxonomyConverter.createInstanceOntology(vto)
