@@ -21,14 +21,6 @@
 			<url>http://www.systap.com/maven/releases</url>
 		</repository>
 		<repository>
-			<id>BerkeleyBOP</id>
-			<name>Berkeley BOP maven repository</name>
-			<url>http://code.berkeleybop.org/maven/repository/</url>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-		</repository>
-		<repository>
 			<id>phenoscape</id>
 			<name>Phenoscape Maven repository</name>
 			<url>http://phenoscape.svn.sourceforge.net/svnroot/phenoscape/trunk/maven/repository</url>
