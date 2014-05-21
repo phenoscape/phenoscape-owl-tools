@@ -15,12 +15,15 @@ import java.net.URL
 import org.phenoscape.owl.util.NullIRIMapper
 import java.util.Date
 import org.phenoscape.owl.util.OBOUtil
+import org.semanticweb.owlapi.model.OWLOntologyManager
 
 class KnowledgeBaseBuilder extends App {
 
-  val manager = OWLManager.createOWLOntologyManager
+  private[this] val manager = OWLManager.createOWLOntologyManager
   manager.clearIRIMappers()
   manager.addIRIMapper(NullIRIMapper)
+
+  def getManager: OWLOntologyManager = manager
 
   def iri(string: String): IRI = { IRI.create(string) }
 

@@ -38,20 +38,18 @@ import com.bigdata.rdf.sail.BigdataSailRepository
 
 object SingleMatrixKB extends KnowledgeBaseBuilder {
 
-  override val manager = OWLManager.createOWLOntologyManager()
-
   def buildKB(inputMatrix: File, inputBigdataProperties: File, outputBigdataJournal: File, outputTboxFile: File): Unit = {
-
+    val owlManager = OWLManager.createOWLOntologyManager()
     step("Loading ontologies")
-    val ro = processOntology(manager.loadOntology(IRI.create("http://purl.obolibrary.org/obo/ro.owl")))
-    val phenoscapeVocab = processOntology(manager.loadOntology(IRI.create("http://purl.org/phenoscape/vocab.owl")))
-    val attributes = processOntology(manager.loadOntology(IRI.create("http://svn.code.sf.net/p/phenoscape/code/trunk/vocab/character_slims.obo")))
-    val uberon = processOntology(manager.loadOntology(IRI.create("http://purl.obolibrary.org/obo/uberon/ext.owl")))
-    val pato = processOntology(manager.loadOntology(IRI.create("http://purl.obolibrary.org/obo/pato.owl")))
-    val bspo = processOntology(manager.loadOntology(IRI.create("http://purl.obolibrary.org/obo/bspo.owl")))
-    val go = processOntology(manager.loadOntology(IRI.create("http://purl.obolibrary.org/obo/go.owl")))
-    val taxrank = processOntology(manager.loadOntology(IRI.create("http://purl.obolibrary.org/obo/taxrank.owl")))
-    val vto = processOntology(manager.loadOntology(IRI.create("http://purl.obolibrary.org/obo/vto.owl")))
+    val phenoscapeVocab = processOntology(owlManager.loadOntology(IRI.create("http://purl.org/phenoscape/vocab.owl")))
+    val ro = processOntology(owlManager.loadOntology(IRI.create("http://purl.obolibrary.org/obo/ro.owl")))
+    val attributes = processOntology(owlManager.loadOntology(IRI.create("http://svn.code.sf.net/p/phenoscape/code/trunk/vocab/character_slims.obo")))
+    val uberon = processOntology(owlManager.loadOntology(IRI.create("http://purl.obolibrary.org/obo/uberon/ext.owl")))
+    val pato = processOntology(owlManager.loadOntology(IRI.create("http://purl.obolibrary.org/obo/pato.owl")))
+    val bspo = processOntology(owlManager.loadOntology(IRI.create("http://purl.obolibrary.org/obo/bspo.owl")))
+    val go = processOntology(owlManager.loadOntology(IRI.create("http://purl.obolibrary.org/obo/go.owl")))
+    val taxrank = processOntology(owlManager.loadOntology(IRI.create("http://purl.obolibrary.org/obo/taxrank.owl")))
+    val vto = processOntology(owlManager.loadOntology(IRI.create("http://purl.obolibrary.org/obo/vto.owl")))
 
     step("Querying anatomical entities")
     val coreReasoner = reasoner(uberon, pato, bspo, go, ro, phenoscapeVocab)
@@ -66,17 +64,17 @@ object SingleMatrixKB extends KnowledgeBaseBuilder {
     val vocabForNeXML = combine(uberon, pato, bspo, go, ro, phenoscapeVocab)
     val converter = new PhenexToOWL()
     val nexOntology = PropertyNormalizer.normalize(converter.convert(inputMatrix, vocabForNeXML))
-    val nexmlTBoxAxioms = manager.createOntology(nexOntology.getTBoxAxioms(false))
+    val nexmlTBoxAxioms = owlManager.createOntology(nexOntology.getTBoxAxioms(false))
 
-    val hasParts = manager.createOntology(anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(has_part, _)))
-    val presences = manager.createOntology(anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(Vocab.IMPLIES_PRESENCE_OF, _)))
-    val inherers = manager.createOntology(anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(Vocab.inheres_in, _)))
-    val inherersInPartOf = manager.createOntology(anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(Vocab.inheres_in_part_of, _)))
-    val towards = manager.createOntology(anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(Vocab.TOWARDS, _)))
-    val absences = manager.createOntology(anatomicalEntities.flatMap(AbsenceClassGenerator.createAbsenceClass(_)))
+    val hasParts = owlManager.createOntology(anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(has_part, _)))
+    val presences = owlManager.createOntology(anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(Vocab.IMPLIES_PRESENCE_OF, _)))
+    val inherers = owlManager.createOntology(anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(Vocab.inheres_in, _)))
+    val inherersInPartOf = owlManager.createOntology(anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(Vocab.inheres_in_part_of, _)))
+    val towards = owlManager.createOntology(anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(Vocab.TOWARDS, _)))
+    val absences = owlManager.createOntology(anatomicalEntities.flatMap(AbsenceClassGenerator.createAbsenceClass(_)))
     val namedHasPartClasses = anatomicalEntities.map(_.getIRI()).map(NamedRestrictionGenerator.getRestrictionIRI(has_part.getIRI, _)).map(Class(_))
-    val absenceNegationEquivalences = manager.createOntology(namedHasPartClasses.flatMap(NegationClassGenerator.createNegationClassAxioms(_, hasParts)))
-    val developsFromRulesForAbsence = manager.createOntology(anatomicalEntities.flatMap(ReverseDevelopsFromRuleGenerator.createRules(_)).toSet[OWLAxiom])
+    val absenceNegationEquivalences = owlManager.createOntology(namedHasPartClasses.flatMap(NegationClassGenerator.createNegationClassAxioms(_, hasParts)))
+    val developsFromRulesForAbsence = owlManager.createOntology(anatomicalEntities.flatMap(ReverseDevelopsFromRuleGenerator.createRules(_)).toSet[OWLAxiom])
 
     val allTBox = combine(uberon, pato, bspo, go, vto, ro, phenoscapeVocab,
       hasParts, inherers, inherersInPartOf, towards, presences, absences, absenceNegationEquivalences, developsFromRulesForAbsence,
@@ -87,13 +85,13 @@ object SingleMatrixKB extends KnowledgeBaseBuilder {
 
     step("Materializing tbox classification")
     val tboxReasoner = reasoner(tBoxWithoutDisjoints)
-    val inferredAxioms = manager.createOntology()
+    val inferredAxioms = owlManager.createOntology()
     MaterializeInferences.materializeInferences(inferredAxioms, tboxReasoner)
     tboxReasoner.dispose()
 
     step("Asserting reverse negation hierarchy")
     val hierarchyAxioms = NegationHierarchyAsserter.assertNegationHierarchy(tBoxWithoutDisjoints, inferredAxioms)
-    manager.addAxioms(inferredAxioms, hierarchyAxioms)
+    owlManager.addAxioms(inferredAxioms, hierarchyAxioms)
     val negationReasoner = reasoner(tBoxWithoutDisjoints, inferredAxioms)
     MaterializeInferences.materializeInferences(inferredAxioms, negationReasoner)
 
@@ -124,7 +122,7 @@ object SingleMatrixKB extends KnowledgeBaseBuilder {
     val graphURI = new URIImpl("http://kb.phenoscape.org/")
 
     val rdfOutput = new ByteArrayOutputStream()
-    manager.saveOntology(everything, new RDFXMLOntologyFormat(), rdfOutput)
+    owlManager.saveOntology(everything, new RDFXMLOntologyFormat(), rdfOutput)
     rdfOutput.close()
     val rdfReader = new StringReader(rdfOutput.toString("utf-8"))
     connection.add(rdfReader, baseURI, RDFFormat.RDFXML, graphURI)
@@ -138,7 +136,7 @@ object SingleMatrixKB extends KnowledgeBaseBuilder {
 
   def processOntology(ont: OWLOntology): OWLOntology = {
     val definedByAxioms = ont.getClassesInSignature map OBOUtil.createDefinedByAnnotation flatMap (_.toSet)
-    manager.addAxioms(ont, definedByAxioms)
+    ont.getOWLOntologyManager.addAxioms(ont, definedByAxioms)
     PropertyNormalizer.normalize(ont)
   }
 

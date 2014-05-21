@@ -52,6 +52,8 @@ object CharaparserEvaluationDB extends KnowledgeBaseBuilder {
   BasicConfigurator.configure()
   Logger.getRootLogger().setLevel(Level.ERROR)
 
+  val manager = getManager
+  
   val cwd = System.getProperty("user.dir")
   val STAGING = new File("staging")
   val KB = new File("staging/kb")
