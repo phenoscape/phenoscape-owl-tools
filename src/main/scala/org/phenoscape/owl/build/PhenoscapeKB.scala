@@ -110,14 +110,9 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
   //  val mp = load(new File(cwd + "/staging/sources/mp.owl"))
   //  write(mp, cwd + "/staging/kb/mp.owl")
 
-  val hpEQOBO = Source.fromFile(new File(cwd + "/staging/sources/hp-equivalence-axioms.obo"), "utf-8").mkString
-  //val hpEQOBOInvolves = hpEQOBO.replaceFirst("ontology: hp/hp-logical-definitions", "ontology: hp/hp-logical-definitions\nlogical-definition-view-relation: involves")
-
-  val hpEQ = PropertyNormalizer.normalize(manager.loadOntologyFromOntologyDocument(new ReaderDocumentSource(new StringReader(hpEQOBO))))
+  val hpEQ = load(new File(cwd + "/staging/sources/hp-equivalence-axioms-subq-ubr.owl"))
   write(hpEQ, cwd + "/staging/kb/hp-logical-definitions.owl")
-  // Should switch to OWL version, but need to work around "subq" model
-  val mpEQOBO = new File(cwd + "/staging/sources/mp-equivalence-axioms.obo")
-  val mpEQ = load(mpEQOBO)
+  val mpEQ = load(new File(cwd + "/staging/sources/mp-equivalence-axioms-subq-ubr.owl"))
   write(mpEQ, cwd + "/staging/kb/mp-logical-definitions.owl")
 
   val zfaToUberon = load(new File(cwd + "/staging/sources/uberon-ext-bridge-to-zfa.owl"))
