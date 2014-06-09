@@ -107,8 +107,8 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
   write(xao, cwd + "/staging/kb/xao.owl")
   val hp = load(new File(cwd + "/staging/sources/hp.owl"))
   write(hp, cwd + "/staging/kb/hp.owl")
-  //  val mp = load(new File(cwd + "/staging/sources/mp.owl"))
-  //  write(mp, cwd + "/staging/kb/mp.owl")
+  val mp = load(new File(cwd + "/staging/sources/mp.owl"))
+  write(mp, cwd + "/staging/kb/mp.owl")
 
   val hpEQ = load(new File(cwd + "/staging/sources/hp-equivalence-axioms-subq-ubr.owl"))
   write(hpEQ, cwd + "/staging/kb/hp-logical-definitions.owl")
