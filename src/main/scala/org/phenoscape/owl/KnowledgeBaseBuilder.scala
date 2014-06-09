@@ -19,11 +19,11 @@ import org.semanticweb.owlapi.model.OWLOntologyManager
 
 class KnowledgeBaseBuilder extends App {
 
-  private[this] val manager = OWLManager.createOWLOntologyManager
-  manager.clearIRIMappers()
-  manager.addIRIMapper(NullIRIMapper)
+  private[this] val globalManager = OWLManager.createOWLOntologyManager
+  globalManager.clearIRIMappers()
+  globalManager.addIRIMapper(NullIRIMapper)
 
-  def getManager: OWLOntologyManager = manager
+  def getManager: OWLOntologyManager = globalManager
 
   def iri(string: String): IRI = { IRI.create(string) }
 
@@ -32,7 +32,7 @@ class KnowledgeBaseBuilder extends App {
       ontologies(0)
     else {
       val newManager = OWLManager.createOWLOntologyManager
-      newManager.createOntology(ontologies.flatMap(_.getAxioms()).toSet)
+      newManager.createOntology(ontologies.flatMap(_.getAxioms).toSet)
     }
   }
 
@@ -42,14 +42,14 @@ class KnowledgeBaseBuilder extends App {
   }
 
   def load(location: String): OWLOntology = {
-    val ont = manager.loadOntologyFromOntologyDocument(iri(location))
+    val ont = globalManager.loadOntologyFromOntologyDocument(iri(location))
     PropertyNormalizer.normalize(ont)
   }
 
   def load(location: File): OWLOntology = {
-    val ont = manager.loadOntologyFromOntologyDocument(location)
+    val ont = globalManager.loadOntologyFromOntologyDocument(location)
     val definedByAxioms = ont.getClassesInSignature map OBOUtil.createDefinedByAnnotation flatMap (_.toSet)
-    manager.addAxioms(ont, definedByAxioms)
+    globalManager.addAxioms(ont, definedByAxioms)
     PropertyNormalizer.normalize(ont)
   }
 
