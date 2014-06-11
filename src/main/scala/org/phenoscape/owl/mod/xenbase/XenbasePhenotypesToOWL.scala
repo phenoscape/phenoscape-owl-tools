@@ -32,7 +32,7 @@ object XenbasePhenotypesToOWL extends OWLTask {
 
   def convert(phenotypeData: Source): OWLOntology = {
     val ontology = manager.createOntology(IRI.create("http://purl.obolibrary.org/obo/phenoscape/xenbase_phenotypes.owl"))
-    manager.addAxioms(ontology, phenotypeData.getLines.flatMap(translate(_)).toSet[OWLAxiom])
+    manager.addAxioms(ontology, phenotypeData.getLines.flatMap(translate).toSet[OWLAxiom])
     return ontology
   }
 
