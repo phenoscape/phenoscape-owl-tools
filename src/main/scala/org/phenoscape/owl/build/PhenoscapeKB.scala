@@ -46,6 +46,11 @@ import com.bigdata.rdf.sail.BigdataSailRepository
 import org.openrdf.model.impl.URIImpl
 import org.semanticweb.owlapi.io.OWLOntologyDocumentSource
 import org.semanticweb.owlapi.io.ReaderDocumentSource
+import org.openrdf.query.QueryLanguage
+import java.io.FileOutputStream
+import java.io.BufferedOutputStream
+import org.openrdf.rio.turtle.TurtleWriter
+import org.openrdf.query.algebra.evaluation.TripleSource
 
 object PhenoscapeKB extends KnowledgeBaseBuilder {
 
@@ -53,7 +58,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
   Logger.getRootLogger().setLevel(Level.ERROR)
 
   val manager = getManager
-  
+
   val cwd = System.getProperty("user.dir")
   val STAGING = new File("staging")
   val KB = new File("staging/kb")
@@ -212,10 +217,10 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
   val towards = manager.createOntology(anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(Vocab.TOWARDS, _)))
   //val involvers = manager.createOntology((anatomicalEntities ++ qualities).map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.INVOLVES), _)).flatten)
   //val homologies = manager.createOntology(anatomicalEntities.map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.PHP), _)).flatten)
-  val absences = manager.createOntology(anatomicalEntities.flatMap(AbsenceClassGenerator.createAbsenceClass(_)))
+  val absences = manager.createOntology(anatomicalEntities.flatMap(AbsenceClassGenerator.createAbsenceClass))
   val namedHasPartClasses = anatomicalEntities.map(_.getIRI()).map(NamedRestrictionGenerator.getRestrictionIRI(has_part.getIRI, _)).map(Class(_))
   val absenceNegationEquivalences = manager.createOntology(namedHasPartClasses.flatMap(NegationClassGenerator.createNegationClassAxioms(_, hasParts)))
-  val developsFromRulesForAbsence = manager.createOntology(anatomicalEntities.flatMap(ReverseDevelopsFromRuleGenerator.createRules(_)).toSet[OWLAxiom])
+  val developsFromRulesForAbsence = manager.createOntology(anatomicalEntities.flatMap(ReverseDevelopsFromRuleGenerator.createRules).toSet[OWLAxiom])
 
   val allTBox = combine(uberon, homology, pato, bspo, go, vto, zfa, xao, hp, //mp,
     hpEQ, mpEQ, zfaToUberon, xaoToUberon, fmaToUberon, mgiToEMAPA, emapaToUberon,
@@ -255,13 +260,14 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
   //MaterializeSubClassOfClosureToNTriples.writeClosureToFile(tboxReasoner, new File(cwd + "/staging/kb/hierarchy_closure.nt"))
   tboxReasoner.dispose()
 
+  step("Loading Bigdata")
   val bigdataProperties = new Properties()
   bigdataProperties.load(new FileReader(BIGDATA_PROPERTIES))
   bigdataProperties.setProperty(Options.FILE, BIGDATA_JOURNAL.getAbsolutePath)
   val sail = new BigdataSail(bigdataProperties)
-  val repository = new BigdataSailRepository(sail);
+  val repository = new BigdataSailRepository(sail)
   repository.initialize()
-  val connection = repository.getConnection;
+  val connection = repository.getConnection
   connection.setAutoCommit(false);
 
   val baseURI = ""
@@ -270,9 +276,27 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     connection.add(rdfFile, baseURI, RDFFormat.RDFXML, graphURI)
   }
 
-  connection.commit();
+  connection.commit()
   // close the repository connection
-  connection.close();
+  connection.close()
+
+  step("Exporting all triples to turtle file")
+  val queryConnection = repository.getReadOnlyConnection
+  queryConnection.setAutoCommit(false)
+  val triplesQuery = queryConnection.prepareGraphQuery(QueryLanguage.SPARQL, """
+CONSTRUCT {
+ ?s ?p ?o .
+}
+FROM <http://kb.phenoscape.org/>
+WHERE {
+ ?s ?p ?o .
+}
+""")
+  val triplesOutput = new BufferedOutputStream(new FileOutputStream(new File(cwd + "/staging/kb/kb.ttl")))
+  triplesQuery.evaluate(new TurtleWriter(triplesOutput))
+  triplesOutput.close()
+  queryConnection.commit()
+  queryConnection.close()
 
   step("Done")
 
