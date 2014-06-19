@@ -21,6 +21,7 @@ import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model.OWLNamedIndividual
 import org.semanticweb.owlapi.model.OWLClassExpression
 import org.phenoscape.owl.Vocab._
+import org.phenoscape.owl.util.OntologyUtil
 
 object XenbasePhenotypesToOWL extends OWLTask {
 
@@ -32,39 +33,44 @@ object XenbasePhenotypesToOWL extends OWLTask {
   val Organism = Class(Vocab.MULTI_CELLULAR_ORGANISM)
   val manager = OWLManager.createOWLOntologyManager()
 
-  def convert(phenotypeData: Source): OWLOntology = {
+  def convertToOntology(phenotypeData: Source): OWLOntology = {
     val ontology = manager.createOntology(IRI.create("http://purl.obolibrary.org/obo/phenoscape/xenbase_phenotypes.owl"))
-    manager.addAxioms(ontology, phenotypeData.getLines.flatMap(translate).toSet[OWLAxiom])
+    manager.addAxioms(ontology, convertToAxioms(phenotypeData))
     return ontology
   }
 
+  def convertToAxioms(phenotypeData: Source): Set[OWLAxiom] = phenotypeData.getLines.drop(1).flatMap(translate).toSet[OWLAxiom]
+
   def translate(annotationLine: String): Set[OWLAxiom] = {
     val items = annotationLine.split("\t")
-    val phenotype = nextIndividual()
-    val source = Individual(OBOUtil.xenbaseImageIRI(StringUtils.stripToNull(items(0))))
-    val species = taxon(StringUtils.stripToNull(items(1)))
-    val gene = Individual(XenbaseGenesToOWL.getGeneIRI(StringUtils.stripToNull(items(11)))) //TODO seems like this may be blank
-    val phenotypeClass = nextClass()
-    val quality = Class(OBOUtil.iriForTermID(StringUtils.stripToNull(items(15))))
-    val (entity, entityAxioms) = OBOUtil.translatePostCompositionNamed(StringUtils.stripToNull(items(13)))
-    val (optionalRelatedEntity, relatedEntityAxioms) = optionSet(Option(StringUtils.stripToNull(items(17))).map(OBOUtil.translatePostCompositionNamed))
-    val eqPhenotype = (entity, quality, optionalRelatedEntity) match {
-      case (entity, Absent, None) => (LacksAllPartsOfType and (inheres_in some Organism) and (TOWARDS value Individual(entity.getIRI)))
-      case (entity, LacksAllPartsOfType, Some(relatedEntity)) => (LacksAllPartsOfType and (inheres_in some entity) and (TOWARDS value Individual(relatedEntity.getIRI)))
-      case (entity, quality, Some(relatedEntity)) => quality and (inheres_in some entity) and (TOWARDS some relatedEntity)
-      case (entity, quality, None) => quality and (inheres_in some entity)
-    }
-    Set(
-      phenotype Type AnnotatedPhenotype,
-      phenotype Fact (associated_with_gene, gene),
-      phenotype Fact (associated_with_taxon, species),
-      phenotype Type phenotypeClass,
-      phenotypeClass SubClassOf eqPhenotype,
-      factory.getOWLDeclarationAxiom(phenotypeClass),
-      factory.getOWLDeclarationAxiom(gene),
-      factory.getOWLDeclarationAxiom(species)) ++
-      entityAxioms ++
-      relatedEntityAxioms
+    val geneText = StringUtils.stripToNull(items(11))
+    if (geneText != null) {
+      val phenotype = OntologyUtil.nextIndividual()
+      val source = Individual(OBOUtil.xenbaseImageIRI(StringUtils.stripToNull(items(0))))
+      val species = taxon(StringUtils.stripToNull(items(1)))
+      val gene = Individual(XenbaseGenesToOWL.getGeneIRI(geneText))
+      val phenotypeClass = OntologyUtil.nextClass()
+      val quality = Class(OBOUtil.iriForTermID(StringUtils.stripToNull(items(15))))
+      val (entity, entityAxioms) = OBOUtil.translatePostCompositionNamed(StringUtils.stripToNull(items(13)))
+      val (optionalRelatedEntity, relatedEntityAxioms) = optionSet(Option(StringUtils.stripToNull(items(17))).map(OBOUtil.translatePostCompositionNamed))
+      val eqPhenotype = (entity, quality, optionalRelatedEntity) match {
+        case (entity, Absent, None) => (LacksAllPartsOfType and (inheres_in some Organism) and (TOWARDS value Individual(entity.getIRI)))
+        case (entity, LacksAllPartsOfType, Some(relatedEntity)) => (LacksAllPartsOfType and (inheres_in some entity) and (TOWARDS value Individual(relatedEntity.getIRI)))
+        case (entity, quality, Some(relatedEntity)) => quality and (inheres_in some entity) and (TOWARDS some relatedEntity)
+        case (entity, quality, None) => quality and (inheres_in some entity)
+      }
+      Set(
+        phenotype Type AnnotatedPhenotype,
+        phenotype Fact (associated_with_gene, gene),
+        phenotype Fact (associated_with_taxon, species),
+        phenotype Type phenotypeClass,
+        phenotypeClass SubClassOf eqPhenotype,
+        factory.getOWLDeclarationAxiom(phenotypeClass),
+        factory.getOWLDeclarationAxiom(gene),
+        factory.getOWLDeclarationAxiom(species)) ++
+        entityAxioms ++
+        relatedEntityAxioms
+    } else Set()
   }
 
   def optionSet[T, S](in: Option[(T, Set[S])]): (Option[T], Set[S]) = in match {

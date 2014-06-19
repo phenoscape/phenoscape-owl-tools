@@ -6,6 +6,10 @@ import org.semanticweb.owlapi.model.OWLClassAxiom
 import org.semanticweb.owlapi.model.OWLOntology
 import org.semanticweb.owlapi.model.AxiomType
 import org.semanticweb.owlapi.model.OWLEquivalentClassesAxiom
+import java.util.UUID
+import org.semanticweb.owlapi.model.OWLNamedIndividual
+import org.semanticweb.owlapi.model.OWLClass
+import org.semanticweb.owlapi.model.IRI
 
 object OntologyUtil {
 
@@ -20,6 +24,16 @@ object OntologyUtil {
         case _ => false
       }
     manager.createOntology(axioms)
+  }
+
+  def nextIndividual(): OWLNamedIndividual = factory.getOWLNamedIndividual(this.nextIRI)
+
+  def nextClass(): OWLClass = factory.getOWLClass(this.nextIRI)
+
+  def nextIRI(): IRI = {
+    val uuid = UUID.randomUUID.toString
+    val id = "http://purl.org/phenoscape/uuid/" + uuid
+    IRI.create(id)
   }
 
 }

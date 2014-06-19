@@ -51,6 +51,7 @@ import java.io.FileOutputStream
 import java.io.BufferedOutputStream
 import org.openrdf.rio.turtle.TurtleWriter
 import org.openrdf.query.algebra.evaluation.TripleSource
+import org.phenoscape.owl.mod.xenbase.XenbasePhenotypesToOWL
 
 object PhenoscapeKB extends KnowledgeBaseBuilder {
 
@@ -190,6 +191,9 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     Source.fromFile(new File(cwd + "/staging/sources/GeneExpression_laevis.txt"), "utf-8"),
     Source.fromFile(new File(cwd + "/staging/sources/GeneExpression_tropicalis.txt"), "utf-8")))
   write(xenbaseExpressionData, cwd + "/staging/kb/xenbase-expression-data.owl")
+  val xenbasePhenotypeFiles = FileUtils.listFiles(new File(cwd + "/staging/sources/xenbase-phenotypes"), Array("txt"), true)
+  val xenbasePhenotypeData = PropertyNormalizer.normalize(manager.createOntology(xenbasePhenotypeFiles.flatMap(f => XenbasePhenotypesToOWL.convertToAxioms(Source.fromFile(f))).toSet))
+  write(xenbasePhenotypeData, cwd + "/staging/kb/xenbase-phenotype-data.owl")
 
   step("Converting human data")
   val humanPhenotypeData = PropertyNormalizer.normalize(HumanPhenotypesToOWL.convert(Source.fromFile(new File(cwd + "/staging/sources/hp_phenotypes.txt"), "utf-8")))
@@ -206,6 +210,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
       mgiPhenotypeData.getTBoxAxioms(false) ++
       xenbaseGenes.getTBoxAxioms(false) ++
       xenbaseExpressionData.getTBoxAxioms(false) ++
+      xenbasePhenotypeData.getTBoxAxioms(false) ++
       humanPhenotypeData.getTBoxAxioms(false) ++
       nexmlTBoxAxioms)
 

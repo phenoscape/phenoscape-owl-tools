@@ -17,6 +17,7 @@ import org.semanticweb.owlapi.model.IRI
 import org.semanticweb.owlapi.model.OWLAxiom
 import org.semanticweb.owlapi.model.OWLOntology
 import org.semanticweb.owlapi.apibinding.OWLManager
+import org.phenoscape.owl.util.OntologyUtil
 
 object ZFINExpressionToOWL extends OWLTask {
 
@@ -41,10 +42,10 @@ object ZFINExpressionToOWL extends OWLTask {
     if (items(0).startsWith("ZDB-EFG")) {
       return axioms
     } else {
-      val expression = nextIndividual()
+      val expression = OntologyUtil.nextIndividual()
       axioms.add(factory.getOWLDeclarationAxiom(expression))
       axioms.add(expression Type GeneExpression)
-      val structure = nextIndividual()
+      val structure = OntologyUtil.nextIndividual()
       axioms.add(factory.getOWLDeclarationAxiom(structure))
       axioms.add(expression Fact (OCCURS_IN, structure))
       val superStructureID = StringUtils.stripToNull(items(3))
@@ -55,7 +56,7 @@ object ZFINExpressionToOWL extends OWLTask {
       } else {
         val superStructure = Class(OBOUtil.iriForTermID(superStructureID))
         val subStructure = Class(OBOUtil.iriForTermID(subStructureID))
-        val structureType = nextClass()
+        val structureType = OntologyUtil.nextClass()
         axioms.add(structureType SubClassOf (subStructure and (part_of some superStructure)))
         axioms.add(structure Type structureType)
       }

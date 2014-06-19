@@ -18,6 +18,7 @@ import org.semanticweb.owlapi.model.OWLAxiom
 import org.semanticweb.owlapi.model.OWLOntology
 import org.semanticweb.owlapi.vocab.OWLRDFVocabulary
 import org.semanticweb.owlapi.apibinding.OWLManager
+import org.phenoscape.owl.util.OntologyUtil
 
 object HumanPhenotypesToOWL extends OWLTask {
 
@@ -42,7 +43,7 @@ object HumanPhenotypesToOWL extends OWLTask {
   def translate(phenotypeLine: String): Set[OWLAxiom] = {
     val items = phenotypeLine.split("\t");
     val axioms = mutable.Set[OWLAxiom]();
-    val phenotype = this.nextIndividual();
+    val phenotype = OntologyUtil.nextIndividual();
     axioms.add(phenotype Type AnnotatedPhenotype);
     axioms.add(factory.getOWLDeclarationAxiom(phenotype));
     val phenotypeID = StringUtils.stripToNull(items(3));

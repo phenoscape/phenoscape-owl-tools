@@ -37,9 +37,17 @@ object OBOUtil {
       Option(term Annotation (factory.getRDFSIsDefinedBy, IRI.create(ontIRI)))
     } else None
   }
-  
-  def translatePostComposition(id: String): OWLClassExpression = ???
-  
-  def translatePostCompositionNamed(id: String): (OWLClass, Set[OWLAxiom]) = ???
+
+  def translatePostComposition(id: String): OWLClassExpression = PostCompositionParser.parseExpression(id).get
+
+  def translatePostCompositionNamed(id: String): (OWLClass, Set[OWLAxiom]) = {
+    translatePostComposition(id) match {
+      case named: OWLClass => (named, Set())
+      case expression => {
+        val term = OntologyUtil.nextClass
+        (term, Set(term EquivalentTo translatePostComposition(id)))
+      }
+    }
+  }
 
 }

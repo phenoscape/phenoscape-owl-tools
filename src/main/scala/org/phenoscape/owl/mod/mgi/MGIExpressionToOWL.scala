@@ -21,6 +21,7 @@ import org.semanticweb.owlapi.vocab.OWLRDFVocabulary
 import org.semanticweb.owlapi.model.AddImport
 import org.semanticweb.owlapi.apibinding.OWLManager
 import org.phenoscape.owl.Vocab._
+import org.phenoscape.owl.util.OntologyUtil
 
 object MGIExpressionToOWL extends OWLTask {
 
@@ -48,10 +49,10 @@ object MGIExpressionToOWL extends OWLTask {
       Set()
     } else {
       val axioms = mutable.Set[OWLAxiom]()
-      val expression = nextIndividual()
+      val expression = OntologyUtil.nextIndividual()
       axioms.add(factory.getOWLDeclarationAxiom(expression))
       axioms.add(expression Type GeneExpression)
-      val structure = nextIndividual()
+      val structure = OntologyUtil.nextIndividual()
       axioms.add(factory.getOWLDeclarationAxiom(structure))
       axioms.add(expression Fact (OCCURS_IN, structure))
       val structureID = StringUtils.stripToNull(items(4))

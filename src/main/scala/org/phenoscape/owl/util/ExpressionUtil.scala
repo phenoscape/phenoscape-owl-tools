@@ -32,19 +32,19 @@ object ExpressionUtil {
 
   val factory = OWLManager.getOWLDataFactory
 
-  def instantiateClassAssertion(individual: OWLIndividual, aClass: OWLClassExpression, context: OWLTask): scala.collection.Set[OWLAxiom] = {
+  def instantiateClassAssertion(individual: OWLIndividual, aClass: OWLClassExpression): scala.collection.Set[OWLAxiom] = {
     val axioms = mutable.Set[OWLAxiom]()
     if (aClass.isInstanceOf[OWLQuantifiedObjectRestriction]) { // either someValuesFrom or allValuesFrom
       val restriction = aClass.asInstanceOf[OWLQuantifiedObjectRestriction]
       val filler = restriction.getFiller
       val property = restriction.getProperty
       // need IRIs for individuals for type materialization
-      val value = context.nextIndividual()
+      val value = OntologyUtil.nextIndividual()
       axioms.add(factory.getOWLObjectPropertyAssertionAxiom(property, individual, value))
-      axioms.addAll(instantiateClassAssertion(value, filler, context))
+      axioms.addAll(instantiateClassAssertion(value, filler))
     } else if (aClass.isInstanceOf[OWLObjectIntersectionOf]) {
       for (operand <- (aClass.asInstanceOf[OWLObjectIntersectionOf]).getOperands) {
-        axioms.addAll(instantiateClassAssertion(individual, operand, context))
+        axioms.addAll(instantiateClassAssertion(individual, operand))
       }
     } else {
       axioms.add(factory.getOWLClassAssertionAxiom(aClass, individual))

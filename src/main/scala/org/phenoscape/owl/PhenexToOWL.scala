@@ -32,6 +32,7 @@ import org.semanticweb.owlapi.util.AnnotationValueShortFormProvider
 import org.semanticweb.owlapi.model.OWLAnnotationProperty
 import org.semanticweb.owlapi.model.OWLOntologySetProvider
 import org.phenoscape.owl.util.ExpressionUtil
+import org.phenoscape.owl.util.OntologyUtil
 
 class PhenexToOWL extends OWLTask {
 
@@ -69,7 +70,7 @@ class PhenexToOWL extends OWLTask {
 
   def convert(root: Element, matrixLabel: String): Unit = {
     nexml = root
-    val matrix = this.nextIndividual()
+    val matrix = OntologyUtil.nextIndividual()
     addAnnotation(OWLRDFVocabulary.RDFS_LABEL.getIRI(), matrix.getIRI(), factory.getOWLLiteral(matrixLabel))
     this.addClass(matrix, this.factory.getOWLClass(Vocab.CHARACTER_STATE_DATA_MATRIX))
     val publicationNotes = getLiteralMetaValues(nexml, "description", dcTermsNS)
@@ -87,7 +88,7 @@ class PhenexToOWL extends OWLTask {
   }
 
   def translateOTU(otu: Element, matrix: OWLNamedIndividual): Unit = {
-    val owlOTU = nextIndividual()
+    val owlOTU = OntologyUtil.nextIndividual()
     val otuID = otu.getAttributeValue("id")
     taxonOTUToOWLMap.put(otuID, owlOTU)
     addPropertyAssertion(Vocab.HAS_TU, matrix, owlOTU)
@@ -123,7 +124,7 @@ class PhenexToOWL extends OWLTask {
   }
 
   def translateCharacter(character: Element, index: Int, matrix: OWLNamedIndividual): Unit = {
-    val owlCharacter = nextIndividual()
+    val owlCharacter = OntologyUtil.nextIndividual()
     val charID = character.getAttributeValue("id")
     characterToOWLMap.put(charID, owlCharacter)
     addAnnotation(Vocab.list_index.getIRI, owlCharacter.getIRI, factory.getOWLLiteral(index))
@@ -142,7 +143,7 @@ class PhenexToOWL extends OWLTask {
   }
 
   def translateState(state: Element, owlCharacter: OWLNamedIndividual, characterLabel: String): Unit = {
-    val owlState = nextIndividual()
+    val owlState = OntologyUtil.nextIndividual()
     val stateID = state.getAttributeValue("id")
     stateToOWLMap.put(stateID, owlState)
     addClass(owlState, factory.getOWLClass(Vocab.STANDARD_STATE))
@@ -173,12 +174,12 @@ class PhenexToOWL extends OWLTask {
   }
 
   def translatePhenotype(phenotype: Element, stateID: String, owlState: OWLNamedIndividual): Unit = {
-    val owlPhenotype = nextClass()
+    val owlPhenotype = OntologyUtil.nextClass()
     stateToOWLPhenotypeMap.getOrElseUpdate(stateID, mutable.Set()).add(owlPhenotype)
     translatePhenotypeSemantics(phenotype, owlPhenotype, owlState)
     //TODO perhaps state should denote phenotype, not organism modify property chain
     manager.addAxiom(ontology, owlState Type (DENOTES only (EXHIBITS some owlPhenotype)))
-    val phenotypeInstance = nextIndividual()
+    val phenotypeInstance = OntologyUtil.nextIndividual()
     manager.addAxiom(ontology, owlState Fact (DENOTES_EXHIBITING, phenotypeInstance))
     manager.addAxiom(ontology, phenotypeInstance Type owlPhenotype)
   }
@@ -246,7 +247,7 @@ class PhenexToOWL extends OWLTask {
   }
 
   def translateMatrixCell(cell: Element, otuID: String, owlOTU: OWLNamedIndividual): Unit = {
-    val owlCell = nextIndividual()
+    val owlCell = OntologyUtil.nextIndividual()
     addClass(owlCell, factory.getOWLClass(Vocab.STANDARD_CELL))
     val characterID = cell.getAttributeValue("char")
     val owlCharacter = characterToOWLMap(characterID)
@@ -266,8 +267,8 @@ class PhenexToOWL extends OWLTask {
       taxonOTUToValidTaxonMap.get(otuID).foreach(owlTaxon => {
         val phenotypes = stateToOWLPhenotypeMap.get(singleState).getOrElse(Set[OWLClass]())
         phenotypes.foreach(owlPhenotype => {
-          val organism = nextIndividual()
-          val phenotype = nextIndividual()
+          val organism = OntologyUtil.nextIndividual()
+          val phenotype = OntologyUtil.nextIndividual()
           addClass(phenotype, owlPhenotype)
           addPropertyAssertion(Vocab.HAS_MEMBER, owlTaxon, organism)
           addPropertyAssertion(Vocab.EXHIBITS, organism, phenotype)
@@ -293,7 +294,7 @@ class PhenexToOWL extends OWLTask {
     classFromTyperef(typeref) match {
       case named: OWLClass => named
       case expression => {
-        val named = nextClass()
+        val named = OntologyUtil.nextClass()
         manager.addAxiom(ontology, (named SubClassOf expression))
         val label = s"[${labelRenderer(expression)}]"
         manager.addAxiom(ontology, named Annotation (factory.getRDFSLabel, label))
@@ -385,7 +386,7 @@ class PhenexToOWL extends OWLTask {
       val filler = restriction.getFiller()
       val property = restriction.getProperty()
       // need IRIs for individuals for type materialization
-      val value = this.nextIndividual()
+      val value = OntologyUtil.nextIndividual()
       addPropertyAssertion(property, individual, value)
       instantiateClassAssertion(value, filler, false)
     } else if (aClass.isInstanceOf[OWLObjectIntersectionOf]) {

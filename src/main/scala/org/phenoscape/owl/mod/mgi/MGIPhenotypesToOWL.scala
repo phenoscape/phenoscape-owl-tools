@@ -1,13 +1,11 @@
 package org.phenoscape.owl.mod.mgi
 
 import java.io.File
-
 import scala.collection.JavaConversions._
 import scala.collection.Set
 import scala.collection.TraversableOnce.flattenTraversableOnce
 import scala.collection.mutable
 import scala.io.Source
-
 import org.apache.commons.lang3.StringUtils
 import org.phenoscape.owl.OWLTask
 import org.phenoscape.owl.Vocab
@@ -22,6 +20,7 @@ import org.semanticweb.owlapi.model.IRI
 import org.semanticweb.owlapi.model.OWLAxiom
 import org.semanticweb.owlapi.model.OWLClass
 import org.semanticweb.owlapi.model.OWLOntology
+import org.phenoscape.owl.util.OntologyUtil
 
 object MGIPhenotypesToOWL extends OWLTask {
 
@@ -43,7 +42,7 @@ object MGIPhenotypesToOWL extends OWLTask {
     val items = expressionLine.split("\t", -1)
     val involved = mutable.Set[OWLClass]()
     val axioms = mutable.Set[OWLAxiom]()
-    val phenotype = nextIndividual()
+    val phenotype = OntologyUtil.nextIndividual()
     axioms.add(phenotype Type AnnotatedPhenotype)
     axioms.add(factory.getOWLDeclarationAxiom(phenotype))
     val phenotypeID = StringUtils.stripToNull(items(10))

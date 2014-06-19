@@ -22,6 +22,7 @@ import org.semanticweb.owlapi.apibinding.OWLManager
 import org.apache.log4j.Logger
 import org.semanticweb.owlapi.vocab.OWLRDFVocabulary
 import org.semanticweb.owlapi.vocab.DublinCoreVocabulary
+import org.phenoscape.owl.util.OntologyUtil
 
 object ZFINPhenotypesToOWL extends OWLTask {
 
@@ -49,7 +50,7 @@ object ZFINPhenotypesToOWL extends OWLTask {
     val items = expressionLine.split("\t")
     val involved = mutable.Set[OWLClass]()
     val axioms = mutable.Set[OWLAxiom]()
-    val phenotype = nextIndividual()
+    val phenotype = OntologyUtil.nextIndividual()
     axioms.add(phenotype Type AnnotatedPhenotype)
     axioms.add(factory.getOWLDeclarationAxiom(phenotype))
     val superStructureID = StringUtils.stripToNull(items(7))
@@ -61,7 +62,7 @@ object ZFINPhenotypesToOWL extends OWLTask {
       val superStructure = Class(OBOUtil.iriForTermID(superStructureID))
       val subStructure = Class(OBOUtil.iriForTermID(subStructureID))
       val relation = ObjectProperty(OBOUtil.iriForTermID(relationID))
-      val namedComposition = nextClass()
+      val namedComposition = OntologyUtil.nextClass()
       axioms.add(namedComposition EquivalentTo (subStructure and (relation some superStructure)))
       namedComposition
     }
@@ -77,7 +78,7 @@ object ZFINPhenotypesToOWL extends OWLTask {
       val relatedSuperStructure = Class(OBOUtil.iriForTermID(relatedSuperStructureID))
       val relatedSubStructure = Class(OBOUtil.iriForTermID(relatedSubStructureID))
       val relatedRelation = ObjectProperty(OBOUtil.iriForTermID(relatedRelationID))
-      val namedComposition = nextClass()
+      val namedComposition = OntologyUtil.nextClass()
       axioms.add(namedComposition EquivalentTo (relatedSubStructure and (relatedRelation some relatedSuperStructure)))
       namedComposition
     }
@@ -97,7 +98,7 @@ object ZFINPhenotypesToOWL extends OWLTask {
     }
     if (eq_phenotype != null) {
       axioms.add(factory.getOWLDeclarationAxiom(organism))
-      val phenotypeClass = nextClass()
+      val phenotypeClass = OntologyUtil.nextClass()
       axioms.add(factory.getOWLDeclarationAxiom(phenotypeClass))
       axioms.add(phenotypeClass SubClassOf eq_phenotype)
       axioms.add(phenotype Type phenotypeClass)
