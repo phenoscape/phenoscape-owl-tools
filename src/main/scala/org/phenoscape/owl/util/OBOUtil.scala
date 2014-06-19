@@ -6,6 +6,9 @@ import org.semanticweb.owlapi.model.OWLAnnotationAssertionAxiom
 import org.semanticweb.owlapi.model.OWLEntity
 import org.semanticweb.owlapi.apibinding.OWLManager
 import org.phenoscape.scowl.OWL._
+import org.semanticweb.owlapi.model.OWLClassExpression
+import org.semanticweb.owlapi.model.OWLClass
+import org.semanticweb.owlapi.model.OWLAxiom
 
 object OBOUtil {
 
@@ -24,6 +27,8 @@ object OBOUtil {
 
   def mgiReferenceIRI(identifier: String): IRI = IRI.create("http://www.informatics.jax.org/reference/summary?id=" + identifier)
 
+  def xenbaseImageIRI(identifier: String): IRI = IRI.create("http://www.xenbase.org/common/ViewImageActionNonAdmin.do?imageId=" + identifier.replaceFirst(".*IMG-", ""))
+
   def createDefinedByAnnotation(term: OWLEntity): Option[OWLAnnotationAssertionAxiom] = {
     val iri = term.getIRI.toString
     if (iri.startsWith("http://purl.obolibrary.org/obo/")) {
@@ -32,5 +37,9 @@ object OBOUtil {
       Option(term Annotation (factory.getRDFSIsDefinedBy, IRI.create(ontIRI)))
     } else None
   }
+  
+  def translatePostComposition(id: String): OWLClassExpression = ???
+  
+  def translatePostCompositionNamed(id: String): (OWLClass, Set[OWLAxiom]) = ???
 
 }
