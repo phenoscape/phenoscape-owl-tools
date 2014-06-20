@@ -192,7 +192,8 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     Source.fromFile(new File(cwd + "/staging/sources/GeneExpression_tropicalis.txt"), "utf-8")))
   write(xenbaseExpressionData, cwd + "/staging/kb/xenbase-expression-data.owl")
   val xenbasePhenotypeFiles = FileUtils.listFiles(new File(cwd + "/staging/sources/xenbase-phenotypes"), Array("txt"), true)
-  val xenbasePhenotypeData = PropertyNormalizer.normalize(manager.createOntology(xenbasePhenotypeFiles.flatMap(f => XenbasePhenotypesToOWL.convertToAxioms(Source.fromFile(f))).toSet))
+  val xenbasePhenotypeData = PropertyNormalizer.normalize(manager.createOntology(xenbasePhenotypeFiles.flatMap(f =>
+    XenbasePhenotypesToOWL.convertToAxioms(Source.fromFile(f))).toSet))
   write(xenbasePhenotypeData, cwd + "/staging/kb/xenbase-phenotype-data.owl")
 
   step("Converting human data")
