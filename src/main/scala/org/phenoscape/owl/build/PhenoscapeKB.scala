@@ -129,6 +129,8 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
   write(fmaToUberon, cwd + "/staging/kb/uberon-bridge-to-fma.owl")
   val mgiToEMAPA = load(new File(cwd + "/staging/sources/mgi_anatomy.owl"))
   write(mgiToEMAPA, cwd + "/staging/kb/mgi_anatomy.owl")
+  val emapa = load(new File(cwd + "/staging/sources/emapa.owl"))
+  write(emapa, cwd + "/staging/kb/emapa.owl")
   val emapaToUberon = load(new File(cwd + "/staging/sources/uberon-bridge-to-emapa.owl"))
   write(mgiToEMAPA, cwd + "/staging/kb/uberon-bridge-to-emapa.owl.owl")
 
@@ -229,7 +231,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
   val developsFromRulesForAbsence = manager.createOntology(anatomicalEntities.flatMap(ReverseDevelopsFromRuleGenerator.createRules).toSet[OWLAxiom])
 
   val allTBox = combine(uberon, homology, pato, bspo, go, vto, zfa, xao, hp, //mp,
-    hpEQ, mpEQ, zfaToUberon, xaoToUberon, fmaToUberon, mgiToEMAPA, emapaToUberon,
+    hpEQ, mpEQ, zfaToUberon, xaoToUberon, fmaToUberon, mgiToEMAPA, emapa, emapaToUberon,
     hasParts, inherers, inherersInPartOf, towards, presences, absences, absenceNegationEquivalences, developsFromRulesForAbsence, tboxFromData, ro, phenoscapeVocab) // , eqCharacters
   println("tbox class count: " + allTBox.getClassesInSignature().size())
   println("tbox logical axiom count: " + allTBox.getLogicalAxiomCount())
