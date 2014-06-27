@@ -45,7 +45,7 @@ object MGIExpressionToOWL extends OWLTask {
 
   def translate(expressionLine: String): Set[OWLAxiom] = {
     val items = expressionLine.split("\t", -1)
-    if (StringUtils.stripToNull(items(5)) != "Present") {
+    if (StringUtils.stripToNull(items(5)) == "Absent") {
       Set()
     } else {
       val axioms = mutable.Set[OWLAxiom]()
