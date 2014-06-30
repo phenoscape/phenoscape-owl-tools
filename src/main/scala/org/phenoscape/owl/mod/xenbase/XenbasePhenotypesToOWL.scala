@@ -49,7 +49,10 @@ object XenbasePhenotypesToOWL extends OWLTask {
     val geneText = StringUtils.stripToNull(items(11))
     if (geneText != null) {
       val phenotype = OntologyUtil.nextIndividual()
-      val source = Individual(OBOUtil.xenbaseImageIRI(StringUtils.stripToNull(items(0))))
+      val sourceText = StringUtils.stripToNull(items(0)).toUpperCase
+      val source = if (sourceText.contains("IMG"))
+        Individual(OBOUtil.xenbaseImageIRI(sourceText))
+      else Individual(OBOUtil.xenbaseArticleIRI(sourceText))
       val species = taxon(StringUtils.stripToNull(items(1)))
       val gene = Individual(XenbaseGenesToOWL.getGeneIRI(fixGeneID(geneText)))
       val phenotypeClass = OntologyUtil.nextClass()
