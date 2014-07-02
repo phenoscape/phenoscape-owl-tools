@@ -107,6 +107,8 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
   write(taxrank, cwd + "/staging/kb/taxrank.owl")
   val vto = load(new File(cwd + "/staging/sources/vto.owl"))
   write(vto, cwd + "/staging/kb/vto.owl")
+  val collections = load(new File(cwd + "/staging/sources/fish_collection_abbreviation.obo"))
+  write(collections, cwd + "/staging/kb/fish_collection_abbreviation.owl")
   val zfa = load(new File(cwd + "/staging/sources/zfa.owl"))
   write(zfa, cwd + "/staging/kb/zfa.owl")
   val xao = load(new File(cwd + "/staging/sources/xao.owl"))
