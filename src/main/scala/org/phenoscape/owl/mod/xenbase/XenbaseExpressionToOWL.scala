@@ -85,6 +85,11 @@ object XenbaseExpressionToOWL extends OWLTask {
         axioms.add(structure Type structureType)
         axioms.add(expression Fact (OCCURS_IN, structure))
       }
+      val evidenceText = StringUtils.stripToEmpty(items(7))
+      if (evidenceText.contains("XB-IMG")) {
+        val image = Individual(OBOUtil.xenbaseImageIRI(evidenceText))
+        axioms.add(expression Fact (dcSource, image))
+      }
       val genepageID = genepageMappings(StringUtils.stripToNull(items(0)))
       val geneIRI = XenbaseGenesToOWL.getGeneIRI(genepageID)
       val gene = Individual(geneIRI)
