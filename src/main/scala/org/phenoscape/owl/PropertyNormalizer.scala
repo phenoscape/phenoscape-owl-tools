@@ -47,12 +47,12 @@ object PropertyNormalizer extends OWLTask {
     IRI.create("http://purl.obolibrary.org/obo/RO_0000052") -> Vocab.inheres_in.getIRI,
     IRI.create("http://purl.obolibrary.org/obo/overlaps") -> IRI.create("http://purl.obolibrary.org/obo/RO_0002131"),
     IRI.create("http://purl.obolibrary.org/obo/RO_overlaps") -> IRI.create("http://purl.obolibrary.org/obo/RO_0002131"),
-    IRI.create("http://purl.obolibrary.org/obo/towards") -> Vocab.TOWARDS.getIRI,
-    IRI.create("http://purl.obolibrary.org/obo/OBO_REL_towards") -> Vocab.TOWARDS.getIRI,
-    IRI.create("http://purl.obolibrary.org/obo/TODO_towards") -> Vocab.TOWARDS.getIRI,
-    IRI.create("http://purl.obolibrary.org/obo/mp/mp-equivalent-axioms-subq#towards") -> Vocab.TOWARDS.getIRI,
-    IRI.create("http://purl.obolibrary.org/obo/hp/hp-logical-definitions#involves") -> Vocab.INVOLVES.getIRI,
-    IRI.create("http://purl.obolibrary.org/obo/mp/mp-equivalent-axioms-subq#occurs_in") -> Vocab.OCCURS_IN.getIRI)
+    IRI.create("http://purl.obolibrary.org/obo/towards") -> Vocab.towards.getIRI,
+    IRI.create("http://purl.obolibrary.org/obo/OBO_REL_towards") -> Vocab.towards.getIRI,
+    IRI.create("http://purl.obolibrary.org/obo/TODO_towards") -> Vocab.towards.getIRI,
+    IRI.create("http://purl.obolibrary.org/obo/mp/mp-equivalent-axioms-subq#towards") -> Vocab.towards.getIRI,
+    IRI.create("http://purl.obolibrary.org/obo/hp/hp-logical-definitions#involves") -> Vocab.involves.getIRI,
+    IRI.create("http://purl.obolibrary.org/obo/mp/mp-equivalent-axioms-subq#occurs_in") -> Vocab.occurs_in.getIRI)
 
   def normalize(ontology: OWLOntology): OWLOntology = {
     val manager = ontology.getOWLOntologyManager

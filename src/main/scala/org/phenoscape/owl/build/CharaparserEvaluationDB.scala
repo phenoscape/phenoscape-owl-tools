@@ -106,8 +106,7 @@ object CharaparserEvaluationDB extends KnowledgeBaseBuilder {
   cd(KB)
   val nexmlTBoxAxioms: mutable.Set[OWLAxiom] = mutable.Set()
   for (file <- filesToConvert) {
-    val converter = new PhenexToOWL()
-    val nexOntology = PropertyNormalizer.normalize(converter.convert(file))
+    val nexOntology = PropertyNormalizer.normalize(PhenexToOWL.convert(file))
     nexmlTBoxAxioms.addAll(nexOntology.getTBoxAxioms(false))
     write(nexOntology, cwd + "/staging/kb/" + file.getName().replaceAll(".xml$", ".owl"))
   }
@@ -117,7 +116,7 @@ object CharaparserEvaluationDB extends KnowledgeBaseBuilder {
   val hasParts = manager.createOntology(anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(has_part, _)))
   val inherers = manager.createOntology(anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(inheres_in, _)))
   val inherersInPartOf = manager.createOntology(anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(inheres_in_part_of, _)))
-  val towardses = manager.createOntology(anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(TOWARDS, _)))
+  val towardses = manager.createOntology(anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(towards, _)))
   val absences = manager.createOntology(anatomicalEntities.flatMap(AbsenceClassGenerator.createAbsenceClass(_)))
   val namedHasPartClasses = anatomicalEntities.map(_.getIRI()).map(NamedRestrictionGenerator.getRestrictionIRI(has_part.getIRI, _)).map(Class(_))
   val absenceNegationEquivalences = manager.createOntology(namedHasPartClasses.flatMap(NegationClassGenerator.createNegationClassAxioms(_, hasParts)))

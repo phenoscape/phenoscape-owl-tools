@@ -76,7 +76,7 @@ object MatrixGenerator extends OWLTask {
 
   def composeEntityAndQualityInvolves(entity: OWLClass, quality: OWLClass): OWLEquivalentClassesAxiom = {
     val composition = Class(compositionIRI(entity, quality));
-    composition EquivalentTo ((INVOLVES some entity) and (INVOLVES some quality));
+    composition EquivalentTo ((involves some entity) and (involves some quality));
   }
 
   def compositionIRI(entity: OWLClass, quality: OWLClass): IRI = {

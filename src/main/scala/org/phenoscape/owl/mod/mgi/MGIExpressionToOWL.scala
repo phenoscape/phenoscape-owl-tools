@@ -54,7 +54,7 @@ object MGIExpressionToOWL extends OWLTask {
       axioms.add(expression Type GeneExpression)
       val structure = OntologyUtil.nextIndividual()
       axioms.add(factory.getOWLDeclarationAxiom(structure))
-      axioms.add(expression Fact (OCCURS_IN, structure))
+      axioms.add(expression Fact (occurs_in, structure))
       val structureID = StringUtils.stripToNull(items(4))
       val structureType = Class(OBOUtil.mgiAnatomyIRI(structureID))
       axioms.add(structure Type structureType)

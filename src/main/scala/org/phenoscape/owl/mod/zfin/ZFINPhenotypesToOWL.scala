@@ -26,11 +26,6 @@ import org.phenoscape.owl.util.OntologyUtil
 
 object ZFINPhenotypesToOWL extends OWLTask {
 
-  val zebrafish = Individual(Vocab.ZEBRAFISH)
-  val present = Class(Vocab.PRESENT)
-  val absent = Class(Vocab.ABSENT)
-  val lacksAllPartsOfType = Class(Vocab.LACKS_ALL_PARTS_OF_TYPE)
-  val organism = Class(Vocab.MULTI_CELLULAR_ORGANISM)
   val manager = OWLManager.createOWLOntologyManager()
 
   def main(args: Array[String]): Unit = {
@@ -84,20 +79,20 @@ object ZFINPhenotypesToOWL extends OWLTask {
     }
     val eq_phenotype = (entityTerm, qualityTerm, relatedEntityTerm) match {
       case (null, null, _) => null
-      case (entity: OWLClass, null, null) => (present and (inheres_in some entity))
+      case (entity: OWLClass, null, null) => (Present and (inheres_in some entity))
       case (entity: OWLClass, null, relatedEntity: OWLClass) => {
         logger.warn("Related entity with no quality.")
-        (present and (inheres_in some entity))
+        (Present and (inheres_in some entity))
       }
-      case (entity: OWLClass, `absent`, null) => (lacksAllPartsOfType and (inheres_in some organism) and (TOWARDS value Individual(entity.getIRI)))
-      case (entity: OWLClass, `lacksAllPartsOfType`, relatedEntity: OWLClass) => (lacksAllPartsOfType and (inheres_in some entity) and (TOWARDS value Individual(relatedEntity.getIRI)))
+      case (entity: OWLClass, Absent, null) => (LacksAllPartsOfType and (inheres_in some MultiCellularOrganism) and (towards value Individual(entity.getIRI)))
+      case (entity: OWLClass, LacksAllPartsOfType, relatedEntity: OWLClass) => (LacksAllPartsOfType and (inheres_in some entity) and (towards value Individual(relatedEntity.getIRI)))
       case (null, quality: OWLClass, null) => quality
-      case (null, quality: OWLClass, relatedEntity: OWLClass) => (quality and (TOWARDS some relatedEntity))
+      case (null, quality: OWLClass, relatedEntity: OWLClass) => (quality and (towards some relatedEntity))
       case (entity: OWLClass, quality: OWLClass, null) => (quality and (inheres_in some entity))
-      case (entity: OWLClass, quality: OWLClass, relatedEntity: OWLClass) => (quality and (inheres_in some entity) and (TOWARDS some relatedEntity))
+      case (entity: OWLClass, quality: OWLClass, relatedEntity: OWLClass) => (quality and (inheres_in some entity) and (towards some relatedEntity))
     }
     if (eq_phenotype != null) {
-      axioms.add(factory.getOWLDeclarationAxiom(organism))
+      axioms.add(factory.getOWLDeclarationAxiom(MultiCellularOrganism))
       val phenotypeClass = OntologyUtil.nextClass()
       axioms.add(factory.getOWLDeclarationAxiom(phenotypeClass))
       axioms.add(phenotypeClass SubClassOf eq_phenotype)
@@ -106,7 +101,7 @@ object ZFINPhenotypesToOWL extends OWLTask {
       val gene = Individual(geneIRI)
       axioms.add(factory.getOWLDeclarationAxiom(gene))
       axioms.add(phenotype Fact (associated_with_gene, gene))
-      axioms.add(phenotype Fact (associated_with_taxon, zebrafish))
+      axioms.add(phenotype Fact (associated_with_taxon, Zebrafish))
     }
     val figureID = StringUtils.stripToNull(items(25))
     val figure = Individual(OBOUtil.zfinIRI(figureID))

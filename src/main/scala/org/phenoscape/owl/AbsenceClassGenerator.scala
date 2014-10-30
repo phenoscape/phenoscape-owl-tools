@@ -2,7 +2,7 @@ package org.phenoscape.owl
 
 import scala.collection.JavaConversions._
 
-import org.phenoscape.owl.Vocab.has_part
+import org.phenoscape.owl.Vocab._
 import org.phenoscape.scowl.OWL.Class
 import org.phenoscape.scowl.OWL.Individual
 import org.phenoscape.scowl.OWL.ScowlClassExpression
@@ -16,7 +16,6 @@ import org.semanticweb.owlapi.model.OWLOntology
 
 object AbsenceClassGenerator extends OWLTask {
 
-  val lacksAllPartsOfType = Class(Vocab.LACKS_ALL_PARTS_OF_TYPE)
   val absenceOf = factory.getOWLAnnotationProperty(Vocab.ABSENCE_OF)
   val manager = OWLManager.createOWLOntologyManager
 
@@ -36,7 +35,7 @@ object AbsenceClassGenerator extends OWLTask {
     val notHasPartClass = Class(NegationClassGenerator.getNegationIRI(NamedRestrictionGenerator.getRestrictionIRI(has_part.getIRI, classIRI)))
     Set(
       factory.getOWLDeclarationAxiom(absenceClass),
-      absenceClass EquivalentTo (lacksAllPartsOfType and (Vocab.TOWARDS value Individual(classIRI))),
+      absenceClass EquivalentTo (LacksAllPartsOfType and (towards value Individual(classIRI))),
       absenceClass EquivalentTo notHasPartClass,
       absenceClass Annotation (absenceOf, ontClass.getIRI))
     //absenceClass SubClassOf (involves some ontClass) //this is dangerous

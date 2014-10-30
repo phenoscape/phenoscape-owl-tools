@@ -21,7 +21,6 @@ import org.phenoscape.owl.util.OntologyUtil
 
 object ZFINExpressionToOWL extends OWLTask {
 
-  val zebrafish = Individual(Vocab.ZEBRAFISH)
   val manager = OWLManager.createOWLOntologyManager()
 
   def main(args: Array[String]): Unit = {
@@ -47,7 +46,7 @@ object ZFINExpressionToOWL extends OWLTask {
       axioms.add(expression Type GeneExpression)
       val structure = OntologyUtil.nextIndividual()
       axioms.add(factory.getOWLDeclarationAxiom(structure))
-      axioms.add(expression Fact (OCCURS_IN, structure))
+      axioms.add(expression Fact (occurs_in, structure))
       val superStructureID = StringUtils.stripToNull(items(3))
       val subStructureID = StringUtils.stripToNull(items(5))
       if (subStructureID == null) {
@@ -64,7 +63,7 @@ object ZFINExpressionToOWL extends OWLTask {
       val gene = Individual(geneIRI)
       axioms.add(factory.getOWLDeclarationAxiom(gene))
       axioms.add(expression Fact (associated_with_gene, gene))
-      axioms.add(expression Fact (associated_with_taxon, zebrafish))
+      axioms.add(expression Fact (associated_with_taxon, Zebrafish))
       val publicationID = StringUtils.stripToNull(items(10))
       val publication = Individual(OBOUtil.zfinIRI(publicationID))
       axioms.add(expression Fact (dcSource, publication))

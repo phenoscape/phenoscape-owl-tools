@@ -16,8 +16,6 @@ import org.phenoscape.owl.Vocab._
 
 object TaxonomyConverter extends OWLTask {
 
-  val taxon = factory.getOWLClass(Vocab.TAXON);
-
   def main(args: Array[String]): Unit = {
     val manager = OWLManager.createOWLOntologyManager();
     val classOntology = manager.loadOntologyFromOntologyDocument(new File(args(0)));
@@ -38,7 +36,7 @@ object TaxonomyConverter extends OWLTask {
     val manager = classOntology.getOWLOntologyManager();
     val factory = manager.getOWLDataFactory();
     val axioms = mutable.Set[OWLAxiom]();
-    axioms.add(factory.getOWLClassAssertionAxiom(taxon, factory.getOWLNamedIndividual(taxonClass.getIRI())));
+    axioms.add(factory.getOWLClassAssertionAxiom(Taxon, factory.getOWLNamedIndividual(taxonClass.getIRI())));
     axioms.addAll(onlyClasses(taxonClass.getSuperClasses(classOntology)).map(createSubcladeRelationship(taxonClass, _)));
     return axioms;
   }
@@ -47,7 +45,7 @@ object TaxonomyConverter extends OWLTask {
     val factory = OWLManager.getOWLDataFactory();
     val subcladeIndividual = factory.getOWLNamedIndividual(subclade.getIRI());
     val supercladeIndividual = factory.getOWLNamedIndividual(superclade.getIRI());
-    return factory.getOWLObjectPropertyAssertionAxiom(SUBCLADE_OF, subcladeIndividual, supercladeIndividual);
+    return factory.getOWLObjectPropertyAssertionAxiom(subclade_of, subcladeIndividual, supercladeIndividual);
   }
 
   def onlyClasses(classes: Iterable[OWLClassExpression]): Iterable[OWLClass] = {

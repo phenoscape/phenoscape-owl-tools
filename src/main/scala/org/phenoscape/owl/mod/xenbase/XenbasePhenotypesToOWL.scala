@@ -28,10 +28,6 @@ object XenbasePhenotypesToOWL extends OWLTask {
 
   val laevis = Individual(Vocab.XENOPUS_LAEVIS)
   val tropicalis = Individual(Vocab.XENOPUS_TROPICALIS)
-  val Present = Class(Vocab.PRESENT)
-  val Absent = Class(Vocab.ABSENT)
-  val LacksAllPartsOfType = Class(Vocab.LACKS_ALL_PARTS_OF_TYPE)
-  val Organism = Class(Vocab.MULTI_CELLULAR_ORGANISM)
   val manager = OWLManager.createOWLOntologyManager()
 
   def convertToOntology(genepageMappingsFile: Source, phenotypeData: Source): OWLOntology = {
@@ -58,11 +54,11 @@ object XenbasePhenotypesToOWL extends OWLTask {
       val phenotypeClass = OntologyUtil.nextClass()
       val quality = Class(OBOUtil.iriForTermID(StringUtils.stripToNull(items(15))))
       val (entity, entityAxioms) = OBOUtil.translatePostCompositionNamed(StringUtils.stripToNull(items(13)))
-      val (optionalRelatedEntity, relatedEntityAxioms) = optionSet(Option(StringUtils.stripToNull(items(17))).map(OBOUtil.translatePostCompositionNamed))
+      val (optionalRelatedEntity, relatedEntityAxioms) = OntologyUtil.optionWithSet(Option(StringUtils.stripToNull(items(17))).map(OBOUtil.translatePostCompositionNamed))
       val eqPhenotype = (entity, quality, optionalRelatedEntity) match {
-        case (entity, Absent, None) => (LacksAllPartsOfType and (inheres_in some Organism) and (TOWARDS value Individual(entity.getIRI)))
-        case (entity, LacksAllPartsOfType, Some(relatedEntity)) => (LacksAllPartsOfType and (inheres_in some entity) and (TOWARDS value Individual(relatedEntity.getIRI)))
-        case (entity, quality, Some(relatedEntity)) => quality and (inheres_in some entity) and (TOWARDS some relatedEntity)
+        case (entity, Absent, None) => (LacksAllPartsOfType and (inheres_in some MultiCellularOrganism) and (towards value Individual(entity.getIRI)))
+        case (entity, LacksAllPartsOfType, Some(relatedEntity)) => (LacksAllPartsOfType and (inheres_in some entity) and (towards value Individual(relatedEntity.getIRI)))
+        case (entity, quality, Some(relatedEntity)) => quality and (inheres_in some entity) and (towards some relatedEntity)
         case (entity, quality, None) => quality and (inheres_in some entity)
       }
       Set(
@@ -78,11 +74,6 @@ object XenbasePhenotypesToOWL extends OWLTask {
         entityAxioms ++
         relatedEntityAxioms
     } else Set()
-  }
-
-  def optionSet[T, S](in: Option[(T, Set[S])]): (Option[T], Set[S]) = in match {
-    case Some((thing, set)) => (Option(thing), set)
-    case None => (None, Set())
   }
 
   def fixGeneID(id: String): String = "XB-GENEPAGE-" + id.split(":")(1)

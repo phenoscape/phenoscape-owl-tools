@@ -36,4 +36,9 @@ object OntologyUtil {
     IRI.create(id)
   }
 
+  def optionWithSet[T, S](in: Option[(T, Set[S])]): (Option[T], Set[S]) = in match {
+    case Some((thing, set)) => (Option(thing), set)
+    case None => (None, Set.empty)
+  }
+
 }

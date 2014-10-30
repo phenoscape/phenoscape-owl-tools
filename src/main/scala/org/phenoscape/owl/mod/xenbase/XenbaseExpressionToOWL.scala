@@ -83,7 +83,7 @@ object XenbaseExpressionToOWL extends OWLTask {
         val structure = OntologyUtil.nextIndividual()
         axioms.add(factory.getOWLDeclarationAxiom(structure))
         axioms.add(structure Type structureType)
-        axioms.add(expression Fact (OCCURS_IN, structure))
+        axioms.add(expression Fact (occurs_in, structure))
       }
       val evidenceText = StringUtils.stripToEmpty(items(7))
       if (evidenceText.contains("XB-IMG")) {

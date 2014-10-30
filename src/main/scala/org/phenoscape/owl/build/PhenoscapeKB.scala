@@ -164,8 +164,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
   cd(KB)
   val nexmlTBoxAxioms: mutable.Set[OWLAxiom] = mutable.Set()
   for (file <- filesToConvert) {
-    val converter = new PhenexToOWL()
-    val nexOntology = PropertyNormalizer.normalize(converter.convert(file, vocabForNeXML))
+    val nexOntology = PropertyNormalizer.normalize(PhenexToOWL.convert(file, vocabForNeXML))
     nexmlTBoxAxioms.addAll(nexOntology.getTBoxAxioms(false))
     write(nexOntology, cwd + "/staging/kb/" + file.getName().replaceAll(".xml$", ".owl"))
   }
@@ -225,7 +224,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
   val presences = manager.createOntology(anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(Vocab.IMPLIES_PRESENCE_OF, _)))
   val inherers = manager.createOntology(anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(Vocab.inheres_in, _)))
   val inherersInPartOf = manager.createOntology(anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(Vocab.inheres_in_part_of, _)))
-  val towards = manager.createOntology(anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(Vocab.TOWARDS, _)))
+  val towards = manager.createOntology(anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(Vocab.towards, _)))
   //val involvers = manager.createOntology((anatomicalEntities ++ qualities).map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.INVOLVES), _)).flatten)
   //val homologies = manager.createOntology(anatomicalEntities.map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.PHP), _)).flatten)
   val absences = manager.createOntology(anatomicalEntities.flatMap(AbsenceClassGenerator.createAbsenceClass))

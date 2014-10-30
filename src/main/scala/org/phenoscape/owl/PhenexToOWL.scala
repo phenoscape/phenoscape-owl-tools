@@ -3,302 +3,265 @@ package org.phenoscape.owl
 import java.io.File
 import java.util.UUID
 import scala.collection.JavaConversions._
-import scala.collection.mutable
 import org.apache.commons.lang3.StringUtils
 import org.jdom2.Element
 import org.jdom2.Namespace
 import org.jdom2.filter.ElementFilter
 import org.jdom2.input.SAXBuilder
-import org.phenoscape.owl.util.OBOUtil
+import org.phenoscape.owl.util.OntologyUtil
 import org.phenoscape.scowl.OWL._
 import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model.IRI
-import org.semanticweb.owlapi.model.OWLAnnotationSubject
-import org.semanticweb.owlapi.model.OWLAnnotationValue
+import org.semanticweb.owlapi.model.OWLAxiom
 import org.semanticweb.owlapi.model.OWLClass
-import org.semanticweb.owlapi.model.OWLClassExpression
-import org.semanticweb.owlapi.model.OWLIndividual
 import org.semanticweb.owlapi.model.OWLNamedIndividual
-import org.semanticweb.owlapi.model.OWLObjectIntersectionOf
-import org.semanticweb.owlapi.model.OWLObjectPropertyExpression
-import org.semanticweb.owlapi.model.OWLObjectSomeValuesFrom
 import org.semanticweb.owlapi.model.OWLOntology
-import org.semanticweb.owlapi.model.OWLQuantifiedObjectRestriction
 import org.semanticweb.owlapi.vocab.DublinCoreVocabulary
-import org.semanticweb.owlapi.vocab.OWLRDFVocabulary
-import org.phenoscape.owl.Vocab._
-import uk.ac.manchester.cs.owl.owlapi.mansyntaxrenderer.ManchesterOWLSyntaxOWLObjectRendererImpl
-import org.semanticweb.owlapi.util.AnnotationValueShortFormProvider
-import org.semanticweb.owlapi.model.OWLAnnotationProperty
-import org.semanticweb.owlapi.model.OWLOntologySetProvider
+import Vocab._
+import org.semanticweb.owlapi.model.OWLClassExpression
+import org.phenoscape.owl.util.OBOUtil
+import org.semanticweb.owlapi.model.OWLEquivalentClassesAxiom
 import org.phenoscape.owl.util.ExpressionUtil
-import org.phenoscape.owl.util.OntologyUtil
+import org.semanticweb.owlapi.model.OWLObject
+import org.phenoscape.owl.util.OntologyUtil.optionWithSet
 
-class PhenexToOWL extends OWLTask {
+object PhenexToOWL extends OWLTask {
 
   val dcTermsNS = Namespace.getNamespace("http://purl.org/dc/terms/")
   val dwcNS = Namespace.getNamespace("http://rs.tdwg.org/dwc/terms/")
   val nexmlNS = Namespace.getNamespace("http://www.nexml.org/2009")
   val phenoNS = Namespace.getNamespace("http://www.bioontologies.org/obd/schema/pheno")
   val rdfsNS = Namespace.getNamespace("http://www.w3.org/2000/01/rdf-schema#")
+  val rdfsLabel = factory.getRDFSLabel
+  val rdfsComment = factory.getRDFSComment
+  val dcDescription = factory.getOWLAnnotationProperty(DublinCoreVocabulary.DESCRIPTION.getIRI)
   val phenoscapeComplement = IRI.create("http://purl.obolibrary.org/obo/PHENOSCAPE_complement_of")
-  val present = Class(Vocab.PRESENT)
-  val absent = Class(Vocab.ABSENT)
-  val eqCharacterToken = Class(Vocab.EQ_CHARACTER_TOKEN)
-  val lacksAllPartsOfType = Class(Vocab.LACKS_ALL_PARTS_OF_TYPE)
-  val organism = Class(Vocab.MULTI_CELLULAR_ORGANISM)
-  val characterToOWLMap = mutable.Map[String, OWLNamedIndividual]()
-  val stateToOWLMap = mutable.Map[String, OWLNamedIndividual]()
-  val taxonOTUToOWLMap = mutable.Map[String, OWLNamedIndividual]()
-  val taxonOTUToValidTaxonMap = mutable.Map[String, OWLNamedIndividual]()
-  val stateToOWLPhenotypeMap = mutable.Map[String, mutable.Set[OWLClass]]()
   val manager = OWLManager.createOWLOntologyManager
-  val ontology = manager.createOntology(IRI.create("http://example.org/" + UUID.randomUUID().toString()))
-  var nexml: Element = null
-  var vocabOntology = manager.createOntology()
-  var labelRenderer = ExpressionUtil.createEntityRenderer(factory.getRDFSLabel, vocabOntology)
-  //nodeIncrementer = 0
+  type LabelRenderer = OWLObject => String
 
   def convert(file: File, vocabulary: OWLOntology = manager.createOntology()): OWLOntology = {
-    vocabOntology = vocabulary
-    labelRenderer = ExpressionUtil.createEntityRenderer(factory.getRDFSLabel, vocabOntology)
-    val builder = new SAXBuilder()
-    val nexml = builder.build(file)
-    convert(nexml.getRootElement(), file.getName())
-    return ontology
+    val labelRenderer = ExpressionUtil.createEntityRenderer(factory.getRDFSLabel, vocabulary)
+    val doc = new SAXBuilder().build(file)
+    val nexml = doc.getRootElement
+    val matrix = OntologyUtil.nextIndividual
+    val axioms = Set(
+      matrix Annotation (rdfsLabel, file.getName),
+      matrix Type CharacterStateDataMatrix)
+    val descriptionAxiom = for { value <- getLiteralMetaValues(nexml, "description", dcTermsNS) }
+      yield matrix Annotation (rdfsComment, value)
+    val (otusAxioms, taxonOTUToOWLMap) = translateOTUs(nexml, matrix)
+    val (charactersAxioms, characterToOWLMap) = translateCharacters(nexml, matrix, labelRenderer)
+    val matrixAxioms = translateMatrixRows(nexml, matrix, taxonOTUToOWLMap, characterToOWLMap)
+    val allAxioms = axioms ++ descriptionAxiom ++ otusAxioms ++ charactersAxioms ++ matrixAxioms
+    manager.createOntology(allAxioms, IRI.create("http://example.org/" + UUID.randomUUID().toString()))
   }
 
-  def convert(root: Element, matrixLabel: String): Unit = {
-    nexml = root
-    val matrix = OntologyUtil.nextIndividual()
-    addAnnotation(OWLRDFVocabulary.RDFS_LABEL.getIRI(), matrix.getIRI(), factory.getOWLLiteral(matrixLabel))
-    this.addClass(matrix, this.factory.getOWLClass(Vocab.CHARACTER_STATE_DATA_MATRIX))
-    val publicationNotes = getLiteralMetaValues(nexml, "description", dcTermsNS)
-    publicationNotes.foreach(note => {
-      val comment = factory.getOWLLiteral(note)
-      addAnnotation(OWLRDFVocabulary.RDFS_COMMENT.getIRI(), matrix.getIRI(), comment)
-    })
-    val otus = nexml.getChild("otus", nexmlNS).getChildren("otu", nexmlNS)
-    otus.foreach(translateOTU(_, matrix))
-    val chars = nexml.getChild("characters", nexmlNS).getChild("format", nexmlNS).getChildren("char", nexmlNS)
-    val charsWithIndex = chars.zipWithIndex
-    charsWithIndex.foreach { case (character, index) => translateCharacter(character, index, matrix) }
-    val matrixRows = nexml.getChild("characters", nexmlNS).getChild("matrix", nexmlNS).getChildren("row", nexmlNS)
-    matrixRows.foreach(translateMatrixRow(_))
+  def translateMatrixRows(nexml: Element, matrix: OWLNamedIndividual, taxonOTUToOWLMap: Map[String, OWLNamedIndividual], characterToOWLMap: Map[String, OWLNamedIndividual]): Set[OWLAxiom] = {
+    val axioms = nexml.getChild("characters", nexmlNS).getChild("matrix", nexmlNS).getChildren("row", nexmlNS).map(translateMatrixRow(_, matrix, taxonOTUToOWLMap, characterToOWLMap))
+    axioms.flatten.toSet
   }
 
-  def translateOTU(otu: Element, matrix: OWLNamedIndividual): Unit = {
-    val owlOTU = OntologyUtil.nextIndividual()
-    val otuID = otu.getAttributeValue("id")
-    taxonOTUToOWLMap.put(otuID, owlOTU)
-    addPropertyAssertion(Vocab.HAS_TU, matrix, owlOTU)
-    addClass(owlOTU, factory.getOWLClass(Vocab.TU))
-    val label = otu.getAttributeValue("label")
-    if (StringUtils.isNotBlank(label)) {
-      addAnnotation(OWLRDFVocabulary.RDFS_LABEL.getIRI(), owlOTU.getIRI(), factory.getOWLLiteral(label))
-    }
-    val validTaxon = getResourceMetaValues(otu, "taxonID", dwcNS).headOption
-    validTaxon.foreach(taxon => {
-      val owlTaxon = factory.getOWLNamedIndividual(taxon)
-      addPropertyAssertion(Vocab.HAS_EXTERNAL_REFERENCE, owlOTU, owlTaxon)
-      taxonOTUToValidTaxonMap.put(otuID, owlTaxon)
-    })
-    val comments = getLiteralMetaValues(otu, "comment", rdfsNS)
-    comments.foreach(c => addAnnotation(OWLRDFVocabulary.RDFS_COMMENT.getIRI(), owlOTU.getIRI(), factory.getOWLLiteral(c)))
-    val specimenMetas = getResourceMetasForProperty(otu, "individualID", dwcNS)
-    specimenMetas.foreach(translateSpecimen(_, owlOTU))
-  }
-
-  def translateSpecimen(specimen: Element, owlOTU: OWLNamedIndividual): Unit = {
-    val owlSpecimen = factory.getOWLAnonymousIndividual()
-    addPropertyAssertion(Vocab.INDIVIDUAL_ID, owlOTU, owlSpecimen)
-    addClass(owlSpecimen, factory.getOWLClass(Vocab.SPECIMEN))
-    val collectionIRI = getResourceMetaValues(specimen, "collectionID", dwcNS).headOption
-    collectionIRI.foreach(iri => addPropertyAssertion(Vocab.SPECIMEN_TO_COLLECTION, owlSpecimen, factory.getOWLNamedIndividual(iri)))
-    val catalogNumber = getLiteralMetaValues(specimen, "catalogNumber", dwcNS).headOption
-    catalogNumber.foreach(num => {
-      val property = factory.getOWLDataProperty(Vocab.SPECIMEN_TO_CATALOG_ID)
-      val axiom = factory.getOWLDataPropertyAssertionAxiom(property, owlSpecimen, num)
-      manager.addAxiom(ontology, axiom)
-    })
-  }
-
-  def translateCharacter(character: Element, index: Int, matrix: OWLNamedIndividual): Unit = {
-    val owlCharacter = OntologyUtil.nextIndividual()
-    val charID = character.getAttributeValue("id")
-    characterToOWLMap.put(charID, owlCharacter)
-    addAnnotation(Vocab.list_index.getIRI, owlCharacter.getIRI, factory.getOWLLiteral(index))
-    addPropertyAssertion(Vocab.HAS_CHARACTER, matrix, owlCharacter)
-    addClass(owlCharacter, factory.getOWLClass(Vocab.STANDARD_CHARACTER))
-    val label = character.getAttributeValue("label")
-    if (StringUtils.isNotBlank(label)) {
-      addAnnotation(OWLRDFVocabulary.RDFS_LABEL.getIRI(), owlCharacter.getIRI(), factory.getOWLLiteral(label))
-    }
-    val comments = getLiteralMetaValues(character, "comment", rdfsNS)
-    comments.foreach(c => addAnnotation(OWLRDFVocabulary.RDFS_COMMENT.getIRI(), owlCharacter.getIRI(), factory.getOWLLiteral(c)))
-    val statesBlockID = character.getAttributeValue("states")
-    val statesBlock = getElementByID(statesBlockID)
-    val states = statesBlock.getChildren("state", nexmlNS)
-    states.foreach(translateState(_, owlCharacter, label))
-  }
-
-  def translateState(state: Element, owlCharacter: OWLNamedIndividual, characterLabel: String): Unit = {
-    val owlState = OntologyUtil.nextIndividual()
-    val stateID = state.getAttributeValue("id")
-    stateToOWLMap.put(stateID, owlState)
-    addClass(owlState, factory.getOWLClass(Vocab.STANDARD_STATE))
-    addPropertyAssertion(Vocab.MAY_HAVE_STATE_VALUE, owlCharacter, owlState)
-    val symbol = state.getAttributeValue("symbol")
-    if (StringUtils.isNotBlank(symbol)) {
-      addAnnotation(state_symbol.getIRI, owlState.getIRI(), factory.getOWLLiteral(symbol))
-    } else {
-      addAnnotation(state_symbol.getIRI, owlState.getIRI(), factory.getOWLLiteral("<?>"))
-    }
-    val descBuffer = new StringBuffer()
-    if (StringUtils.isNotBlank(characterLabel)) {
-      descBuffer.append(characterLabel + ": ")
-    }
-    val label = state.getAttributeValue("label")
-    if (StringUtils.isNotBlank(label)) {
-      descBuffer.append(label)
-      addAnnotation(OWLRDFVocabulary.RDFS_LABEL.getIRI(), owlState.getIRI(), factory.getOWLLiteral(label))
-    }
-    val completeDescription = descBuffer.toString() // for full-text indexing
-    if (StringUtils.isNotBlank(completeDescription)) {
-      addAnnotation(DublinCoreVocabulary.DESCRIPTION.getIRI(), owlState.getIRI(), factory.getOWLLiteral(completeDescription))
-    }
-    val comments = getLiteralMetaValues(state, "comment", rdfsNS)
-    comments.map(c => addAnnotation(OWLRDFVocabulary.RDFS_COMMENT.getIRI(), owlState.getIRI(), factory.getOWLLiteral(c)))
-    val phenotypes = state.getDescendants(new ElementFilter("phenotype_character", phenoNS)).iterator()
-    phenotypes.foreach(translatePhenotype(_, stateID, owlState))
-  }
-
-  def translatePhenotype(phenotype: Element, stateID: String, owlState: OWLNamedIndividual): Unit = {
-    val owlPhenotype = OntologyUtil.nextClass()
-    stateToOWLPhenotypeMap.getOrElseUpdate(stateID, mutable.Set()).add(owlPhenotype)
-    translatePhenotypeSemantics(phenotype, owlPhenotype, owlState)
-    //TODO perhaps state should denote phenotype, not organism modify property chain
-    manager.addAxiom(ontology, owlState Type (DENOTES only (EXHIBITS some owlPhenotype)))
-    val phenotypeInstance = OntologyUtil.nextIndividual()
-    manager.addAxiom(ontology, owlState Fact (DENOTES_EXHIBITING, phenotypeInstance))
-    manager.addAxiom(ontology, phenotypeInstance Type owlPhenotype)
-  }
-
-  def translatePhenotypeSemantics(phenotype: Element, owlPhenotype: OWLClass, owlState: OWLNamedIndividual): Unit = {
-    val involved = mutable.Set[OWLClass]()
-    val bearerElement = phenotype.getChild("bearer", phenoNS)
-    val entityTerm = if (bearerElement != null) {
-      val bearerType = bearerElement.getChild("typeref", phenoNS)
-      if (bearerType != null) {
-        val e = namedClassFromTyperef(bearerType)
-        manager.addAxioms(ontology, AbsenceClassGenerator.generateAllAbsenceAxiomsForEntity(e))
-        e
-      } else { null }
-    } else { null }
-    val qualityElement = phenotype.getChild("quality", phenoNS)
-    val qualityTerm = if (qualityElement != null) {
-      val qualityType = qualityElement.getChild("typeref", phenoNS)
-      if (qualityType != null) {
-        namedClassFromTyperef(qualityType)
-      } else { null }
-    } else { null }
-    val relatedEntityTerm = if (qualityElement != null) {
-      val relatedEntityElement = qualityElement.getChild("related_entity", phenoNS)
-      if (relatedEntityElement != null) {
-        val relatedEntityType = relatedEntityElement.getChild("typeref", phenoNS)
-        if (relatedEntityType != null) {
-          val re = namedClassFromTyperef(relatedEntityType)
-          manager.addAxioms(ontology, AbsenceClassGenerator.generateAllAbsenceAxiomsForEntity(re))
-          re
-        } else { null }
-      } else { null }
-    } else { null }
-    if (entityTerm != null) manager.addAxiom(ontology, owlPhenotype Annotation (entity_term, entityTerm.getIRI))
-    if (qualityTerm != null) manager.addAxiom(ontology, owlPhenotype Annotation (quality_term, qualityTerm.getIRI))
-    if (relatedEntityTerm != null) manager.addAxiom(ontology, owlPhenotype Annotation (related_entity_term, relatedEntityTerm.getIRI))
-    val eq_phenotype = (entityTerm, qualityTerm, relatedEntityTerm) match {
-      case (null, null, _) => null
-      case (entity: OWLClass, null, null) => (present and (inheres_in some entity))
-      case (entity: OWLClass, null, relatedEntity: OWLClass) => {
-        logger.warn("Related entity with no quality.")
-        (present and (inheres_in some entity))
-      }
-      case (entity: OWLClass, `absent`, null) => (lacksAllPartsOfType and (inheres_in some organism) and (TOWARDS value Individual(entity.getIRI)))
-      case (entity: OWLClass, `lacksAllPartsOfType`, relatedEntity: OWLClass) => (lacksAllPartsOfType and (inheres_in some entity) and (TOWARDS value Individual(relatedEntity.getIRI)))
-      case (null, quality: OWLClass, null) => quality
-      case (null, quality: OWLClass, relatedEntity: OWLClass) => (quality and (TOWARDS some relatedEntity))
-      case (entity: OWLClass, quality: OWLClass, null) => (quality and (inheres_in some entity))
-      case (entity: OWLClass, quality: OWLClass, relatedEntity: OWLClass) => (quality and (inheres_in some entity) and (TOWARDS some relatedEntity))
-      //TODO comparisons, etc.
-    }
-    if (eq_phenotype == null) {
-      return
-    } else {
-      manager.addAxiom(ontology, owlPhenotype SubClassOf eq_phenotype)
-      manager.addAxiom(ontology, owlPhenotype SubClassOf eqCharacterToken)
-    }
-  }
-
-  def translateMatrixRow(row: Element): Unit = {
+  def translateMatrixRow(row: Element, matrix: OWLNamedIndividual, taxonOTUToOWLMap: Map[String, OWLNamedIndividual], characterToOWLMap: Map[String, OWLNamedIndividual]): Set[OWLAxiom] = {
     val otuID = row.getAttributeValue("otu")
     val owlOTU = taxonOTUToOWLMap(otuID)
     val cells = row.getChildren("cell", nexmlNS)
-    cells.foreach(translateMatrixCell(_, otuID, owlOTU))
+    cells.flatMap(translateMatrixCell(_, otuID, owlOTU, characterToOWLMap)).toSet
   }
 
-  def translateMatrixCell(cell: Element, otuID: String, owlOTU: OWLNamedIndividual): Unit = {
+  def translateMatrixCell(cell: Element, otuID: String, owlOTU: OWLNamedIndividual, characterToOWLMap: Map[String, OWLNamedIndividual]): Set[OWLAxiom] = {
     val owlCell = OntologyUtil.nextIndividual()
-    addClass(owlCell, factory.getOWLClass(Vocab.STANDARD_CELL))
     val characterID = cell.getAttributeValue("char")
     val owlCharacter = characterToOWLMap(characterID)
     val stateID = cell.getAttributeValue("state")
-    addPropertyAssertion(Vocab.BELONGS_TO_CHARACTER, owlCell, owlCharacter)
-    addPropertyAssertion(Vocab.BELONGS_TO_TU, owlCell, owlOTU)
+    val cellAxioms = Set(
+      owlCell Type StandardCell,
+      owlCell Fact (belongs_to_character, owlCharacter),
+      owlCell Fact (belongs_to_TU, owlOTU))
     // We are flattening uncertain/polymorphic states into multiple individual states related to the matrix cell
-    val states = if (stateToOWLMap.containsKey(stateID)) {
-      Set(stateID)
-    } else {
-      getElementByID(stateID).getChildren("member", nexmlNS).map(_.getAttributeValue("state"))
+    val states = if (characterToOWLMap.containsKey(stateID)) Set(stateID)
+    else getElementByID(stateID, cell).getChildren("member", nexmlNS).map(_.getAttributeValue("state"))
+    val stateAxioms = for {
+      singleState <- states
+      owlState <- characterToOWLMap.get(singleState)
+    } yield {
+      val taxonStateAxiomOpt = for (owlTaxon <- taxonForOTU(getElementByID(otuID, cell))) yield owlTaxon Fact (exhibits_state, owlState)
+      taxonStateAxiomOpt.toSet + (owlCell Fact (has_state, owlState))
     }
-    states.foreach(singleState => {
-      stateToOWLMap.get(singleState).foreach(owlState => {
-        addPropertyAssertion(Vocab.HAS_STATE, owlCell, owlState)
-      })
-      taxonOTUToValidTaxonMap.get(otuID).foreach(owlTaxon => {
-        val phenotypes = stateToOWLPhenotypeMap.get(singleState).getOrElse(Set[OWLClass]())
-        phenotypes.foreach(owlPhenotype => {
-          val organism = OntologyUtil.nextIndividual()
-          val phenotype = OntologyUtil.nextIndividual()
-          addClass(phenotype, owlPhenotype)
-          addPropertyAssertion(Vocab.HAS_MEMBER, owlTaxon, organism)
-          addPropertyAssertion(Vocab.EXHIBITS, organism, phenotype)
-        })
-      })
+    cellAxioms ++ stateAxioms.flatten
+  }
+
+  def translateOTUs(nexml: Element, matrix: OWLNamedIndividual): (Set[OWLAxiom], Map[String, OWLNamedIndividual]) = {
+    val translations = nexml.getChild("otus", nexmlNS).getChildren("otu", nexmlNS).map(translateOTU(_, matrix))
+    val (axioms, owlOTUAssociations) = translations.unzip
+    (axioms.flatten.toSet, owlOTUAssociations.toMap)
+  }
+
+  def translateOTU(otu: Element, matrix: OWLNamedIndividual): (Set[OWLAxiom], (String, OWLNamedIndividual)) = {
+    val owlOTU = OntologyUtil.nextIndividual
+    val otuID = otu.getAttributeValue("id")
+    val otuLabel = optString(otu.getAttributeValue("label")).getOrElse("")
+    val axioms = Set(
+      matrix Fact (has_TU, owlOTU),
+      owlOTU Type TU,
+      owlOTU Annotation (rdfsLabel, otuLabel))
+    val otuToValidTaxonOption = for { taxon <- taxonForOTU(otu) }
+      yield owlOTU Fact (has_external_reference, taxon)
+    val otuComments = for { comment <- getLiteralMetaValues(otu, "comment", rdfsNS) }
+      yield owlOTU Annotation (rdfsComment, comment)
+    val specimensAxioms = translateSpecimens(otu, owlOTU)
+    (axioms ++ otuToValidTaxonOption ++ otuComments ++ specimensAxioms, otuID -> owlOTU)
+  }
+
+  def taxonForOTU(otu: Element): Option[OWLNamedIndividual] = {
+    getResourceMetaValues(otu, "taxonID", dwcNS).headOption.map(Individual(_))
+  }
+
+  def translateSpecimens(otu: Element, owlOTU: OWLNamedIndividual): Set[OWLAxiom] = {
+    val axioms = for {
+      specimen <- getResourceMetasForProperty(otu, "individualID", dwcNS)
+      axiom <- translateSpecimen(specimen, owlOTU)
+    } yield axiom
+    axioms.toSet
+  }
+
+  def translateSpecimen(specimenElement: Element, owlOTU: OWLNamedIndividual): Set[OWLAxiom] = {
+    val owlSpecimen = Individual()
+    val axioms = Set(
+      owlOTU Fact (individual_id, owlSpecimen),
+      owlSpecimen Type Specimen)
+    val collectionAxiom = for { iri <- getResourceMetaValues(specimenElement, "collectionID", dwcNS) }
+      yield owlSpecimen Fact (collectionID, Individual(iri))
+    val catalogNumAxiom = for { value <- getLiteralMetaValues(specimenElement, "catalogNumber", dwcNS) }
+      yield factory.getOWLDataPropertyAssertionAxiom(catalogNumber, owlSpecimen, value)
+    axioms ++ collectionAxiom ++ catalogNumAxiom
+  }
+
+  def translateCharacters(nexml: Element, matrix: OWLNamedIndividual, labelRenderer: LabelRenderer): (Set[OWLAxiom], Map[String, OWLNamedIndividual]) = {
+    val characterElements = nexml.getChild("characters", nexmlNS).getChild("format", nexmlNS).getChildren("char", nexmlNS)
+    val charactersWithIndex = characterElements.zipWithIndex
+    val translations = charactersWithIndex.map { case (characterElement, index) => translateCharacter(characterElement, index, matrix, labelRenderer) }
+    val (axioms, nexmlToOWLMaps) = translations.unzip
+    (axioms.flatten.toSet, nexmlToOWLMaps.flatten.toMap)
+  }
+
+  def translateCharacter(character: Element, index: Int, matrix: OWLNamedIndividual, labelRenderer: LabelRenderer): (Set[OWLAxiom], Map[String, OWLNamedIndividual]) = {
+    val owlCharacter = OntologyUtil.nextIndividual
+    val characterID = character.getAttributeValue("id")
+    val characterLabel = optString(character.getAttributeValue("label")).getOrElse("")
+    val axioms = Set(
+      matrix Fact (has_character, owlCharacter),
+      owlCharacter Type StandardCharacter,
+      owlCharacter Annotation (list_index, factory.getOWLLiteral(index + 1)),
+      owlCharacter Annotation (rdfsLabel, characterLabel))
+    val characterComments = for { comment <- getLiteralMetaValues(character, "comment", rdfsNS) }
+      yield owlCharacter Annotation (rdfsComment, comment)
+    val statesBlockID = character.getAttributeValue("states")
+    val statesBlock = getElementByID(statesBlockID, character)
+    val (statesAxioms, stateToOWLMap) = translateStates(statesBlock, owlCharacter, characterLabel, labelRenderer)
+    (axioms ++ characterComments, stateToOWLMap + (characterID -> owlCharacter))
+  }
+
+  def translateStates(statesBlock: Element, owlCharacter: OWLNamedIndividual, characterLabel: String, labelRenderer: LabelRenderer): (Set[OWLAxiom], Map[String, OWLNamedIndividual]) = {
+    val stateElements = statesBlock.getChildren("state", nexmlNS)
+    val translations = stateElements.map(translateState(_, owlCharacter, characterLabel, labelRenderer))
+    val (axioms, owlStateAssociations) = translations.unzip
+    (axioms.flatten.toSet, owlStateAssociations.toMap)
+  }
+
+  def translateState(state: Element, owlCharacter: OWLNamedIndividual, characterLabel: String, labelRenderer: LabelRenderer): (Set[OWLAxiom], (String, OWLNamedIndividual)) = {
+    val owlState = OntologyUtil.nextIndividual
+    val stateID = state.getAttributeValue("id")
+    val stateLabel = optString(state.getAttributeValue("label")).getOrElse("")
+    val stateAxioms = Set(
+      owlState Type StandardState,
+      owlCharacter Fact (may_have_state_value, owlState),
+      owlState Annotation (rdfsLabel, stateLabel),
+      owlState Annotation (dcDescription, s"$characterLabel: $stateLabel"))
+    val stateComments = for { comment <- getLiteralMetaValues(state, "comment", rdfsNS) }
+      yield owlState Annotation (rdfsComment, comment)
+    val phenotypeAxioms = translatePhenotypes(state, owlState, labelRenderer)
+    (stateAxioms ++ stateComments ++ phenotypeAxioms, stateID -> owlState)
+  }
+
+  def translatePhenotypes(state: Element, owlState: OWLNamedIndividual, labelRenderer: LabelRenderer): Set[OWLAxiom] = {
+    val phenotypeElements = state.getDescendants(new ElementFilter("phenotype_character", phenoNS)).iterator
+    phenotypeElements.flatMap(translatePhenotype(_, owlState, labelRenderer)).toSet
+  }
+
+  def translatePhenotype(phenotypeElement: Element, owlState: OWLNamedIndividual, labelRenderer: LabelRenderer): Set[OWLAxiom] = {
+    val owlPhenotype = OntologyUtil.nextClass()
+    val phenotypeAxioms = translatePhenotypeSemantics(phenotypeElement, owlPhenotype, labelRenderer)
+    phenotypeAxioms + (owlState Annotation (describes_phenotype, owlPhenotype.getIRI))
+  }
+
+  def translatePhenotypeSemantics(phenotypeElement: Element, owlPhenotype: OWLClass, labelRenderer: LabelRenderer): Set[OWLAxiom] = {
+    val (entityOption, entityAxioms) = optionWithSet(for {
+      bearerElement <- Option(phenotypeElement.getChild("bearer", phenoNS))
+      bearerType <- Option(bearerElement.getChild("typeref", phenoNS))
+    } yield {
+      val (entity, axioms) = namedClassFromTyperef(bearerType, labelRenderer)
+      (entity,
+        axioms ++
+        AbsenceClassGenerator.generateAllAbsenceAxiomsForEntity(entity) +
+        (owlPhenotype Annotation (entity_term, entity.getIRI)))
     })
+    val qualityElementOption = Option(phenotypeElement.getChild("quality", phenoNS))
+    val (qualityOption, qualityAxioms) = optionWithSet(for {
+      qualityElement <- qualityElementOption
+      qualityType <- Option(qualityElement.getChild("typeref", phenoNS))
+    } yield {
+      val (quality, axioms) = namedClassFromTyperef(qualityType, labelRenderer)
+      (quality,
+        axioms + (owlPhenotype Annotation (quality_term, quality.getIRI)))
+    })
+    val (relatedEntityOption, relatedEntityAxioms) = optionWithSet(for {
+      qualityElement <- qualityElementOption
+      relatedEntityElement <- Option(qualityElement.getChild("related_entity", phenoNS))
+      relatedEntityType <- Option(relatedEntityElement.getChild("typeref", phenoNS))
+    } yield {
+      val (relatedEntity, axioms) = namedClassFromTyperef(relatedEntityType, labelRenderer)
+      (relatedEntity,
+        axioms ++
+        AbsenceClassGenerator.generateAllAbsenceAxiomsForEntity(relatedEntity) +
+        (owlPhenotype Annotation (related_entity_term, relatedEntity.getIRI)))
+    })
+    val eqPhenotypeOption = (entityOption, qualityOption, relatedEntityOption) match {
+      case (None, None, _) => None
+      case (Some(entity), None, None) => Option(Present and (inheres_in some entity))
+      case (Some(entity), None, Some(relatedEntity)) => {
+        logger.warn("Related entity with no quality. Shouldn't be possible.")
+        Option(Present and (inheres_in some entity))
+      }
+      case (Some(entity), Some(Absent), None) => Option(LacksAllPartsOfType and (inheres_in some MultiCellularOrganism) and (towards value Individual(entity.getIRI)))
+      case (Some(entity), Some(LacksAllPartsOfType), Some(relatedEntity)) => Option(LacksAllPartsOfType and (inheres_in some entity) and (towards value Individual(relatedEntity.getIRI)))
+      case (None, Some(quality), None) => Option(quality)
+      case (None, Some(quality), Some(relatedEntity)) => Option(quality and (towards some relatedEntity))
+      case (Some(entity), Some(quality), None) => Option(quality and (inheres_in some entity))
+      case (Some(entity), Some(quality), Some(relatedEntity)) => Option(quality and (inheres_in some entity) and (towards some relatedEntity))
+      //TODO comparisons, etc.
+    }
+    val phenotypeAxioms = eqPhenotypeOption.toSet.flatMap { eqPhenotype: OWLClassExpression =>
+      Set(owlPhenotype SubClassOf eqPhenotype,
+        owlPhenotype SubClassOf EQCharacterToken)
+    }
+    entityAxioms ++ qualityAxioms ++ relatedEntityAxioms ++ phenotypeAxioms
   }
 
   def classFromTyperef(typeref: Element): OWLClassExpression = {
     val genusID = typeref.getAttributeValue("about")
     val qualifiers = typeref.getChildren("qualifier", phenoNS)
-    val genus = factory.getOWLClass(OBOUtil.iriForTermID(genusID))
-    if (qualifiers.isEmpty()) {
-      return genus
-    } else {
-      val operands: mutable.Set[OWLClassExpression] = mutable.Set(genus)
-      operands.addAll(qualifiers.map(restrictionFromQualifier(_)))
-      return factory.getOWLObjectIntersectionOf(operands)
-    }
+    val genus = Class(OBOUtil.iriForTermID(genusID))
+    if (qualifiers.isEmpty) genus
+    else factory.getOWLObjectIntersectionOf(qualifiers.map(restrictionFromQualifier).toSet + genus)
   }
 
-  def namedClassFromTyperef(typeref: Element): OWLClass = {
+  def namedClassFromTyperef(typeref: Element, labelRenderer: LabelRenderer): (OWLClass, Set[OWLAxiom]) = {
     classFromTyperef(typeref) match {
-      case named: OWLClass => named
+      case named: OWLClass => (named, Set.empty)
       case expression => {
         val named = OntologyUtil.nextClass()
-        manager.addAxiom(ontology, (named SubClassOf expression))
         val label = s"[${labelRenderer(expression)}]"
-        manager.addAxiom(ontology, named Annotation (factory.getRDFSLabel, label))
-        named
+        (named, Set(named SubClassOf expression, named Annotation (factory.getRDFSLabel, label)))
       }
     }
   }
@@ -314,88 +277,43 @@ class PhenexToOWL extends OWLTask {
     }
   }
 
-  def addClass(individual: OWLIndividual, aClass: OWLClassExpression): Unit = {
-    manager.addAxiom(ontology, factory.getOWLClassAssertionAxiom(aClass, individual))
-  }
-
-  def addAnnotation(property: IRI, subject: OWLAnnotationSubject, value: OWLAnnotationValue) {
-    val annotationProperty = this.factory.getOWLAnnotationProperty(property)
-    manager.addAxiom(ontology, factory.getOWLDeclarationAxiom(annotationProperty))
-    manager.addAxiom(ontology, factory.getOWLAnnotationAssertionAxiom(annotationProperty, subject, value))
-  }
-
-  def addPropertyAssertion(propertyIRI: IRI, subject: OWLIndividual, value: OWLIndividual) {
-    val property = factory.getOWLObjectProperty(propertyIRI)
-    addPropertyAssertion(property, subject, value)
-  }
-
-  def addPropertyAssertion(property: OWLObjectPropertyExpression, subject: OWLIndividual, value: OWLIndividual) {
-    if (!property.isAnonymous()) {
-      manager.addAxiom(ontology, factory.getOWLDeclarationAxiom(property.asOWLObjectProperty()))
-    }
-    manager.addAxiom(ontology, this.factory.getOWLObjectPropertyAssertionAxiom(property, subject, value))
-  }
-
-  def prefixForNamespace(element: Element, namespace: Namespace): String = {
-    val prefix = element.getNamespacesInScope().filter(_.getURI() == namespace.getURI()).headOption.map(_.getPrefix() + ":")
-    return prefix.getOrElse("")
-  }
-
-  def getLiteralMetaValues(element: Element, property: String, namespace: Namespace): Iterable[String] = {
-    val allMetas = element.getChildren("meta", nexmlNS)
-    val matchingMetas = allMetas.filter(meta => (meta.getAttributeValue("property") == (prefixForNamespace(meta, namespace) + property)))
-    return (matchingMetas.map(_.getValue()) ++ matchingMetas.map(_.getAttributeValue("content"))).filter(StringUtils.isNotBlank(_))
+  def getLiteralMetaValues(element: Element, property: String, namespace: Namespace): Set[String] = {
+    val values = for {
+      meta <- element.getChildren("meta", nexmlNS)
+      if meta.getAttributeValue("property") == (prefixForNamespace(meta, namespace) + property)
+      value <- (optString(meta.getValue) ++ optString(meta.getAttributeValue("content")))
+    } yield value
+    values.toSet
   }
 
   def getResourceMetasForProperty(element: Element, property: String, propertyNamespace: Namespace): Iterable[Element] = {
-    val allMetas = element.getChildren("meta", nexmlNS)
-    return allMetas.filter(meta => (meta.getAttributeValue("rel") == (prefixForNamespace(meta, propertyNamespace) + property)))
+    for {
+      meta <- element.getChildren("meta", nexmlNS)
+      if meta.getAttributeValue("rel") == (prefixForNamespace(meta, propertyNamespace) + property)
+    } yield meta
   }
 
-  def getResourceMetaValues(element: Element, property: String, namespace: Namespace): Iterable[IRI] = {
-    val matchingMetas = getResourceMetasForProperty(element, property, namespace)
-    return matchingMetas.map(_.getAttributeValue("href")).filter(StringUtils.isNotBlank(_)).map(IRI.create(_))
+  def getResourceMetaValues(element: Element, property: String, namespace: Namespace): Set[IRI] = {
+    val values = for {
+      meta <- getResourceMetasForProperty(element, property, namespace)
+      href <- optString(meta.getAttributeValue("href"))
+    } yield IRI.create(href)
+    values.toSet
   }
 
-  def getElementByID(id: String): Element = {
-    val iter = nexml.getDescendants(new ElementFilter()).iterator().filter(id == _.getAttributeValue("id"))
-    if (iter.isEmpty) {
-      logger.error("No element in NeXML doc with id: " + id)
-    }
-    iter.next()
+  def prefixForNamespace(element: Element, namespace: Namespace): String = {
+    val prefixes = for {
+      localNamespace <- element.getNamespacesInScope
+      if localNamespace.getURI == namespace.getURI
+    } yield localNamespace.getPrefix + ":"
+    return prefixes.headOption.getOrElse("")
   }
 
-  def instantiateClassAssertion(individual: OWLIndividual, aClass: OWLClassExpression, expandNamedClass: Boolean): Unit = {
-    if (aClass.isInstanceOf[OWLClass]) {
-      if (expandNamedClass) {
-        val relatedClasses = mutable.Set[OWLClassExpression]()
-        val equivClasses = ontology.getEquivalentClassesAxioms(aClass.asOWLClass()).map(_.getClassExpressionsMinus(aClass)).flatten
-        relatedClasses.addAll(equivClasses)
-        val superClasses = ontology.getSubClassAxiomsForSubClass(aClass.asOWLClass()).map(_.getSuperClass())
-        relatedClasses.addAll(superClasses)
-        for (expression <- relatedClasses) {
-          if (expression.isInstanceOf[OWLObjectSomeValuesFrom]) {
-            instantiateClassAssertion(individual, expression, false)
-          }
-        }
-      } else {
-        manager.addAxiom(this.ontology, factory.getOWLClassAssertionAxiom(aClass, individual))
-      }
-    } else if (aClass.isInstanceOf[OWLQuantifiedObjectRestriction]) { // either someValuesFrom or allValuesFrom
-      val restriction = aClass.asInstanceOf[OWLQuantifiedObjectRestriction]
-      val filler = restriction.getFiller()
-      val property = restriction.getProperty()
-      // need IRIs for individuals for type materialization
-      val value = OntologyUtil.nextIndividual()
-      addPropertyAssertion(property, individual, value)
-      instantiateClassAssertion(value, filler, false)
-    } else if (aClass.isInstanceOf[OWLObjectIntersectionOf]) {
-      for (operand <- (aClass.asInstanceOf[OWLObjectIntersectionOf]).getOperands()) {
-        instantiateClassAssertion(individual, operand, false)
-      }
-    } else {
-      manager.addAxiom(this.ontology, this.factory.getOWLClassAssertionAxiom(aClass, individual))
-    }
+  def optString(text: String): Option[String] = Option(StringUtils.stripToNull(text))
+
+  def getElementByID(id: String, elementInDoc: Element): Element = {
+    val elements = elementInDoc.getDocument.getRootElement.getDescendants(new ElementFilter()).iterator
+    elements.find(_.getAttributeValue("id") == id).get
   }
 
 }

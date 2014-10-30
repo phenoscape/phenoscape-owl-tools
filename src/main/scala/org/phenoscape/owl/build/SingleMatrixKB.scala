@@ -62,15 +62,14 @@ object SingleMatrixKB extends KnowledgeBaseBuilder {
     step("Converting NeXML to OWL")
 
     val vocabForNeXML = combine(uberon, pato, bspo, go, ro, phenoscapeVocab)
-    val converter = new PhenexToOWL()
-    val nexOntology = PropertyNormalizer.normalize(converter.convert(inputMatrix, vocabForNeXML))
+    val nexOntology = PropertyNormalizer.normalize(PhenexToOWL.convert(inputMatrix, vocabForNeXML))
     val nexmlTBoxAxioms = owlManager.createOntology(nexOntology.getTBoxAxioms(false))
 
     val hasParts = owlManager.createOntology(anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(has_part, _)))
     val presences = owlManager.createOntology(anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(Vocab.IMPLIES_PRESENCE_OF, _)))
     val inherers = owlManager.createOntology(anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(Vocab.inheres_in, _)))
     val inherersInPartOf = owlManager.createOntology(anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(Vocab.inheres_in_part_of, _)))
-    val towards = owlManager.createOntology(anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(Vocab.TOWARDS, _)))
+    val towards = owlManager.createOntology(anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(Vocab.towards, _)))
     val absences = owlManager.createOntology(anatomicalEntities.flatMap(AbsenceClassGenerator.createAbsenceClass(_)))
     val namedHasPartClasses = anatomicalEntities.map(_.getIRI()).map(NamedRestrictionGenerator.getRestrictionIRI(has_part.getIRI, _)).map(Class(_))
     val absenceNegationEquivalences = owlManager.createOntology(namedHasPartClasses.flatMap(NegationClassGenerator.createNegationClassAxioms(_, hasParts)))
