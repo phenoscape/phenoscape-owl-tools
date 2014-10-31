@@ -158,7 +158,7 @@ object PhenexToOWL extends OWLTask {
     val statesBlockID = character.getAttributeValue("states")
     val statesBlock = getElementByID(statesBlockID, character)
     val (statesAxioms, stateToOWLMap) = translateStates(statesBlock, owlCharacter, characterLabel, labelRenderer)
-    (axioms ++ characterComments, stateToOWLMap + (characterID -> owlCharacter))
+    (axioms ++ characterComments ++ statesAxioms, stateToOWLMap + (characterID -> owlCharacter))
   }
 
   def translateStates(statesBlock: Element, owlCharacter: OWLNamedIndividual, characterLabel: String, labelRenderer: LabelRenderer): (Set[OWLAxiom], Map[String, OWLNamedIndividual]) = {
@@ -172,10 +172,12 @@ object PhenexToOWL extends OWLTask {
     val owlState = OntologyUtil.nextIndividual
     val stateID = state.getAttributeValue("id")
     val stateLabel = optString(state.getAttributeValue("label")).getOrElse("")
+    val stateSymbol = optString(state.getAttributeValue("symbol")).getOrElse("<?>")
     val stateAxioms = Set(
       owlState Type StandardState,
       owlCharacter Fact (may_have_state_value, owlState),
       owlState Annotation (rdfsLabel, stateLabel),
+      owlState Annotation (state_symbol, stateSymbol),
       owlState Annotation (dcDescription, s"$characterLabel: $stateLabel"))
     val stateComments = for { comment <- getLiteralMetaValues(state, "comment", rdfsNS) }
       yield owlState Annotation (rdfsComment, comment)
