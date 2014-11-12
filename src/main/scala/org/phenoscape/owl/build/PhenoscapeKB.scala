@@ -277,7 +277,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
   val sail = new BigdataSail(bigdataProperties)
   val repository = new BigdataSailRepository(sail)
   repository.initialize()
-  val connection = repository.getConnection
+  val connection = repository.getUnisolatedConnection()
   connection.setAutoCommit(false);
 
   val baseURI = ""
@@ -290,7 +290,56 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
   // close the repository connection
   connection.close()
 
+  step("Computing absence assertions")
+  val absenceConnection = repository.getUnisolatedConnection()
+  absenceConnection.setAutoCommit(false);
+  val absencesQuery = absenceConnection.prepareUpdate(QueryLanguage.SPARQL, """
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX ps: <http://purl.org/phenoscape/vocab.owl#>
+PREFIX Entity: <http://purl.obolibrary.org/obo/UBERON_0001062>
+PREFIX Taxon: <http://purl.obolibrary.org/obo/VTO_0000001>
+
+WITH <http://kb.phenoscape.org/>
+INSERT {
+    ?taxon ps:hasAbsenceOf ?entity .
+}
+WHERE {
+    ?taxon ps:exhibits_state/ps:describes_phenotype/rdfs:subClassOf*/ps:absence_of ?entity .
+    ?entity rdfs:subClassOf* Entity: .
+    ?entity rdfs:isDefinedBy <http://purl.obolibrary.org/obo/uberon.owl> .
+    ?taxon rdfs:subClassOf* Taxon: .
+}
+""")
+  absenceConnection.commit()
+  absenceConnection.close()
+
+  step("Computing presence assertions")
+  val presenceConnection = repository.getUnisolatedConnection()
+  presenceConnection.setAutoCommit(false);
+  val presencesQuery = presenceConnection.prepareUpdate(QueryLanguage.SPARQL, """
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX ps: <http://purl.org/phenoscape/vocab.owl#>
+PREFIX Entity: <http://purl.obolibrary.org/obo/UBERON_0001062>
+PREFIX Taxon: <http://purl.obolibrary.org/obo/VTO_0000001>
+
+WITH <http://kb.phenoscape.org/>
+INSERT {
+    ?taxon ps:hasPresenceOf ?entity .
+}
+WHERE {
+    ?taxon ps:exhibits_state/ps:describes_phenotype/rdfs:subClassOf*/ps:implies_presence_of_some ?entity .
+    ?entity rdfs:subClassOf* Entity: .
+    ?entity rdfs:isDefinedBy <http://purl.obolibrary.org/obo/uberon.owl> .
+    ?taxon rdfs:subClassOf* Taxon: .
+}
+""")
+  presenceConnection.commit()
+  presenceConnection.close()
+
   step("Exporting all triples to turtle file")
+
   val queryConnection = repository.getReadOnlyConnection
   queryConnection.setAutoCommit(false)
   val triplesQuery = queryConnection.prepareGraphQuery(QueryLanguage.SPARQL, """
