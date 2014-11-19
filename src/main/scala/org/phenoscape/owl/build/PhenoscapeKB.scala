@@ -1,21 +1,24 @@
 package org.phenoscape.owl.build
 
-import java.io.BufferedReader
+import java.io.BufferedOutputStream
 import java.io.File
+import java.io.FileOutputStream
 import java.io.FileReader
-import java.io.StringReader
 import java.util.Properties
+
 import scala.collection.JavaConversions._
 import scala.collection.mutable
 import scala.io.Source
+
 import org.apache.commons.io.FileUtils
 import org.apache.log4j.BasicConfigurator
 import org.apache.log4j.Level
 import org.apache.log4j.Logger
-import org.obolibrary.oboformat.parser.OBOFormatParser
+import org.openrdf.model.impl.URIImpl
+import org.openrdf.query.QueryLanguage
 import org.openrdf.rio.RDFFormat
+import org.openrdf.rio.turtle.TurtleWriter
 import org.phenoscape.owl.AbsenceClassGenerator
-import org.phenoscape.owl.EQCharactersGenerator
 import org.phenoscape.owl.KnowledgeBaseBuilder
 import org.phenoscape.owl.MaterializeInferences
 import org.phenoscape.owl.NamedRestrictionGenerator
@@ -26,33 +29,29 @@ import org.phenoscape.owl.PropertyNormalizer
 import org.phenoscape.owl.ReverseDevelopsFromRuleGenerator
 import org.phenoscape.owl.TaxonomyConverter
 import org.phenoscape.owl.Vocab
-import org.phenoscape.owl.Vocab.has_part
+import org.phenoscape.owl.Vocab._
 import org.phenoscape.owl.mod.human.HumanPhenotypesToOWL
 import org.phenoscape.owl.mod.mgi.MGIExpressionToOWL
 import org.phenoscape.owl.mod.mgi.MGIGeneticMarkersToOWL
 import org.phenoscape.owl.mod.mgi.MGIPhenotypesToOWL
 import org.phenoscape.owl.mod.xenbase.XenbaseExpressionToOWL
 import org.phenoscape.owl.mod.xenbase.XenbaseGenesToOWL
+import org.phenoscape.owl.mod.xenbase.XenbasePhenotypesToOWL
 import org.phenoscape.owl.mod.zfin.ZFINExpressionToOWL
 import org.phenoscape.owl.mod.zfin.ZFINGeneticMarkersToOWL
 import org.phenoscape.owl.mod.zfin.ZFINPhenotypesToOWL
 import org.phenoscape.owl.mod.zfin.ZFINPreviousGeneNamesToOWL
 import org.phenoscape.owl.util.OntologyUtil
+import org.phenoscape.owlet.SPARQLComposer._
 import org.phenoscape.scowl.OWL._
+import org.semanticweb.owlapi.apibinding.OWLManager
+import org.semanticweb.owlapi.model.IRI
 import org.semanticweb.owlapi.model.OWLAxiom
+import org.semanticweb.owlapi.vocab.OWLRDFVocabulary
+
 import com.bigdata.journal.Options
 import com.bigdata.rdf.sail.BigdataSail
 import com.bigdata.rdf.sail.BigdataSailRepository
-import org.openrdf.model.impl.URIImpl
-import org.semanticweb.owlapi.io.OWLOntologyDocumentSource
-import org.semanticweb.owlapi.io.ReaderDocumentSource
-import org.openrdf.query.QueryLanguage
-import java.io.FileOutputStream
-import java.io.BufferedOutputStream
-import org.openrdf.rio.turtle.TurtleWriter
-import org.openrdf.query.algebra.evaluation.TripleSource
-import org.phenoscape.owl.mod.xenbase.XenbasePhenotypesToOWL
-import org.semanticweb.owlapi.apibinding.OWLManager
 
 object PhenoscapeKB extends KnowledgeBaseBuilder {
 
@@ -60,6 +59,8 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
   Logger.getRootLogger().setLevel(Level.ERROR)
 
   val manager = getManager
+  val rdfsSubClassOf = ObjectProperty(OWLRDFVocabulary.RDFS_SUBCLASS_OF.getIRI)
+  val implies_presence_of_some = NamedRestrictionGenerator.getClassRelationIRI(Vocab.IMPLIES_PRESENCE_OF.getIRI)
 
   val cwd = System.getProperty("user.dir")
   val STAGING = new File("staging")
@@ -250,7 +251,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
   step("Asserting reverse negation hierarchy")
   val hierarchyAxioms = NegationHierarchyAsserter.assertNegationHierarchy(tBoxWithoutDisjoints, inferredAxioms)
   manager.addAxioms(inferredAxioms, hierarchyAxioms)
-  val negationReasoner = reasoner(tBoxWithoutDisjoints, inferredAxioms)
+  implicit val negationReasoner = reasoner(tBoxWithoutDisjoints, inferredAxioms)
   MaterializeInferences.materializeInferences(inferredAxioms, negationReasoner)
 
   if (negationReasoner.getUnsatisfiableClasses().getEntitiesMinusBottom().isEmpty()) {
@@ -259,6 +260,21 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     println("WARNING: some classes are unsatisfiable.")
     println(negationReasoner.getUnsatisfiableClasses())
   }
+
+  val presencesQuery = construct(t('taxon, Vocab.has_presence_of, 'entity)) from "http://kb.phenoscape.org/" where (
+    bgp(
+      t('taxon, Vocab.exhibits_state / Vocab.describes_phenotype / (rdfsSubClassOf*) / implies_presence_of_some, 'entity),
+      t('entity, OWLRDFVocabulary.RDFS_IS_DEFINED_BY.getIRI, IRI.create("http://purl.obolibrary.org/obo/uberon.owl"))),
+      subClassOf('taxon, Class(Vocab.CHORDATA)),
+      subClassOf('entity, Class(Vocab.ANATOMICAL_ENTITY)))
+
+  val absencesQuery = construct(t('taxon, Vocab.has_absence_of, 'entity)) from "http://kb.phenoscape.org/" where (
+    bgp(
+      t('taxon, Vocab.exhibits_state / Vocab.describes_phenotype / (rdfsSubClassOf*) / ABSENCE_OF, 'entity),
+      t('entity, OWLRDFVocabulary.RDFS_IS_DEFINED_BY.getIRI, IRI.create("http://purl.obolibrary.org/obo/uberon.owl"))),
+      subClassOf('taxon, Class(Vocab.CHORDATA)),
+      subClassOf('entity, Class(Vocab.ANATOMICAL_ENTITY)))
+
   negationReasoner.dispose()
 
   step("Writing generated and inferred tbox axioms")
@@ -266,9 +282,8 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
 
   step("Writing tbox axioms for ELK")
   write(combine(tBoxWithoutDisjoints, inferredAxioms), cwd + "/staging/kb/tbox.owl")
-  //step("Materializing subclass closure")
-  //MaterializeSubClassOfClosureToNTriples.writeClosureToFile(tboxReasoner, new File(cwd + "/staging/kb/hierarchy_closure.nt"))
-  tboxReasoner.dispose()
+
+  System.gc()
 
   step("Loading Bigdata")
   val bigdataProperties = new Properties()
@@ -290,53 +305,85 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
   // close the repository connection
   connection.close()
 
-  step("Computing absence assertions")
+  //    step("Computing absence assertions")
+  //    val absenceConnection = repository.getUnisolatedConnection()
+  //    absenceConnection.setAutoCommit(false);
+  //    val absencesQuery = absenceConnection.prepareUpdate(QueryLanguage.SPARQL, """
+  //PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+  //PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+  //PREFIX ps: <http://purl.org/phenoscape/vocab.owl#>
+  //PREFIX Entity: <http://purl.obolibrary.org/obo/UBERON_0001062>
+  //PREFIX Taxon: <http://purl.obolibrary.org/obo/VTO_0000001>
+  //
+  //WITH <http://kb.phenoscape.org/>
+  //INSERT {
+  //    ?taxon ps:hasAbsenceOf ?entity .
+  //}
+  //WHERE {
+  //    ?taxon ps:exhibits_state/ps:describes_phenotype/rdfs:subClassOf*/ps:absence_of ?entity .
+  //    ?entity rdfs:subClassOf* Entity: .
+  //    ?entity rdfs:isDefinedBy <http://purl.obolibrary.org/obo/uberon.owl> .
+  //    ?taxon rdfs:subClassOf* Taxon: .
+  //}
+  //""")
+  //    absencesQuery.execute()
+  //    absenceConnection.commit()
+  //    absenceConnection.close()
+  //
+  //    step("Computing presence assertions")
+  //    val presenceConnection = repository.getUnisolatedConnection()
+  //    presenceConnection.setAutoCommit(false);
+  //    val presencesQuery = presenceConnection.prepareUpdate(QueryLanguage.SPARQL, """
+  //PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+  //PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+  //PREFIX ps: <http://purl.org/phenoscape/vocab.owl#>
+  //PREFIX Entity: <http://purl.obolibrary.org/obo/UBERON_0001062>
+  //PREFIX Taxon: <http://purl.obolibrary.org/obo/VTO_0000001>
+  //
+  //WITH <http://kb.phenoscape.org/>
+  //INSERT {
+  //    ?taxon ps:hasPresenceOf ?entity .
+  //}
+  //WHERE {
+  //    ?taxon ps:exhibits_state/ps:describes_phenotype/rdfs:subClassOf*/ps:implies_presence_of_some ?entity .
+  //    ?entity rdfs:subClassOf* Entity: .
+  //    ?entity rdfs:isDefinedBy <http://purl.obolibrary.org/obo/uberon.owl> .
+  //    ?taxon rdfs:subClassOf* Taxon: .
+  //}
+  //""")
+  //    presencesQuery.execute()
+  //    presenceConnection.commit()
+  //    presenceConnection.close()
+
+  step("Exporting presence assertions")
+  val presenceConnection = repository.getUnisolatedConnection()
+  presenceConnection.setAutoCommit(false);
+  val preparedPresencesQuery = presenceConnection.prepareGraphQuery(QueryLanguage.SPARQL, presencesQuery.toString)
+  val presencesFile = new File(cwd + "/staging/kb/presences.ttl")
+  val presencesOutput = new BufferedOutputStream(new FileOutputStream(presencesFile))
+  preparedPresencesQuery.evaluate(new TurtleWriter(presencesOutput))
+  presencesOutput.close()
+  presenceConnection.commit()
+  presenceConnection.close()
+
+  step("Exporting absence assertions")
   val absenceConnection = repository.getUnisolatedConnection()
   absenceConnection.setAutoCommit(false);
-  val absencesQuery = absenceConnection.prepareUpdate(QueryLanguage.SPARQL, """
-PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-PREFIX ps: <http://purl.org/phenoscape/vocab.owl#>
-PREFIX Entity: <http://purl.obolibrary.org/obo/UBERON_0001062>
-PREFIX Taxon: <http://purl.obolibrary.org/obo/VTO_0000001>
-
-WITH <http://kb.phenoscape.org/>
-INSERT {
-    ?taxon ps:hasAbsenceOf ?entity .
-}
-WHERE {
-    ?taxon ps:exhibits_state/ps:describes_phenotype/rdfs:subClassOf*/ps:absence_of ?entity .
-    ?entity rdfs:subClassOf* Entity: .
-    ?entity rdfs:isDefinedBy <http://purl.obolibrary.org/obo/uberon.owl> .
-    ?taxon rdfs:subClassOf* Taxon: .
-}
-""")
+  val preparedAbsencesQuery = absenceConnection.prepareGraphQuery(QueryLanguage.SPARQL, absencesQuery.toString)
+  val absencesFile = new File(cwd + "/staging/kb/absences.ttl")
+  val absencesOutput = new BufferedOutputStream(new FileOutputStream(absencesFile))
+  preparedAbsencesQuery.evaluate(new TurtleWriter(absencesOutput))
+  absencesOutput.close()
   absenceConnection.commit()
   absenceConnection.close()
 
-  step("Computing presence assertions")
-  val presenceConnection = repository.getUnisolatedConnection()
-  presenceConnection.setAutoCommit(false);
-  val presencesQuery = presenceConnection.prepareUpdate(QueryLanguage.SPARQL, """
-PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-PREFIX ps: <http://purl.org/phenoscape/vocab.owl#>
-PREFIX Entity: <http://purl.obolibrary.org/obo/UBERON_0001062>
-PREFIX Taxon: <http://purl.obolibrary.org/obo/VTO_0000001>
-
-WITH <http://kb.phenoscape.org/>
-INSERT {
-    ?taxon ps:hasPresenceOf ?entity .
-}
-WHERE {
-    ?taxon ps:exhibits_state/ps:describes_phenotype/rdfs:subClassOf*/ps:implies_presence_of_some ?entity .
-    ?entity rdfs:subClassOf* Entity: .
-    ?entity rdfs:isDefinedBy <http://purl.obolibrary.org/obo/uberon.owl> .
-    ?taxon rdfs:subClassOf* Taxon: .
-}
-""")
-  presenceConnection.commit()
-  presenceConnection.close()
+  step("Load presence/absence data")
+  val presenceAbsenceConnection = repository.getUnisolatedConnection()
+  presenceAbsenceConnection.setAutoCommit(false);
+  presenceAbsenceConnection.add(presencesFile, baseURI, RDFFormat.TURTLE, graphURI)
+  presenceAbsenceConnection.add(absencesFile, baseURI, RDFFormat.TURTLE, graphURI)
+  presenceAbsenceConnection.commit()
+  presenceAbsenceConnection.close()
 
   step("Exporting all triples to turtle file")
 

@@ -83,5 +83,7 @@ object Vocab {
   val state_symbol = factory.getOWLAnnotationProperty(IRI.create("http://purl.org/phenoscape/vocab.owl#state_symbol"))
   val exhibits_state = ObjectProperty("http://purl.org/phenoscape/vocab.owl#exhibits_state")
   val describes_phenotype = AnnotationProperty("http://purl.org/phenoscape/vocab.owl#describes_phenotype")
+  val has_presence_of = ObjectProperty("http://purl.org/phenoscape/vocab.owl#has_presence_of")
+  val has_absence_of = ObjectProperty("http://purl.org/phenoscape/vocab.owl#has_absence_of")
 
 }
