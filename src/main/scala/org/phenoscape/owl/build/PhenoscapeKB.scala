@@ -162,7 +162,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
   cd(NEXML)
   val filesToConvert = (FileUtils.listFiles(new File(cwd + "/staging/nexml/completed-phenex-files"), Array("xml"), true) ++
     FileUtils.listFiles(new File(cwd + "/staging/nexml/fin_limb-incomplete-files"), Array("xml"), true) ++
-    FileUtils.listFiles(new File(cwd + "/staging/nexml/matrix-vs-monograph"), Array("xml"), true)).filterNot(_.getName() == "catalog-v001.xml")
+    FileUtils.listFiles(new File(cwd + "/staging/nexml/matrix-vs-monograph"), Array("xml"), true)).filterNot(_.getName == "catalog-v001.xml")
   cd(KB)
   val nexmlTBoxAxioms: mutable.Set[OWLAxiom] = mutable.Set()
   for (file <- filesToConvert) {
