@@ -151,7 +151,7 @@
 				<configuration>
 					<archive>
 						<manifest>
-							<mainClass>org.phenoscape.owl.build.PostorderTest</mainClass>
+							<mainClass>org.phenoscape.owl.build.PhenoscapeKB</mainClass>
 						</manifest>
 					</archive>
 				</configuration>
