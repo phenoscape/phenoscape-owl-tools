@@ -140,7 +140,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
 
   step("Querying entities and qualities")
   val coreReasoner = reasoner(uberon, pato, bspo, go, ro, phenoscapeVocab)
-  val anatomicalEntities = coreReasoner.getSubClasses(Class(Vocab.ANATOMICAL_ENTITY), false).getFlattened().filterNot(_.isOWLNothing())
+  val anatomicalEntities = coreReasoner.getSubClasses(Class(Vocab.ANATOMICAL_ENTITY), false).getFlattened.filterNot(_.isOWLNothing)
   //val qualities = coreReasoner.getSubClasses(Class(Vocab.QUALITY), false).getFlattened().filterNot(_.isOWLNothing())
   coreReasoner.dispose()
 
