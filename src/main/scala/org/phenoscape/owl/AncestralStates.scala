@@ -13,23 +13,36 @@ import org.phenoscape.owl.util.SesameIterationIterator._
 import com.hp.hpl.jena.query.Query
 import org.openrdf.query.BindingSet
 import scala.collection.GenMap
+import scala.collection.GenSet
+import org.phenoscape.owl.util.ExpressionUtil
 
 object AncestralStates {
 
   val factory = OWLManager.getOWLDataFactory
   val Nothing = factory.getOWLNothing
 
-  def reconstructAncestralStates(rootTaxon: TaxonNode, reasoner: OWLReasoner, observedAssociations: Set[StateAssociation]): GenMap[TaxonNode, GenMap[Character, Set[State]]] = {
-    println("Found associations: " + observedAssociations.size)
+  type StateAssociations = GenMap[TaxonNode, GenMap[Character, Set[State]]]
+
+  def reconstructAncestralStates(rootTaxon: TaxonNode, reasoner: OWLReasoner, observedAssociations: Set[StateAssociation]): Map[TaxonNode, Map[Character, Set[State]]] = {
     val associationsIndex = index(observedAssociations)
-    //val allCharacters = observedAssociations.map(_.character).toSet
-    val result = postorder(rootTaxon, reasoner, index(observedAssociations))
-    for {
-      (character, states) <- result(rootTaxon)
-    } {
-      println(s"$character: ${states.size}")
-    }
+    val (associations, profiles) = postorder(rootTaxon, reasoner, index(observedAssociations), Map.empty)
+    val result = toSequential(profiles)
+    report(result, reasoner)
     result
+  }
+
+  def report(profiles: Map[TaxonNode, Map[Character, Set[State]]], reasoner: OWLReasoner): Unit = {
+    for {
+      (taxon, profile) <- profiles
+      if profile.nonEmpty
+    } {
+      val taxonLabel = ExpressionUtil.labelFor(taxon, reasoner.getRootOntology.getImportsClosure).getOrElse("unlabeled")
+      println(s"$taxonLabel")
+      for { (character, states) <- profile } {
+        println(s"\t${character.label}: ${states.map(_.label).mkString("\t")}")
+      }
+      println
+    }
   }
 
   def index(associations: Set[StateAssociation]): Map[TaxonNode, Map[Character, Set[State]]] =
@@ -43,41 +56,44 @@ object AncestralStates {
 
   implicit def taxonToOWLClass(taxon: TaxonNode): OWLClass = factory.getOWLClass(taxon.iri)
 
-  def preorder(node: TaxonNode, reasoner: OWLReasoner): Map[TaxonNode, Map[Character, Set[State]]] = {
-    //val res = f(node, initial)
-    //val r = reasoner.getSubClasses(node, true).getFlattened.flatMap(preorder(_, f, res))
-    ???
-  }
+  def toSequential(associations: StateAssociations): Map[TaxonNode, Map[Character, Set[State]]] = associations.map({ case (taxon, states) => taxon -> states.seq.toMap }).seq.toMap
 
-  def postorder(node: TaxonNode, reasoner: OWLReasoner, startingAssociations: Map[TaxonNode, Map[Character, Set[State]]]): GenMap[TaxonNode, GenMap[Character, Set[State]]] = {
-    val children = reasoner.getSubClasses(node, true).getFlattened.filterNot(_ == Nothing).map(_.getIRI).map(TaxonNode)
+  def postorder(node: TaxonNode, reasoner: OWLReasoner, startingAssociations: StateAssociations, startingProfiles: StateAssociations): (StateAssociations, StateAssociations) = {
+    val children = reasoner.getSubClasses(node, true).getFlattened.filterNot(_ == Nothing).map(aClass => TaxonNode(aClass.getIRI))
     val nodeStates = startingAssociations.getOrElse(node, Map.empty)
     if (children.isEmpty) {
-      Map(node -> nodeStates)
+      (Map(node -> nodeStates), Map.empty)
     } else {
-      val subtreeAssociations = children.par.flatMap(postorder(_, reasoner, startingAssociations)).toMap
-      println("Processing " + node)
+      val (subtreeAssociationsGroups, subtreeProfilesGroups) = children.par.map(postorder(_, reasoner, startingAssociations, startingProfiles)).unzip
+      val subtreeAssociations = subtreeAssociationsGroups.flatten.toMap
+      val subtreeProfiles = subtreeProfilesGroups.flatten.toMap
       val charactersWithAssociations = subtreeAssociations.values.flatMap(_.keys).toSet ++ nodeStates.keys
-      val currentNodeAssociations = for {
+      val currentNodeAssociationsAndProfile = for {
         character <- charactersWithAssociations
       } yield {
         val nodeStateSet = nodeStates.getOrElse(character, Set.empty)
         val childrenStateSets = children.map(subtreeAssociations(_).getOrElse(character, Set.empty))
         val allStateSets = childrenStateSets + nodeStateSet
         val nonEmptyStateSets = allStateSets.filter(_.nonEmpty)
-        val shared: Set[State] = nonEmptyStateSets.size match {
+        val sharedStates: Set[State] = nonEmptyStateSets.size match {
           case 0 => Set.empty
           case 1 => nonEmptyStateSets.head
           case _ => nonEmptyStateSets.reduce(_ intersect _)
         }
-        val (currentStates: Set[State], addToProfile) = if (shared.nonEmpty) (shared, false) else allStateSets.size match {
-          case 0 => (Set.empty, false)
-          case 1 => (allStateSets.head, false)
-          case _ => (allStateSets.reduce(_ union _), true) //TODO add character/state to profile for this node!
+        val (currentStates: Set[State], statesForProfile: Set[State]) = if (sharedStates.nonEmpty) (sharedStates, Set.empty)
+        else allStateSets.size match {
+          case 0 => (Set.empty, Set.empty)
+          case 1 => (allStateSets.head, Set.empty)
+          case _ => {
+            val unionStates = allStateSets.reduce(_ union _)
+            (unionStates, unionStates)
+          }
         }
-        (character, currentStates)
+        (character -> currentStates, character -> statesForProfile)
       }
-      subtreeAssociations + (node -> currentNodeAssociations.toMap)
+      val (currentNodeAssociations, rawProfile) = currentNodeAssociationsAndProfile.unzip
+      val profileWithoutEmptyCharacters = rawProfile.filter { case (character, states) => states.nonEmpty }
+      (subtreeAssociations + (node -> currentNodeAssociations.toMap), subtreeProfiles + (node -> profileWithoutEmptyCharacters.toMap))
     }
   }
 
@@ -86,18 +102,21 @@ object AncestralStates {
     query.evaluate().map(StateAssociation(_)).toSet
   }
 
-  val associationsQuery: Query = select_distinct('taxon, 'matrix_char, 'state) from "http://kb.phenoscape.org/" where (
-    bgp(
-      t('taxon, exhibits_state, 'state),
-      t('matrix_char, may_have_state_value, 'state)))
+  val associationsQuery: Query =
+    select_distinct('taxon, 'matrix_char, 'matrix_char_label, 'state, 'state_label) from "http://kb.phenoscape.org/" where (
+      bgp(
+        t('taxon, exhibits_state, 'state),
+        t('state, rdfsLabel, 'state_label),
+        t('matrix_char, may_have_state_value, 'state),
+        t('matrix_char, rdfsLabel, 'matrix_char_label)))
 
 }
 
 case class TaxonNode(iri: IRI)
 
-case class Character(iri: IRI)
+case class Character(iri: IRI, label: String)
 
-case class State(iri: IRI)
+case class State(iri: IRI, label: String)
 
 case class StateAssociation(taxon: TaxonNode, character: Character, state: State)
 
@@ -105,8 +124,8 @@ object StateAssociation {
 
   def apply(result: BindingSet): StateAssociation = StateAssociation(
     TaxonNode(IRI.create(result.getValue("taxon").stringValue)),
-    Character(IRI.create(result.getValue("matrix_char").stringValue)),
-    State(IRI.create(result.getValue("state").stringValue)))
+    Character(IRI.create(result.getValue("matrix_char").stringValue), result.getValue("matrix_char_label").stringValue),
+    State(IRI.create(result.getValue("state").stringValue), result.getValue("state_label").stringValue))
 
 }
 
