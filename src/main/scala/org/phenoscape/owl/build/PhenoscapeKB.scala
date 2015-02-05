@@ -308,7 +308,8 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
 
   step("Building profiles using ancestral states reconstruction")
   val asConnection = repository.getUnisolatedConnection()
-  AncestralStates.computePhenotypeProfiles(TaxonNode(CHORDATA), negationReasoner, asConnection)
+  val profileData = AncestralStates.computePhenotypeProfiles(TaxonNode(CHORDATA), negationReasoner, asConnection)
+  asConnection.add(profileData, graphURI)
   asConnection.commit()
   asConnection.close()
 
