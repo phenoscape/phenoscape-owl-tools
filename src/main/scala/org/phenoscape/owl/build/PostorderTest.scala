@@ -50,7 +50,7 @@ import com.bigdata.journal.Options
 import com.bigdata.rdf.sail.BigdataSail
 import com.bigdata.rdf.sail.BigdataSailRepository
 import com.bigdata.rdf.sail.BigdataSailRepositoryConnection
-import org.phenoscape.owl.AncestralStates
+import org.phenoscape.owl.EvolutionaryProfiles
 import org.phenoscape.owl.TaxonNode
 
 object PostorderTest extends KnowledgeBaseBuilder {
@@ -91,7 +91,7 @@ object PostorderTest extends KnowledgeBaseBuilder {
 
   step("Testing postorder part of ancestral states reconstruction")
   println("Triples: " + connection.getTripleStore.getStatementCount)
-  AncestralStates.computePhenotypeProfiles(TaxonNode(CHORDATA), tboxReasoner, connection)
+  EvolutionaryProfiles.computePhenotypeProfiles(TaxonNode(CHORDATA), tboxReasoner, connection)
 
   connection.commit()
   // close the repository connection
