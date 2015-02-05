@@ -21,7 +21,7 @@ import org.semanticweb.owlapi.reasoner.OWLReasoner
 
 import com.hp.hpl.jena.query.Query
 
-object AncestralStates {
+object EvolutionaryProfiles {
 
   val factory = OWLManager.getOWLDataFactory
   val Nothing = factory.getOWLNothing
@@ -69,7 +69,7 @@ object AncestralStates {
     } yield {
       val profileURI = new URIImpl(taxonProfileURI(taxon))
       Set(new StatementImpl(profileURI, RDF.TYPE, new URIImpl(phenotype.iri.toString)),
-        new StatementImpl(new URIImpl(taxon.iri.toString), new URIImpl(has_evolutionary_profile.toString), profileURI))
+        new StatementImpl(new URIImpl(taxon.iri.toString), new URIImpl(has_phenotypic_profile.toString), profileURI))
     }).flatten.toSet
   }
 

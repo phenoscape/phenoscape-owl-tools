@@ -85,6 +85,6 @@ object Vocab {
   val describes_phenotype = AnnotationProperty("http://purl.org/phenoscape/vocab.owl#describes_phenotype")
   val has_presence_of = ObjectProperty("http://purl.org/phenoscape/vocab.owl#has_presence_of")
   val has_absence_of = ObjectProperty("http://purl.org/phenoscape/vocab.owl#has_absence_of")
-  val has_evolutionary_profile = IRI.create("http://purl.org/phenoscape/vocab.owl#has_evolutionary_profile")
+  val has_phenotypic_profile = IRI.create("http://purl.org/phenoscape/vocab.owl#has_phenotypic_profile")
 
 }

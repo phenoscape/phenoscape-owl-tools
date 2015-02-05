@@ -50,8 +50,9 @@ import com.bigdata.journal.Options
 import com.bigdata.rdf.sail.BigdataSail
 import com.bigdata.rdf.sail.BigdataSailRepository
 import com.bigdata.rdf.sail.BigdataSailRepositoryConnection
-import org.phenoscape.owl.AncestralStates
+import org.phenoscape.owl.EvolutionaryProfiles
 import org.phenoscape.owl.TaxonNode
+import org.phenoscape.owl.GeneProfiles
 
 object PhenoscapeKB extends KnowledgeBaseBuilder {
 
@@ -293,63 +294,54 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
   val sail = new BigdataSail(bigdataProperties)
   val repository = new BigdataSailRepository(sail)
   repository.initialize()
-  val connection = repository.getUnisolatedConnection()
-  connection.setAutoCommit(false);
+  val bigdata = repository.getUnisolatedConnection()
+  bigdata.setAutoCommit(false);
 
   val baseURI = ""
   val graphURI = new URIImpl("http://kb.phenoscape.org/")
   for (rdfFile <- FileUtils.listFiles(KB, Array("owl"), true)) {
-    connection.add(rdfFile, baseURI, RDFFormat.RDFXML, graphURI)
+    bigdata.add(rdfFile, baseURI, RDFFormat.RDFXML, graphURI)
   }
 
-  connection.commit()
+  bigdata.commit()
   // close the repository connection
-  connection.close()
 
-  step("Building profiles using ancestral states reconstruction")
-  val asConnection = repository.getUnisolatedConnection()
-  val profileData = AncestralStates.computePhenotypeProfiles(TaxonNode(CHORDATA), negationReasoner, asConnection)
-  asConnection.add(profileData, graphURI)
-  asConnection.commit()
-  asConnection.close()
+  step("Building evolutionary profiles using ancestral states reconstruction")
+  val profileData = EvolutionaryProfiles.computePhenotypeProfiles(TaxonNode(CHORDATA), negationReasoner, bigdata)
+  bigdata.add(profileData, graphURI)
+  bigdata.commit()
 
   negationReasoner.dispose()
 
+  step("Building gene profiles")
+  val geneProfileData = GeneProfiles.generateGeneProfiles(bigdata)
+  bigdata.add(profileData, graphURI)
+  bigdata.commit()
+
   step("Exporting presence assertions")
-  val presenceConnection = repository.getUnisolatedConnection()
-  presenceConnection.setAutoCommit(false);
-  val preparedPresencesQuery = presenceConnection.prepareGraphQuery(QueryLanguage.SPARQL, presencesQuery.toString)
+  val preparedPresencesQuery = bigdata.prepareGraphQuery(QueryLanguage.SPARQL, presencesQuery.toString)
   val presencesFile = new File(cwd + "/staging/kb/presences.ttl")
   val presencesOutput = new BufferedOutputStream(new FileOutputStream(presencesFile))
   preparedPresencesQuery.evaluate(new TurtleWriter(presencesOutput))
   presencesOutput.close()
-  presenceConnection.commit()
-  presenceConnection.close()
+  bigdata.commit()
 
   step("Exporting absence assertions")
-  val absenceConnection = repository.getUnisolatedConnection()
-  absenceConnection.setAutoCommit(false);
-  val preparedAbsencesQuery = absenceConnection.prepareGraphQuery(QueryLanguage.SPARQL, absencesQuery.toString)
+  val preparedAbsencesQuery = bigdata.prepareGraphQuery(QueryLanguage.SPARQL, absencesQuery.toString)
   val absencesFile = new File(cwd + "/staging/kb/absences.ttl")
   val absencesOutput = new BufferedOutputStream(new FileOutputStream(absencesFile))
   preparedAbsencesQuery.evaluate(new TurtleWriter(absencesOutput))
   absencesOutput.close()
-  absenceConnection.commit()
-  absenceConnection.close()
+  bigdata.commit()
 
   step("Load presence/absence data")
-  val presenceAbsenceConnection = repository.getUnisolatedConnection()
-  presenceAbsenceConnection.setAutoCommit(false);
-  presenceAbsenceConnection.add(presencesFile, baseURI, RDFFormat.TURTLE, graphURI)
-  presenceAbsenceConnection.add(absencesFile, baseURI, RDFFormat.TURTLE, graphURI)
-  presenceAbsenceConnection.commit()
-  presenceAbsenceConnection.close()
+  bigdata.add(presencesFile, baseURI, RDFFormat.TURTLE, graphURI)
+  bigdata.add(absencesFile, baseURI, RDFFormat.TURTLE, graphURI)
+  bigdata.commit()
 
   step("Exporting all triples to turtle file")
 
-  val queryConnection = repository.getReadOnlyConnection
-  queryConnection.setAutoCommit(false)
-  val triplesQuery = queryConnection.prepareGraphQuery(QueryLanguage.SPARQL, """
+  val triplesQuery = bigdata.prepareGraphQuery(QueryLanguage.SPARQL, """
 CONSTRUCT {
  ?s ?p ?o .
 }
@@ -361,8 +353,9 @@ WHERE {
   val triplesOutput = new BufferedOutputStream(new FileOutputStream(new File(cwd + "/staging/kb/kb.ttl")))
   triplesQuery.evaluate(new TurtleWriter(triplesOutput))
   triplesOutput.close()
-  queryConnection.commit()
-  queryConnection.close()
+  bigdata.commit()
+
+  bigdata.close()
 
   step("Done")
 
