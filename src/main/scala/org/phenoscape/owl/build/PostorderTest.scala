@@ -91,8 +91,7 @@ object PostorderTest extends KnowledgeBaseBuilder {
 
   step("Testing postorder part of ancestral states reconstruction")
   println("Triples: " + connection.getTripleStore.getStatementCount)
-  val associations = AncestralStates.queryAssociations(connection)
-  AncestralStates.reconstructAncestralStates(TaxonNode(CHORDATA), tboxReasoner, associations)
+  AncestralStates.computePhenotypeProfiles(TaxonNode(CHORDATA), tboxReasoner, connection)
 
   connection.commit()
   // close the repository connection

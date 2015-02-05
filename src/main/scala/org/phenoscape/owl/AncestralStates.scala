@@ -1,34 +1,39 @@
 package org.phenoscape.owl
 
+import scala.collection.GenMap
 import scala.collection.JavaConversions._
+
+import org.openrdf.model.Statement
+import org.openrdf.model.impl.StatementImpl
+import org.openrdf.model.impl.URIImpl
+import org.openrdf.model.vocabulary.RDF
+import org.openrdf.query.BindingSet
 import org.openrdf.query.QueryLanguage
 import org.openrdf.repository.sail.SailRepositoryConnection
 import org.phenoscape.owl.Vocab._
+import org.phenoscape.owl.util.ExpressionUtil
+import org.phenoscape.owl.util.SesameIterationIterator.iterationToIterator
 import org.phenoscape.owlet.SPARQLComposer._
 import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model.IRI
 import org.semanticweb.owlapi.model.OWLClass
 import org.semanticweb.owlapi.reasoner.OWLReasoner
-import org.phenoscape.owl.util.SesameIterationIterator._
+
 import com.hp.hpl.jena.query.Query
-import org.openrdf.query.BindingSet
-import scala.collection.GenMap
-import scala.collection.GenSet
-import org.phenoscape.owl.util.ExpressionUtil
 
 object AncestralStates {
 
   val factory = OWLManager.getOWLDataFactory
   val Nothing = factory.getOWLNothing
+  val PhenoscapeKB = new URIImpl("http://kb.phenoscape.org/")
 
   type StateAssociations = GenMap[TaxonNode, GenMap[Character, Set[State]]]
 
-  def reconstructAncestralStates(rootTaxon: TaxonNode, reasoner: OWLReasoner, observedAssociations: Set[StateAssociation]): Map[TaxonNode, Map[Character, Set[State]]] = {
+  def computePhenotypeProfiles(rootTaxon: TaxonNode, reasoner: OWLReasoner, db: SailRepositoryConnection): Set[Statement] = {
+    val observedAssociations = queryAssociations(db)
     val associationsIndex = index(observedAssociations)
     val (associations, profiles) = postorder(rootTaxon, reasoner, index(observedAssociations), Map.empty)
-    val result = toSequential(profiles)
-    report(result, reasoner)
-    result
+    profilesToRDF(profiles, db)
   }
 
   def report(profiles: Map[TaxonNode, Map[Character, Set[State]]], reasoner: OWLReasoner): Unit = {
@@ -54,7 +59,23 @@ object AncestralStates {
         }
     }
 
+  def profilesToRDF(profiles: StateAssociations, db: SailRepositoryConnection): Set[Statement] = {
+    val statePhenotypes: Map[State, Set[Phenotype]] = queryStatePhenotypes(db)
+    (for {
+      (taxon, profile) <- toSequential(profiles)
+      (character, states) <- profile
+      state <- states
+      phenotype <- statePhenotypes.getOrElse(state, Set.empty)
+    } yield {
+      val profileURI = new URIImpl(taxonProfileURI(taxon))
+      Set(new StatementImpl(profileURI, RDF.TYPE, new URIImpl(phenotype.iri.toString)),
+        new StatementImpl(new URIImpl(taxon.iri.toString), new URIImpl(has_evolutionary_profile.toString), profileURI))
+    }).flatten.toSet
+  }
+
   implicit def taxonToOWLClass(taxon: TaxonNode): OWLClass = factory.getOWLClass(taxon.iri)
+
+  def taxonProfileURI(taxon: TaxonNode) = s"http://phenoscape.org/profile/${taxon.iri.toString.split("/").last}"
 
   def toSequential(associations: StateAssociations): Map[TaxonNode, Map[Character, Set[State]]] = associations.map({ case (taxon, states) => taxon -> states.seq.toMap }).seq.toMap
 
@@ -110,6 +131,26 @@ object AncestralStates {
         t('matrix_char, may_have_state_value, 'state),
         t('matrix_char, rdfsLabel, 'matrix_char_label)))
 
+  def queryStatePhenotypes(connection: SailRepositoryConnection): Map[State, Set[Phenotype]] = {
+    val query = connection.prepareTupleQuery(QueryLanguage.SPARQL, phenotypesQuery.toString)
+    query.evaluate().map { bindings =>
+      (State(IRI.create(bindings.getValue("state").stringValue), bindings.getValue("state").stringValue),
+        Phenotype(IRI.create(bindings.getValue("phenotype").stringValue)))
+    }.toIterable.groupBy {
+      case (state, phenotype) => state
+    }.map {
+      case (state, statesWithPhenotypes) => state -> statesWithPhenotypes.map {
+        case (state, phenotype) => phenotype
+      }.toSet
+    }
+  }
+
+  val phenotypesQuery: Query =
+    select_distinct('state, 'state_label, 'phenotype) from "http://kb.phenoscape.org/" where (
+      bgp(
+        t('state, rdfsLabel, 'state_label),
+        t('state, describes_phenotype, 'phenotype)))
+
 }
 
 case class TaxonNode(iri: IRI)
@@ -117,6 +158,8 @@ case class TaxonNode(iri: IRI)
 case class Character(iri: IRI, label: String)
 
 case class State(iri: IRI, label: String)
+
+case class Phenotype(iri: IRI)
 
 case class StateAssociation(taxon: TaxonNode, character: Character, state: State)
 

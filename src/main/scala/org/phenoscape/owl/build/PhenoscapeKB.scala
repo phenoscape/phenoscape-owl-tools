@@ -306,12 +306,11 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
   // close the repository connection
   connection.close()
 
-  step("Testing postorder part of ancestral states reconstruction")
-  val postorderConnection = repository.getUnisolatedConnection()
-  val associations = AncestralStates.queryAssociations(postorderConnection)
-  AncestralStates.reconstructAncestralStates(TaxonNode(CHORDATA), negationReasoner, associations)
-  postorderConnection.commit()
-  postorderConnection.close()
+  step("Building profiles using ancestral states reconstruction")
+  val asConnection = repository.getUnisolatedConnection()
+  AncestralStates.computePhenotypeProfiles(TaxonNode(CHORDATA), negationReasoner, asConnection)
+  asConnection.commit()
+  asConnection.close()
 
   negationReasoner.dispose()
 
