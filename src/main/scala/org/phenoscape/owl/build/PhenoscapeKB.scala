@@ -53,6 +53,7 @@ import com.bigdata.rdf.sail.BigdataSailRepositoryConnection
 import org.phenoscape.owl.EvolutionaryProfiles
 import org.phenoscape.owl.TaxonNode
 import org.phenoscape.owl.GeneProfiles
+import org.phenoscape.owl.SimilarityTemplates
 
 object PhenoscapeKB extends KnowledgeBaseBuilder {
 
@@ -146,7 +147,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
   coreReasoner.dispose()
 
   //  step("Generating EQ characters for analyses")
-  //  val attributeQualities = attributes.getClassesInSignature() + Class(Vocab.HAS_NUMBER_OF)
+  val attributeQualities = attributes.getClassesInSignature + HasNumberOf
   //  val eqCharacters = manager.createOntology(EQCharactersGenerator.generateEQCharacters(anatomicalEntities, attributeQualities))
 
   step("Creating VTO instances")
@@ -235,9 +236,23 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
   val absenceNegationEquivalences = manager.createOntology(namedHasPartClasses.flatMap(NegationClassGenerator.createNegationClassAxioms(_, hasParts)))
   val developsFromRulesForAbsence = manager.createOntology(anatomicalEntities.flatMap(ReverseDevelopsFromRuleGenerator.createRules).toSet[OWLAxiom])
 
+  step("Generating semantic similarity subsumers")
+  val dualSubsumers = for {
+    entity <- anatomicalEntities
+    attribute <- attributeQualities
+    subsumer <- Set(SimilarityTemplates.entityWithQuality(entity, attribute),
+      SimilarityTemplates.entityAndPartsWithQuality(entity, attribute))
+  } yield {
+    subsumer
+  }
+  val subsumers = manager.createOntology(
+    (anatomicalEntities.map(SimilarityTemplates.entity) ++
+      anatomicalEntities.map(SimilarityTemplates.entityAndParts) ++
+      dualSubsumers).toSet[OWLAxiom])
+
   val allTBox = combine(uberon, homology, pato, bspo, go, vto, zfa, xao, hp, //mp,
     hpEQ, mpEQ, zfaToUberon, xaoToUberon, fmaToUberon, mgiToEMAPA, emapa, emapaToUberon,
-    hasParts, inherers, inherersInPartOf, towards, presences, absences, absenceNegationEquivalences, developsFromRulesForAbsence, tboxFromData, ro, phenoscapeVocab) // , eqCharacters
+    hasParts, inherers, inherersInPartOf, towards, presences, absences, absenceNegationEquivalences, developsFromRulesForAbsence, subsumers, tboxFromData, ro, phenoscapeVocab) // , eqCharacters
   println("tbox class count: " + allTBox.getClassesInSignature().size())
   println("tbox logical axiom count: " + allTBox.getLogicalAxiomCount())
   val tBoxWithoutDisjoints = OntologyUtil.ontologyWithoutDisjointAxioms(allTBox)
