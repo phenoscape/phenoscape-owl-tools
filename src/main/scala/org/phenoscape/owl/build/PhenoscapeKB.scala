@@ -5,11 +5,9 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.FileReader
 import java.util.Properties
-
 import scala.collection.JavaConversions._
 import scala.collection.mutable
 import scala.io.Source
-
 import org.apache.commons.io.FileUtils
 import org.apache.log4j.BasicConfigurator
 import org.apache.log4j.Level
@@ -48,10 +46,12 @@ import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model.IRI
 import org.semanticweb.owlapi.model.OWLAxiom
 import org.semanticweb.owlapi.vocab.OWLRDFVocabulary
-
 import com.bigdata.journal.Options
 import com.bigdata.rdf.sail.BigdataSail
 import com.bigdata.rdf.sail.BigdataSailRepository
+import com.bigdata.rdf.sail.BigdataSailRepositoryConnection
+import org.phenoscape.owl.AncestralStates
+import org.phenoscape.owl.TaxonNode
 
 object PhenoscapeKB extends KnowledgeBaseBuilder {
 
@@ -276,7 +276,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
       subClassOf('taxon, Class(Vocab.CHORDATA)),
       subClassOf('entity, Class(Vocab.ANATOMICAL_ENTITY)))
 
-  negationReasoner.dispose()
+  //negationReasoner.dispose()
 
   step("Writing generated and inferred tbox axioms")
   write(combine(hasParts, inherers, inherersInPartOf, towards, presences, absences, absenceNegationEquivalences, developsFromRulesForAbsence, inferredAxioms), cwd + "/staging/kb/generated.owl") //, eqCharacters
@@ -306,55 +306,13 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
   // close the repository connection
   connection.close()
 
-  //    step("Computing absence assertions")
-  //    val absenceConnection = repository.getUnisolatedConnection()
-  //    absenceConnection.setAutoCommit(false);
-  //    val absencesQuery = absenceConnection.prepareUpdate(QueryLanguage.SPARQL, """
-  //PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-  //PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-  //PREFIX ps: <http://purl.org/phenoscape/vocab.owl#>
-  //PREFIX Entity: <http://purl.obolibrary.org/obo/UBERON_0001062>
-  //PREFIX Taxon: <http://purl.obolibrary.org/obo/VTO_0000001>
-  //
-  //WITH <http://kb.phenoscape.org/>
-  //INSERT {
-  //    ?taxon ps:hasAbsenceOf ?entity .
-  //}
-  //WHERE {
-  //    ?taxon ps:exhibits_state/ps:describes_phenotype/rdfs:subClassOf*/ps:absence_of ?entity .
-  //    ?entity rdfs:subClassOf* Entity: .
-  //    ?entity rdfs:isDefinedBy <http://purl.obolibrary.org/obo/uberon.owl> .
-  //    ?taxon rdfs:subClassOf* Taxon: .
-  //}
-  //""")
-  //    absencesQuery.execute()
-  //    absenceConnection.commit()
-  //    absenceConnection.close()
-  //
-  //    step("Computing presence assertions")
-  //    val presenceConnection = repository.getUnisolatedConnection()
-  //    presenceConnection.setAutoCommit(false);
-  //    val presencesQuery = presenceConnection.prepareUpdate(QueryLanguage.SPARQL, """
-  //PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-  //PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-  //PREFIX ps: <http://purl.org/phenoscape/vocab.owl#>
-  //PREFIX Entity: <http://purl.obolibrary.org/obo/UBERON_0001062>
-  //PREFIX Taxon: <http://purl.obolibrary.org/obo/VTO_0000001>
-  //
-  //WITH <http://kb.phenoscape.org/>
-  //INSERT {
-  //    ?taxon ps:hasPresenceOf ?entity .
-  //}
-  //WHERE {
-  //    ?taxon ps:exhibits_state/ps:describes_phenotype/rdfs:subClassOf*/ps:implies_presence_of_some ?entity .
-  //    ?entity rdfs:subClassOf* Entity: .
-  //    ?entity rdfs:isDefinedBy <http://purl.obolibrary.org/obo/uberon.owl> .
-  //    ?taxon rdfs:subClassOf* Taxon: .
-  //}
-  //""")
-  //    presencesQuery.execute()
-  //    presenceConnection.commit()
-  //    presenceConnection.close()
+  step("Building profiles using ancestral states reconstruction")
+  val asConnection = repository.getUnisolatedConnection()
+  AncestralStates.computePhenotypeProfiles(TaxonNode(CHORDATA), negationReasoner, asConnection)
+  asConnection.commit()
+  asConnection.close()
+
+  negationReasoner.dispose()
 
   step("Exporting presence assertions")
   val presenceConnection = repository.getUnisolatedConnection()

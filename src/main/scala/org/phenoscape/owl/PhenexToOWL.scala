@@ -79,7 +79,7 @@ object PhenexToOWL extends OWLTask {
       owlCell Fact (belongs_to_TU, owlOTU))
     // We are flattening uncertain/polymorphic states into multiple individual states related to the matrix cell
     val states = if (characterToOWLMap.containsKey(stateID)) Set(stateID)
-    else getElementByID(stateID, cell).getChildren("member", nexmlNS).map(_.getAttributeValue("state"))
+    else getElementByID(stateID, cell).getChildren("member", nexmlNS).map(_.getAttributeValue("state")).toSet
     val stateAxioms = for {
       singleState <- states
       owlState <- characterToOWLMap.get(singleState)
