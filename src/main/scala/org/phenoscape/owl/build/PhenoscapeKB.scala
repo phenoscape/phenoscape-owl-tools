@@ -355,20 +355,20 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
   bigdata.commit()
 
   step("Exporting all triples to turtle file")
-  new ExportKB(sail.getDatabase, STAGING, org.openrdf.rio.RDFFormat.TURTLE, false).exportData()
-  //  val triplesQuery = bigdata.prepareGraphQuery(QueryLanguage.SPARQL, """
-  //CONSTRUCT {
-  // ?s ?p ?o .
-  //}
-  //FROM <http://kb.phenoscape.org/>
-  //WHERE {
-  // ?s ?p ?o .
-  //}
-  //""")
-  //  val triplesOutput = new BufferedOutputStream(new FileOutputStream(new File(cwd + "/staging/kb/kb.ttl")))
-  //  triplesQuery.evaluate(new TurtleWriter(triplesOutput))
-  //  triplesOutput.close()
-  //  bigdata.commit()
+  //new ExportKB(sail.getDatabase, STAGING, org.openrdf.rio.RDFFormat.TURTLE, false).exportData()
+    val triplesQuery = bigdata.prepareGraphQuery(QueryLanguage.SPARQL, """
+  CONSTRUCT {
+   ?s ?p ?o .
+  }
+  FROM <http://kb.phenoscape.org/>
+  WHERE {
+   ?s ?p ?o .
+  }
+  """)
+  val triplesOutput = new BufferedOutputStream(new FileOutputStream(new File(cwd + "/staging/kb/kb.ttl")))
+  triplesQuery.evaluate(new TurtleWriter(triplesOutput))
+  triplesOutput.close()
+  bigdata.commit()
 
   bigdata.close()
 
