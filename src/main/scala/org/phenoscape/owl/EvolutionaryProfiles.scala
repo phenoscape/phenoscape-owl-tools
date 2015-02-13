@@ -24,7 +24,6 @@ import com.hp.hpl.jena.query.Query
 object EvolutionaryProfiles {
 
   val factory = OWLManager.getOWLDataFactory
-  val Nothing = factory.getOWLNothing
   val PhenoscapeKB = new URIImpl("http://kb.phenoscape.org/")
 
   type StateAssociations = GenMap[TaxonNode, GenMap[Character, Set[State]]]
@@ -80,7 +79,7 @@ object EvolutionaryProfiles {
   def toSequential(associations: StateAssociations): Map[TaxonNode, Map[Character, Set[State]]] = associations.map({ case (taxon, states) => taxon -> states.seq.toMap }).seq.toMap
 
   def postorder(node: TaxonNode, reasoner: OWLReasoner, startingAssociations: StateAssociations, startingProfiles: StateAssociations): (StateAssociations, StateAssociations) = {
-    val children = reasoner.getSubClasses(node, true).getFlattened.filterNot(_ == Nothing).map(aClass => TaxonNode(aClass.getIRI))
+    val children = reasoner.getSubClasses(node, true).getFlattened.filterNot(_.isOWLNothing).map(aClass => TaxonNode(aClass.getIRI))
     val nodeStates = startingAssociations.getOrElse(node, Map.empty)
     if (children.isEmpty) {
       (Map(node -> nodeStates), Map.empty)

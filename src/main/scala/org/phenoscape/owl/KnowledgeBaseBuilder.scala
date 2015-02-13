@@ -41,14 +41,9 @@ class KnowledgeBaseBuilder extends App {
     new ElkReasonerFactory().createReasoner(allAxioms)
   }
 
-  def load(location: String): OWLOntology = {
-    val ont = globalManager.loadOntologyFromOntologyDocument(iri(location))
-    PropertyNormalizer.normalize(ont)
-  }
-
-  def load(location: File): OWLOntology = {
+  def loadNormalized(location: File): OWLOntology = {
     val ont = globalManager.loadOntologyFromOntologyDocument(location)
-    val definedByAxioms = ont.getClassesInSignature map OBOUtil.createDefinedByAnnotation flatMap (_.toSet)
+    val definedByAxioms = ont.getClassesInSignature.flatMap(OBOUtil.createDefinedByAnnotation)
     globalManager.addAxioms(ont, definedByAxioms)
     PropertyNormalizer.normalize(ont)
   }

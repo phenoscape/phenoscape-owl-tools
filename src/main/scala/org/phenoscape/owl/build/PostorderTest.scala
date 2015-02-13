@@ -73,8 +73,8 @@ object PostorderTest extends KnowledgeBaseBuilder {
   cd(KB)
 
   step("Loading ontologies")
-  val taxrank = load(new File(cwd + "/staging/sources/taxrank.owl"))
-  val vto = load(new File(cwd + "/staging/sources/vto.owl"))
+  val taxrank = loadNormalized(new File(cwd + "/staging/sources/taxrank.owl"))
+  val vto = loadNormalized(new File(cwd + "/staging/sources/vto.owl"))
 
   step("Materializing tbox classification")
   val tboxReasoner = reasoner(combine(vto, taxrank))
