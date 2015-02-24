@@ -133,7 +133,7 @@ object EvolutionaryProfiles {
   def queryStatePhenotypes(connection: SailRepositoryConnection): Map[State, Set[Phenotype]] = {
     val query = connection.prepareTupleQuery(QueryLanguage.SPARQL, phenotypesQuery.toString)
     query.evaluate().map { bindings =>
-      (State(IRI.create(bindings.getValue("state").stringValue), bindings.getValue("state").stringValue),
+      (State(IRI.create(bindings.getValue("state").stringValue), bindings.getValue("state_label").stringValue),
         Phenotype(IRI.create(bindings.getValue("phenotype").stringValue)))
     }.toIterable.groupBy {
       case (state, phenotype) => state
