@@ -225,38 +225,38 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
         xenbaseExpressionData.getTBoxAxioms(false) ++
         xenbasePhenotypeData.getTBoxAxioms(false) ++
         humanPhenotypeData.getTBoxAxioms(false) ++
-        nexmlTBoxAxioms)
+        nexmlTBoxAxioms +
+        (has_part_inhering_in SubPropertyChain (has_part o inheres_in))) //TODO add this to Phenoscape vocab ontology
 
     //val parts = manager.createOntology(anatomicalEntities.map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.PART_OF), _)).flatten)
     val hasParts = manager.createOntology(anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(has_part, _)))
     val presences = manager.createOntology(anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(Vocab.IMPLIES_PRESENCE_OF, _)))
-    val inherers = manager.createOntology(anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(Vocab.inheres_in, _)))
-    val inherersInPartOf = manager.createOntology(anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(Vocab.inheres_in_part_of, _)))
-    val towards = manager.createOntology(anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(Vocab.towards, _)))
-    //val involvers = manager.createOntology((anatomicalEntities ++ qualities).map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.INVOLVES), _)).flatten)
-    //val homologies = manager.createOntology(anatomicalEntities.map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.PHP), _)).flatten)
+    val hasPartsInheringIns = manager.createOntology(anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(has_part_inhering_in, _)))
     val absences = manager.createOntology(anatomicalEntities.flatMap(AbsenceClassGenerator.createAbsenceClass))
     val namedHasPartClasses = anatomicalEntities.map(_.getIRI()).map(NamedRestrictionGenerator.getRestrictionIRI(has_part.getIRI, _)).map(Class(_))
     val absenceNegationEquivalences = manager.createOntology(namedHasPartClasses.flatMap(NegationClassGenerator.createNegationClassAxioms(_, hasParts)))
     val developsFromRulesForAbsence = manager.createOntology(anatomicalEntities.flatMap(ReverseDevelopsFromRuleGenerator.createRules).toSet[OWLAxiom])
 
     step("Generating semantic similarity subsumers")
-    val dualSubsumers = for {
-      entity <- anatomicalEntities
-      attribute <- attributeQualities
-      subsumer <- Set(SimilarityTemplates.entityWithQuality(entity, attribute),
-        SimilarityTemplates.entityAndPartsWithQuality(entity, attribute))
-    } yield {
-      subsumer
-    }
+    //    val dualSubsumers = for {
+    //      entity <- anatomicalEntities
+    //      attribute <- attributeQualities
+    //      subsumer <- Set(SimilarityTemplates.entityWithQuality(entity, attribute),
+    //        SimilarityTemplates.entityAndPartsWithQuality(entity, attribute))
+    //    } yield {
+    //      subsumer
+    //    }
+    //    val subsumers = manager.createOntology(
+    //      (anatomicalEntities.map(SimilarityTemplates.entity) ++
+    //        anatomicalEntities.map(SimilarityTemplates.entityAndParts) ++
+    //        dualSubsumers).toSet[OWLAxiom])
     val subsumers = manager.createOntology(
       (anatomicalEntities.map(SimilarityTemplates.entity) ++
-        anatomicalEntities.map(SimilarityTemplates.entityAndParts) ++
-        dualSubsumers).toSet[OWLAxiom])
+        anatomicalEntities.map(SimilarityTemplates.entityAndParts)).toSet[OWLAxiom])
 
     val allTBox = combine(uberon, homology, pato, bspo, go, vto, zfa, xao, hp, //mp,
       hpEQ, mpEQ, zfaToUberon, xaoToUberon, fmaToUberon, mgiToEMAPA, emapa, emapaToUberon,
-      hasParts, inherers, inherersInPartOf, towards, presences, absences, absenceNegationEquivalences, developsFromRulesForAbsence, subsumers, tboxFromData, ro, phenoscapeVocab) // , eqCharacters
+      hasParts, hasPartsInheringIns, presences, absences, absenceNegationEquivalences, developsFromRulesForAbsence, subsumers, tboxFromData, ro, phenoscapeVocab) // , eqCharacters
     println("tbox class count: " + allTBox.getClassesInSignature().size())
     println("tbox logical axiom count: " + allTBox.getLogicalAxiomCount())
     val tBoxWithoutDisjoints = OntologyUtil.ontologyWithoutDisjointAxioms(allTBox)
@@ -283,10 +283,15 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     }
 
     step("Writing generated and inferred tbox axioms")
-    write(combine(hasParts, inherers, inherersInPartOf, towards, presences, absences, absenceNegationEquivalences, developsFromRulesForAbsence, inferredAxioms), cwd + "/staging/kb/generated.owl") //, eqCharacters
+    write(combine(hasParts, hasPartsInheringIns, presences, absences, absenceNegationEquivalences, developsFromRulesForAbsence, inferredAxioms), cwd + "/staging/kb/generated.owl") //, eqCharacters
 
     step("Writing tbox axioms for ELK")
-    write(combine(tBoxWithoutDisjoints, inferredAxioms), cwd + "/staging/kb/tbox.owl")
+    val tboxOut = combine(tBoxWithoutDisjoints, inferredAxioms)
+    write(tboxOut, cwd + "/staging/kb/tbox.owl")
+
+    step("Reducing tbox for OWLsim")
+    val reducedTbox = OntologyUtil.reduceOntologyToHierarchy(tboxOut)
+    write(reducedTbox, cwd + "/staging/kb/tbox-hierarchy-only.owl")
 
     negationReasoner
 
@@ -369,6 +374,26 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
   val triplesOutput = new BufferedOutputStream(new FileOutputStream(new File(cwd + "/staging/kb/kb.ttl")))
   triplesQuery.evaluate(new TurtleWriter(triplesOutput))
   triplesOutput.close()
+  bigdata.commit()
+
+  step("Exporting phenotypic profiles for semantic similarity")
+  val profilesQuery = bigdata.prepareGraphQuery(QueryLanguage.SPARQL, """
+PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl:  <http://www.w3.org/2002/07/owl#>
+PREFIX ps:   <http://purl.org/phenoscape/vocab.owl#>
+CONSTRUCT {
+ ?profile rdf:type ?phenotype
+}
+FROM <http://kb.phenoscape.org/>
+WHERE {
+  ?source ps:has_phenotypic_profile ?profile .
+  ?profile rdf:type ?phenotype .
+}
+    """)
+  val profilesOutput = new BufferedOutputStream(new FileOutputStream(new File(cwd + "/staging/kb/profiles.ttl")))
+  profilesQuery.evaluate(new TurtleWriter(profilesOutput))
+  profilesOutput.close()
   bigdata.commit()
 
   bigdata.close()

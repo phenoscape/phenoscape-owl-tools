@@ -10,6 +10,8 @@ import java.util.UUID
 import org.semanticweb.owlapi.model.OWLNamedIndividual
 import org.semanticweb.owlapi.model.OWLClass
 import org.semanticweb.owlapi.model.IRI
+import org.semanticweb.owlapi.model.OWLSubClassOfAxiom
+import org.semanticweb.owlapi.model.OWLAxiom
 
 object OntologyUtil {
 
@@ -21,7 +23,7 @@ object OntologyUtil {
       .filterNot { _.getAxiomType == AxiomType.DISJOINT_CLASSES }
       .filterNot {
         case axiom: OWLEquivalentClassesAxiom => axiom.getNamedClasses.contains(factory.getOWLNothing) || axiom.getClassExpressions.contains(factory.getOWLNothing)
-        case _ => false
+        case _                                => false
       }
     manager.createOntology(axioms)
   }
@@ -38,7 +40,17 @@ object OntologyUtil {
 
   def optionWithSet[T, S](in: Option[(T, Set[S])]): (Option[T], Set[S]) = in match {
     case Some((thing, set)) => (Option(thing), set)
-    case None => (None, Set.empty)
+    case None               => (None, Set.empty)
+  }
+
+  def reduceOntologyToHierarchy(ontology: OWLOntology): OWLOntology = {
+    val manager = OWLManager.createOWLOntologyManager
+    val factory = OWLManager.getOWLDataFactory
+    val axioms = ontology.getAxioms.collect {
+      case subClassOf: OWLSubClassOfAxiom if !subClassOf.getSubClass.isAnonymous && !subClassOf.getSuperClass.isAnonymous => subClassOf
+      case equiv: OWLEquivalentClassesAxiom if equiv.getNamedClasses.size > 1 => factory.getOWLEquivalentClassesAxiom(equiv.getNamedClasses)
+    }
+    manager.createOntology(axioms.toSet[OWLAxiom])
   }
 
 }
