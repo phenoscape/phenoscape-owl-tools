@@ -5,59 +5,74 @@ import scala.collection.mutable
 
 import org.semanticweb.elk.owlapi.ElkReasonerFactory
 import org.semanticweb.owlapi.apibinding.OWLManager
-import org.semanticweb.owlapi.model.AxiomType
 import org.semanticweb.owlapi.model.OWLClass
-import org.semanticweb.owlapi.model.OWLClassAssertionAxiom
 import org.semanticweb.owlapi.model.OWLNamedIndividual
 import org.semanticweb.owlapi.model.OWLOntology
 import org.semanticweb.owlapi.reasoner.{Node => ReasonerNode}
+import org.semanticweb.owlapi.reasoner.OWLReasoner
 
-class OWLsim(ontology: OWLOntology) {
+class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
 
-  type ICTable = Map[Node, Double]
-
-  /**
-   * parent to children
-   */
   type SuperClassOfIndex = Map[Node, Set[Node]]
   type SubClassOfIndex = Map[Node, Set[Node]]
-
-  private val scaleFactor = 1000
 
   private val OWLThing = OWLManager.getOWLDataFactory.getOWLThing
   private val OWLNothing = OWLManager.getOWLDataFactory.getOWLNothing
 
-  private val (superClassOfIndex, subClassOfIndex) = nonRedundantHierarchy(ontology)
+  val (superClassOfIndex, subClassOfIndex, directAssociationsByNode, directAssociationsByIndividual) = {
+    val reasoner = new ElkReasonerFactory().createReasoner(ontology)
+    val (superClassOf, subClassOf) = nonRedundantHierarchy(reasoner)
+    val (directAssocByNode, directAssocByIndividual) = indexDirectAssociations(reasoner)
+    reasoner.dispose()
+    (superClassOf, subClassOf, directAssocByNode, directAssocByIndividual)
+  }
 
-  private val allNodes: Set[Node] = superClassOfIndex.keySet
+  val allNodes: Set[Node] = superClassOfIndex.keySet
+
+  private val (nodeToInt, intToNode) = {
+    val (nodesToInts, intsToNodes) = allNodes.zipWithIndex.map { case (node, index) => (node -> index, index -> node) }.unzip
+    (nodesToInts.toMap, intsToNodes.toMap)
+  }
 
   val classToNode: Map[OWLClass, Node] = (for {
     node <- allNodes
     aClass <- node.classes
   } yield aClass -> node).toMap
 
-  private val childToAncestorIndex = indexAncestors(classToNode(OWLNothing))
+  val childToReflexiveAncestorIndex: Map[Node, Set[Node]] = indexAncestorsReflexive(classToNode(OWLNothing))
 
-  val (directAssociationsByNode, directAssociationsByIndividual) = indexDirectAssociations(ontology)
+  val allIndividuals: Set[OWLNamedIndividual] = directAssociationsByIndividual.keySet
+
+  val individualsInCorpus: Set[OWLNamedIndividual] = directAssociationsByIndividual.keySet.filter(inCorpus)
 
   val directAndIndirectAssociationsByIndividual = directAssociationsByIndividual.map {
-    case (individual, nodes) => individual -> (nodes ++ nodes.flatMap(childToAncestorIndex))
+    case (individual, nodes) => individual -> (nodes ++ nodes.flatMap(childToReflexiveAncestorIndex))
   }
 
-  val corpusSize: Int = directAssociationsByNode.values.flatten.toSet.size
+  val corpusSize: Int = allIndividuals.size
 
   val directAndIndirectAssociationsByNode: Map[Node, Set[OWLNamedIndividual]] = accumulateAssociations(classToNode(OWLThing))
 
   val nodeIC: Map[Node, Double] = convertFrequenciesToInformationContent(classToNode(OWLNothing))
 
-  def nonRedundantHierarchy(ontology: OWLOntology): (SuperClassOfIndex, SubClassOfIndex) = {
-    val reasoner = new ElkReasonerFactory().createReasoner(ontology)
+  def computeAllSimilarityToCorpus(inputs: Set[OWLNamedIndividual]): Set[SimpleSimilarity] = {
+    val parallelInputs = inputs.par
+    val parallelIndividualsSize = parallelInputs.size
+    (for {
+      inputProfile <- parallelInputs
+      corpusProfile <- individualsInCorpus
+    } yield {
+      SimpleSimilarity(inputProfile, corpusProfile, groupWiseSimilarity(inputProfile, corpusProfile).score)
+    }).seq
+  }
+
+  def nonRedundantHierarchy(reasoner: OWLReasoner): (SuperClassOfIndex, SubClassOfIndex) = {
     val parentToChildren = mutable.Map[Node, Set[Node]]()
     val childToParents = mutable.Map[Node, Set[Node]]()
-    def traverse(node: ReasonerNode[OWLClass]): Unit = {
-      val parent = Node(node)
+    def traverse(reasonerNode: ReasonerNode[OWLClass]): Unit = {
+      val parent = Node(reasonerNode)
       if (!parentToChildren.contains(parent)) {
-        val representative = node.getRepresentativeElement
+        val representative = reasonerNode.getRepresentativeElement
         val children = reasoner.getSubClasses(representative, true).getNodes.asScala.toSet
         children.foreach { childNode =>
           traverse(childNode)
@@ -71,27 +86,17 @@ class OWLsim(ontology: OWLOntology) {
     val top = reasoner.getTopClassNode
     traverse(top)
     childToParents += (Node(top) -> Set.empty)
-    reasoner.dispose()
     (parentToChildren.toMap, childToParents.toMap)
   }
 
-  //FIXME use reasoner instead of axioms to remove redundant annotations?
-  def indexDirectAssociations(ontology: OWLOntology): (Map[Node, Set[OWLNamedIndividual]], Map[OWLNamedIndividual, Set[Node]]) = {
-    val classAssertions: Set[OWLClassAssertionAxiom] = ontology.getAxioms(AxiomType.CLASS_ASSERTION).asScala.toSet
+  def indexDirectAssociations(reasoner: OWLReasoner): (Map[Node, Set[OWLNamedIndividual]], Map[OWLNamedIndividual, Set[Node]]) = {
+    val individuals = reasoner.getRootOntology.getIndividualsInSignature(true).asScala.toSet
     val init = (Map.empty[Node, Set[OWLNamedIndividual]], Map.empty[OWLNamedIndividual, Set[Node]])
-    classAssertions.foldLeft(init) {
-      case ((byNode, byIndividual), assertion) =>
-        (assertion.getIndividual, assertion.getClassExpression) match {
-          case (namedInd: OWLNamedIndividual, namedClass: OWLClass) => {
-            val node = classToNode(namedClass)
-            val currentByNode = byNode.getOrElse(node, Set.empty)
-            val currentByIndividual = byIndividual.getOrElse(namedInd, Set.empty)
-            (byNode + (node -> (currentByNode + namedInd)),
-              byIndividual + (namedInd -> (currentByIndividual + node)))
-          }
-          case _ => (byNode, byIndividual)
-        }
-    }
+    val individualsToNodes = (individuals.map { individual =>
+      val nodes = reasoner.getTypes(individual, true).getNodes.asScala.map(Node(_)).toSet
+      individual -> nodes
+    }).toMap
+    (invertMapOfSets(individualsToNodes), individualsToNodes)
   }
 
   private def accumulateAssociations(node: Node): Map[Node, Set[OWLNamedIndividual]] = {
@@ -108,34 +113,32 @@ class OWLsim(ontology: OWLOntology) {
     index.toMap
   }
 
-  private def indexAncestors(bottom: Node): Map[Node, Set[Node]] = {
+  private def indexAncestorsReflexive(bottom: Node): Map[Node, Set[Node]] = {
     val index = mutable.Map[Node, Set[Node]]()
     def traverse(node: Node): Unit = {
       if (!index.contains(node)) {
         val parents = subClassOfIndex(node)
         parents.foreach(traverse)
         val ancestors = parents ++ parents.flatMap(index)
-        index += (node -> ancestors)
+        index += (node -> (ancestors + node))
       }
     }
     traverse(bottom)
     index.toMap
   }
 
-  def convertFrequenciesToInformationContent(bottom: Node): Map[Node, Double] = {
+  private def convertFrequenciesToInformationContent(bottom: Node): Map[Node, Double] = {
     val ics = mutable.Map[Node, Double]()
     def traverse(node: Node): Unit = {
       if (!ics.contains(node)) {
         val parents = subClassOfIndex(node)
         parents.foreach(traverse)
-        val freq = directAndIndirectAssociationsByNode(node).size
+        val instancesInCorpus = directAndIndirectAssociationsByNode(node).intersect(individualsInCorpus)
+        val freq = instancesInCorpus.size
         val ic = if (freq == 0) {
           parents.map(ics).max
         } else {
-          val basicIC = -Math.log((freq.toDouble / corpusSize)) / Math.log(2)
-          val ancestorCount = childToAncestorIndex(node).size
-          val bump = ancestorCount / scaleFactor.toDouble
-          basicIC + bump
+          -Math.log((freq.toDouble / corpusSize)) / Math.log(2)
         }
         ics += (node -> ic)
       }
@@ -144,12 +147,40 @@ class OWLsim(ontology: OWLOntology) {
     ics.toMap
   }
 
+  def commonSubsumersOf(i: Node, j: Node): Set[Node] = childToReflexiveAncestorIndex(i).intersect(childToReflexiveAncestorIndex(j))
+
   def commonSubsumersOf(i: OWLNamedIndividual, j: OWLNamedIndividual): Set[Node] =
     directAndIndirectAssociationsByIndividual(i).intersect(directAndIndirectAssociationsByIndividual(j))
 
-  def groupWiseSimilarity(i: OWLNamedIndividual, j: OWLNamedIndividual) = {
-    //median of max IC from all pairs
-    
+  def maxICSubsumer(i: Node, j: Node): Node = if (i == j) i else commonSubsumersOf(i, j).maxBy(nodeIC)
+
+  def groupWiseSimilarity(i: OWLNamedIndividual, j: OWLNamedIndividual): GroupWiseSimilarity = {
+    val pairScores = for {
+      iNode <- directAssociationsByIndividual(i)
+      jNode <- directAssociationsByIndividual(j)
+    } yield {
+      val maxSubsumer = maxICSubsumer(iNode, jNode)
+      PairScore(Map(i -> iNode, j -> jNode), maxSubsumer, nodeIC(maxSubsumer))
+    }
+    val medianScore = median(pairScores.map(_.maxSubsumerIC).toSeq)
+    GroupWiseSimilarity(medianScore, pairScores)
+  }
+
+  def median(values: Seq[Double]): Double = {
+    val (lower, upper) = values.sorted.splitAt(values.size / 2)
+    if (values.size % 2 == 0) ((lower.last + upper.head) / 2.0) else upper.head
+  }
+
+  private def invertMapOfSets[K, V](in: Map[K, Set[V]]): Map[V, Set[K]] = {
+    in.toIterable.flatMap {
+      case (k, vs) => vs.map(_ -> k)
+    }.groupBy {
+      case (v, k) => v
+    }.map {
+      case (v, vks) => v -> vks.map {
+        case (v1, k1) => k1
+      }.toSet
+    }
   }
 
 }
@@ -161,3 +192,14 @@ object Node {
   def apply(reasonerNode: ReasonerNode[OWLClass]): Node = Node(reasonerNode.getEntities.asScala.toSet)
 
 }
+
+case class PairScore(annotations: Map[OWLNamedIndividual, Node], maxSubsumer: Node, maxSubsumerIC: Double)
+
+case class GroupWiseSimilarity(score: Double, pairs: Set[PairScore])
+
+case class SimpleSimilarity(i: OWLNamedIndividual, j: OWLNamedIndividual, score: Double) {
+
+  override def toString() = s"${i.getIRI.toString}\t${j.getIRI.toString}\t${score}"
+
+}
+
