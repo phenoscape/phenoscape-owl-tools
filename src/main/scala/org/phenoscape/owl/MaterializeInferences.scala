@@ -17,7 +17,6 @@ import org.semanticweb.owlapi.util.InferredOntologyGenerator
 import org.semanticweb.owlapi.util.InferredPropertyAssertionGenerator
 import org.semanticweb.owlapi.util.InferredSubClassAxiomGenerator
 import org.semanticweb.owlapi.util.OWLEntityRemover
-import eu.trowl.owlapi3.rel.reasoner.dl.RELReasonerFactory
 import org.semanticweb.owlapi.model.OWLAxiom
 
 object MaterializeInferences extends OWLTask {
@@ -78,7 +77,7 @@ object MaterializeInferences extends OWLTask {
     kind match {
       //case "hermit" => new ReasonerFactory().createReasoner(ontology)
       case "elk" => new ElkReasonerFactory().createReasoner(ontology)
-      case "trowl" => new RELReasonerFactory().createReasoner(ontology)
+      // case "trowl" => new RELReasonerFactory().createReasoner(ontology)
     }
   }
 
