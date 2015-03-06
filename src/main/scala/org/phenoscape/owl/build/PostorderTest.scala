@@ -73,11 +73,10 @@ object PostorderTest extends KnowledgeBaseBuilder {
   cd(KB)
 
   step("Loading ontologies")
-  val taxrank = loadNormalized(new File(cwd + "/staging/sources/taxrank.owl"))
-  val vto = loadNormalized(new File(cwd + "/staging/sources/vto.owl"))
+  val tbox = manager.loadOntologyFromOntologyDocument(new File(cwd + "/staging/kb/tbox.owl"))
 
-  step("Materializing tbox classification")
-  val tboxReasoner = reasoner(combine(vto, taxrank))
+  step("Reasoning with tbox")
+  val tboxReasoner = reasoner(tbox)
 
   step("Loading Bigdata")
   val bigdataProperties = new Properties()
@@ -91,7 +90,9 @@ object PostorderTest extends KnowledgeBaseBuilder {
 
   step("Testing postorder part of ancestral states reconstruction")
   println("Triples: " + connection.getTripleStore.getStatementCount)
-  EvolutionaryProfiles.computePhenotypeProfiles(TaxonNode(CHORDATA), tboxReasoner, connection)
+  val result = EvolutionaryProfiles.computePhenotypeProfiles(TaxonNode(CHORDATA), tboxReasoner, connection)
+  println("Size of profile data: " + result.size)
+  result.take(100).foreach(println)
 
   connection.commit()
   // close the repository connection
