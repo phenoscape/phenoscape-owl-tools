@@ -8,7 +8,7 @@ import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model.OWLClass
 import org.semanticweb.owlapi.model.OWLNamedIndividual
 import org.semanticweb.owlapi.model.OWLOntology
-import org.semanticweb.owlapi.reasoner.{Node => ReasonerNode}
+import org.semanticweb.owlapi.reasoner.{ Node => ReasonerNode }
 import org.semanticweb.owlapi.reasoner.OWLReasoner
 
 class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
@@ -29,11 +29,6 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
 
   val allNodes: Set[Node] = superClassOfIndex.keySet
 
-  private val (nodeToInt, intToNode) = {
-    val (nodesToInts, intsToNodes) = allNodes.zipWithIndex.map { case (node, index) => (node -> index, index -> node) }.unzip
-    (nodesToInts.toMap, intsToNodes.toMap)
-  }
-
   val classToNode: Map[OWLClass, Node] = (for {
     node <- allNodes
     aClass <- node.classes
@@ -45,7 +40,7 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
 
   val individualsInCorpus: Set[OWLNamedIndividual] = directAssociationsByIndividual.keySet.filter(inCorpus)
 
-  val directAndIndirectAssociationsByIndividual = directAssociationsByIndividual.map {
+  val directAndIndirectAssociationsByIndividual: Map[OWLNamedIndividual, Set[Node]] = directAssociationsByIndividual.map {
     case (individual, nodes) => individual -> (nodes ++ nodes.flatMap(childToReflexiveAncestorIndex))
   }
 
@@ -57,7 +52,6 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
 
   def computeAllSimilarityToCorpus(inputs: Set[OWLNamedIndividual]): Set[SimpleSimilarity] = {
     val parallelInputs = inputs.par
-    val parallelIndividualsSize = parallelInputs.size
     (for {
       inputProfile <- parallelInputs
       corpusProfile <- individualsInCorpus
@@ -166,7 +160,7 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
     GroupWiseSimilarity(medianScore, pairScores)
   }
 
-  def median(values: Seq[Double]): Double = {
+  private def median(values: Seq[Double]): Double = {
     val (lower, upper) = values.sorted.splitAt(values.size / 2)
     if (values.size % 2 == 0) ((lower.last + upper.head) / 2.0) else upper.head
   }
