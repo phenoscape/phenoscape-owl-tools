@@ -27,7 +27,7 @@ resolvers += "apache-repo-releases" at "http://repository.apache.org/content/rep
 
 resolvers += "BBOP repository" at "http://code.berkeleybop.org/maven/repository"
 
-javaOptions += "-Xmx12G"
+javaOptions += "-Xmx100G"
 
 libraryDependencies ++= {
   Seq(
