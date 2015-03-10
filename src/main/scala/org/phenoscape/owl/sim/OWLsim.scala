@@ -3,6 +3,7 @@ package org.phenoscape.owl.sim
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.collection.parallel._
+import scala.collection.optimizer._
 import scala.collection.par.Scheduler.Implicits.global
 
 import org.semanticweb.elk.owlapi.ElkReasonerFactory
@@ -53,10 +54,9 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
   val nodeIC: Map[Node, Double] = convertFrequenciesToInformationContent(classToNode(OWLNothing))
 
   def computeAllSimilarityToCorpus(inputs: Set[OWLNamedIndividual]): Set[SimpleSimilarity] = {
-    val parallelInputs = inputs.toParArray
     (for {
-      inputProfile <- parallelInputs
-      corpusProfile <- individualsInCorpus
+      inputProfile <- inputs.toParArray
+      corpusProfile <- individualsInCorpus.toParArray
     } yield {
       SimpleSimilarity(inputProfile, corpusProfile, groupWiseSimilarity(inputProfile, corpusProfile).score)
     }).toSet.seq
@@ -150,7 +150,7 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
 
   def maxICSubsumer(i: Node, j: Node): Node = if (i == j) i else commonSubsumersOf(i, j).maxBy(nodeIC)
 
-  def groupWiseSimilarity(i: OWLNamedIndividual, j: OWLNamedIndividual): GroupWiseSimilarity = {
+  def groupWiseSimilarity(i: OWLNamedIndividual, j: OWLNamedIndividual): GroupWiseSimilarity = optimize {
     val pairScores = for {
       iNode <- directAssociationsByIndividual(i)
       jNode <- directAssociationsByIndividual(j)
