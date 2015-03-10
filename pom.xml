@@ -99,6 +99,11 @@
 			<artifactId>owlet</artifactId>
 			<version>1.3</version>
 		</dependency>
+		<dependency>
+			<groupId>com.github.scala-blitz</groupId>
+			<artifactId>scala-blitz_2.11</artifactId>
+			<version>1.2</version>
+		</dependency>
 	</dependencies>
 	<build>
 		<plugins>

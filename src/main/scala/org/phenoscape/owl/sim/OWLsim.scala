@@ -2,13 +2,15 @@ package org.phenoscape.owl.sim
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
+import scala.collection.parallel._
+import scala.collection.par.Scheduler.Implicits.global
 
 import org.semanticweb.elk.owlapi.ElkReasonerFactory
 import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model.OWLClass
 import org.semanticweb.owlapi.model.OWLNamedIndividual
 import org.semanticweb.owlapi.model.OWLOntology
-import org.semanticweb.owlapi.reasoner.{ Node => ReasonerNode }
+import org.semanticweb.owlapi.reasoner.{Node => ReasonerNode}
 import org.semanticweb.owlapi.reasoner.OWLReasoner
 
 class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
@@ -51,13 +53,13 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
   val nodeIC: Map[Node, Double] = convertFrequenciesToInformationContent(classToNode(OWLNothing))
 
   def computeAllSimilarityToCorpus(inputs: Set[OWLNamedIndividual]): Set[SimpleSimilarity] = {
-    val parallelInputs = inputs.par
+    val parallelInputs = inputs.toParArray
     (for {
       inputProfile <- parallelInputs
       corpusProfile <- individualsInCorpus
     } yield {
       SimpleSimilarity(inputProfile, corpusProfile, groupWiseSimilarity(inputProfile, corpusProfile).score)
-    }).seq
+    }).toSet.seq
   }
 
   def nonRedundantHierarchy(reasoner: OWLReasoner): (SuperClassOfIndex, SubClassOfIndex) = {
@@ -165,7 +167,7 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
     if (values.size % 2 == 0) ((lower.last + upper.head) / 2.0) else upper.head
   }
 
-  private def invertMapOfSets[K, V](in: Map[K, Set[V]]): Map[V, Set[K]] = {
+  private def invertMapOfSets[K, V](in: Map[K, Set[V]]): Map[V, Set[K]] =
     in.toIterable.flatMap {
       case (k, vs) => vs.map(_ -> k)
     }.groupBy {
@@ -175,7 +177,6 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
         case (v1, k1) => k1
       }.toSet
     }
-  }
 
 }
 
