@@ -3,3 +3,6 @@
 target
 src/test/resources/catalog-v001.xml
 catalog-v001.xml
+.classpath
+.project
+.settings/org.scala-ide.sdt.core.prefs
