@@ -41,7 +41,6 @@ libraryDependencies ++= {
       "com.bigdata"            %   "bigdata"                       % "1.3.4",
       "org.openrdf.sesame"     %   "sesame-rio-turtle"             % "2.6.10",
       "org.phenoscape"         %   "scowl"                         % "0.9",
-      "org.phenoscape"         %   "kb-owl-tools"                  % "1.1",
       "org.phenoscape"         %   "owlet"                         % "1.3"
   )
 }
