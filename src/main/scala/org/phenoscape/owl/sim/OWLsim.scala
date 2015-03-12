@@ -5,14 +5,19 @@ import scala.collection.mutable
 import scala.collection.parallel._
 import scala.collection.optimizer._
 import scala.collection.par.Scheduler.Implicits.global
-
 import org.semanticweb.elk.owlapi.ElkReasonerFactory
 import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model.OWLClass
 import org.semanticweb.owlapi.model.OWLNamedIndividual
 import org.semanticweb.owlapi.model.OWLOntology
-import org.semanticweb.owlapi.reasoner.{Node => ReasonerNode}
+import org.semanticweb.owlapi.reasoner.{ Node => ReasonerNode }
 import org.semanticweb.owlapi.reasoner.OWLReasoner
+import org.openrdf.model.Statement
+import org.phenoscape.owl.util.OntologyUtil
+import org.openrdf.model.impl.URIImpl
+import org.openrdf.model.impl.StatementImpl
+import org.phenoscape.owl.Vocab
+import org.openrdf.model.impl.NumericLiteralImpl
 
 class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
 
@@ -53,14 +58,11 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
 
   val nodeIC: Map[Node, Double] = convertFrequenciesToInformationContent(classToNode(OWLNothing))
 
-  def computeAllSimilarityToCorpus(inputs: Set[OWLNamedIndividual]): Set[SimpleSimilarity] = {
-    (for {
-      inputProfile <- inputs.toParArray
-      corpusProfile <- individualsInCorpus.toParArray
-    } yield {
-      SimpleSimilarity(inputProfile, corpusProfile, groupWiseSimilarity(inputProfile, corpusProfile).score)
-    }).toSet.seq
-  }
+  def computeAllSimilarityToCorpus(inputs: Set[OWLNamedIndividual]): Set[Statement] = (for {
+    inputProfile <- inputs.toParArray
+    corpusProfile <- individualsInCorpus.toParArray
+    triple <- groupWiseSimilarity(inputProfile, corpusProfile).toTriples
+  } yield triple).toSet.seq
 
   def nonRedundantHierarchy(reasoner: OWLReasoner): (SuperClassOfIndex, SubClassOfIndex) = {
     val parentToChildren = mutable.Map[Node, Set[Node]]()
@@ -150,16 +152,16 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
 
   def maxICSubsumer(i: Node, j: Node): Node = if (i == j) i else commonSubsumersOf(i, j).maxBy(nodeIC)
 
-  def groupWiseSimilarity(i: OWLNamedIndividual, j: OWLNamedIndividual): GroupWiseSimilarity = optimize {
+  def groupWiseSimilarity(queryIndividual: OWLNamedIndividual, corpusIndividual: OWLNamedIndividual): GroupWiseSimilarity = optimize {
     val pairScores = for {
-      iNode <- directAssociationsByIndividual(i)
-      jNode <- directAssociationsByIndividual(j)
+      queryAnnotation <- directAssociationsByIndividual(queryIndividual)
+      corpusAnnotation <- directAssociationsByIndividual(corpusIndividual)
     } yield {
-      val maxSubsumer = maxICSubsumer(iNode, jNode)
-      PairScore(Map(i -> iNode, j -> jNode), maxSubsumer, nodeIC(maxSubsumer))
+      val maxSubsumer = maxICSubsumer(queryAnnotation, corpusAnnotation)
+      PairScore(queryAnnotation, corpusAnnotation, maxSubsumer, nodeIC(maxSubsumer))
     }
     val medianScore = median(pairScores.map(_.maxSubsumerIC).toSeq)
-    GroupWiseSimilarity(medianScore, pairScores)
+    GroupWiseSimilarity(queryIndividual, corpusIndividual, medianScore, pairScores)
   }
 
   private def median(values: Seq[Double]): Double = {
@@ -188,9 +190,29 @@ object Node {
 
 }
 
-case class PairScore(annotations: Map[OWLNamedIndividual, Node], maxSubsumer: Node, maxSubsumerIC: Double)
+case class PairScore(queryAnnotation: Node, corpusAnnotation: Node, maxSubsumer: Node, maxSubsumerIC: Double)
 
-case class GroupWiseSimilarity(score: Double, pairs: Set[PairScore])
+case class GroupWiseSimilarity(queryIndividual: OWLNamedIndividual, corpusIndividual: OWLNamedIndividual, score: Double, pairs: Set[PairScore]) {
+
+  private val combined_score = new URIImpl(Vocab.combined_score.getIRI.toString)
+  private val has_subsumer = new URIImpl(Vocab.has_subsumer.getIRI.toString)
+  private val for_query_profile = new URIImpl(Vocab.for_query_profile.getIRI.toString)
+  private val for_corpus_profile = new URIImpl(Vocab.for_corpus_profile.getIRI.toString)
+
+  def toTriples: Set[Statement] = {
+    val self = new URIImpl(OntologyUtil.nextIRI.toString)
+    val bestSubsumers = pairs.toSeq.sortBy(_.maxSubsumerIC).takeRight(10).map(_.maxSubsumer)
+    val subsumerTriples = for {
+      node <- bestSubsumers
+      term <- node.classes
+    } yield new StatementImpl(self, has_subsumer, new URIImpl(term.getIRI.toString))
+    Set(
+      new StatementImpl(self, combined_score, new NumericLiteralImpl(score)),
+      new StatementImpl(self, for_query_profile, new URIImpl(queryIndividual.getIRI.toString)),
+      new StatementImpl(self, for_corpus_profile, new URIImpl(corpusIndividual.getIRI.toString))) ++ subsumerTriples
+  }
+
+}
 
 case class SimpleSimilarity(i: OWLNamedIndividual, j: OWLNamedIndividual, score: Double) {
 

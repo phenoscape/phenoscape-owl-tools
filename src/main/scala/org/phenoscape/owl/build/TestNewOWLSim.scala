@@ -7,6 +7,11 @@ import org.apache.commons.io.FileUtils
 import org.phenoscape.owl.sim.OWLsim
 import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model.OWLNamedIndividual
+import org.openrdf.rio.Rio
+import java.io.FileOutputStream
+import java.io.BufferedOutputStream
+import org.openrdf.rio.turtle.TurtleWriter
+import org.openrdf.rio.RDFFormat
 
 object TestNewOWLSim extends App {
 
@@ -23,7 +28,10 @@ object TestNewOWLSim extends App {
   val similarityMatrix = owlSim.computeAllSimilarityToCorpus(geneProfiles)
   //val similarityMatrix = owlSim.computeAllSimilarityToCorpus(owlSim.allIndividuals)
   println("Writing results to file")
-  FileUtils.writeLines(new File("similarities.txt"), similarityMatrix.asJavaCollection)
+  //FileUtils.writeLines(new File("similarities.txt"), similarityMatrix.asJavaCollection)
+  val triplesOutput = new BufferedOutputStream(new FileOutputStream(new File("similarities.ttl")))
+  Rio.write(similarityMatrix.asJava, triplesOutput, RDFFormat.TURTLE)
+  triplesOutput.close()
   println("Done: " + new Date())
 
 }

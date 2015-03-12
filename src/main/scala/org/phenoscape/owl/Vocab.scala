@@ -89,4 +89,8 @@ object Vocab {
   val phenotype_of = ObjectProperty("http://purl.org/phenoscape/vocab.owl#phenotype_of")
   val has_part_inhering_in = ObjectProperty("http://purl.org/phenoscape/vocab.owl#has_part_inhering_in")
 
+  val combined_score = ObjectProperty("http://purl.org/phenoscape/vocab.owl#combined_score")
+  val has_subsumer = ObjectProperty("http://purl.org/phenoscape/vocab.owl#has_subsumer")
+  val for_query_profile = ObjectProperty("http://purl.org/phenoscape/vocab.owl#for_query_profile")
+  val for_corpus_profile = ObjectProperty("http://purl.org/phenoscape/vocab.owl#for_corpus_profile")
 }
