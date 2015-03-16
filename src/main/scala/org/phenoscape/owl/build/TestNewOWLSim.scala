@@ -15,8 +15,10 @@ import org.openrdf.rio.RDFFormat
 
 object TestNewOWLSim extends App {
 
+  val taskNum = args(1).toInt
+
   val manager = OWLManager.createOWLOntologyManager()
-  val ontfile = new File("staging/kb/tbox-hierarchy-and-profiles-2015-2-24.owl")
+  val ontfile = new File("../staging/kb/tbox-hierarchy-and-profiles-2015-2-24.owl")
   //val ontfile = new File("uberpheno.owl")
   val ontology = manager.loadOntologyFromOntologyDocument(ontfile)
   println("Creating OWLSim")
@@ -24,12 +26,17 @@ object TestNewOWLSim extends App {
   //val owlSim = new OWLsim(ontology, ind => true)
   println("Done creating OWLSim")
   val geneProfiles = owlSim.allIndividuals.filterNot(ind => ind.getIRI.toString.contains("VTO_"))
+  val orderedProfiles = geneProfiles.toSeq.sortBy(_.getIRI.toString())
+  val numProfiles = orderedProfiles.size
+  val groupSize = (numProfiles.toFloat / taskNum).ceil.toInt
+  val startIndex = (taskNum - 1) * groupSize
+  val group = orderedProfiles.drop(startIndex).take(groupSize)
   println("Computing similarity matrix")
-  val similarityMatrix = owlSim.computeAllSimilarityToCorpus(geneProfiles)
+  val similarityMatrix = owlSim.computeAllSimilarityToCorpus(group.toSet)
   //val similarityMatrix = owlSim.computeAllSimilarityToCorpus(owlSim.allIndividuals)
   println("Writing results to file")
   //FileUtils.writeLines(new File("similarities.txt"), similarityMatrix.asJavaCollection)
-  val triplesOutput = new BufferedOutputStream(new FileOutputStream(new File("similarities.ttl")))
+  val triplesOutput = new BufferedOutputStream(new FileOutputStream(new File(s"similarities-$taskNum.ttl")))
   Rio.write(similarityMatrix.asJava, triplesOutput, RDFFormat.TURTLE)
   triplesOutput.close()
   println("Done: " + new Date())
