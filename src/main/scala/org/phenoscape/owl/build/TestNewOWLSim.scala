@@ -15,7 +15,8 @@ import org.openrdf.rio.RDFFormat
 
 object TestNewOWLSim extends App {
 
-  val taskNum = args(0).toInt
+  val taskCount = args(0).toInt
+  val taskNum = args(1).toInt
 
   val manager = OWLManager.createOWLOntologyManager()
   val ontfile = new File("../staging/kb/tbox-hierarchy-and-profiles-2015-2-24.owl")
@@ -28,7 +29,7 @@ object TestNewOWLSim extends App {
   val geneProfiles = owlSim.allIndividuals.filterNot(ind => ind.getIRI.toString.contains("VTO_"))
   val orderedProfiles = geneProfiles.toSeq.sortBy(_.getIRI.toString())
   val numProfiles = orderedProfiles.size
-  val groupSize = (numProfiles.toFloat / taskNum).ceil.toInt
+  val groupSize = (numProfiles.toFloat / taskCount).ceil.toInt
   val startIndex = (taskNum - 1) * groupSize
   val group = orderedProfiles.drop(startIndex).take(groupSize)
   println("Computing similarity matrix")
