@@ -15,7 +15,7 @@ import org.openrdf.rio.RDFFormat
 
 object TestNewOWLSim extends App {
 
-  val taskNum = args(1).toInt
+  val taskNum = args(0).toInt
 
   val manager = OWLManager.createOWLOntologyManager()
   val ontfile = new File("../staging/kb/tbox-hierarchy-and-profiles-2015-2-24.owl")
