@@ -29,18 +29,20 @@ object LoadTriples extends App {
   //val bigdata = repository.getUnisolatedConnection()
   val loader = new DataLoader(tripleStore)
   val baseURI = ""
-  for (triplesFile <- FileUtils.listFiles(inputFolder, Array("ttl"), true)) {
-    val start = new Date()
-    println(s"Loading $triplesFile")
-    val stats = loader.loadFiles(triplesFile, baseURI, RDFFormat.TURTLE, graphURI, null)
-    println(stats)
-    //bigdata.begin()
-    //bigdata.add(triplesFile, baseURI, RDFFormat.TURTLE, graphURI)
-    //bigdata.commit()
-    val end = new Date()
-    val seconds = (end.getTime - start.getTime).toDouble / 1000
-    println(s"Done loading $triplesFile; $seconds seconds")
-  }
+  val stats = loader.loadFiles(inputFolder, baseURI, RDFFormat.TURTLE, graphURI, null)
+  println(stats)
+//  for (triplesFile <- FileUtils.listFiles(inputFolder, Array("ttl"), true)) {
+//    val start = new Date()
+//    println(s"Loading $triplesFile")
+//    val stats = loader.loadFiles(triplesFile, baseURI, RDFFormat.TURTLE, graphURI, null)
+//    println(stats)
+//    //bigdata.begin()
+//    //bigdata.add(triplesFile, baseURI, RDFFormat.TURTLE, graphURI)
+//    //bigdata.commit()
+//    val end = new Date()
+//    val seconds = (end.getTime - start.getTime).toDouble / 1000
+//    println(s"Done loading $triplesFile; $seconds seconds")
+//  }
   //bigdata.close()
 
 }
