@@ -52,7 +52,7 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
     case (individual, nodes) => individual -> (nodes ++ nodes.flatMap(childToReflexiveAncestorIndex))
   }
 
-  val corpusSize: Int = allIndividuals.size
+  val corpusSize: Int = individualsInCorpus.size
 
   val directAndIndirectAssociationsByNode: Map[Node, Set[OWLNamedIndividual]] = accumulateAssociations(classToNode(OWLThing))
 
