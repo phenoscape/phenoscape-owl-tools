@@ -10,6 +10,7 @@ import com.bigdata.rdf.sail.BigdataSail
 import com.bigdata.rdf.sail.BigdataSailRepository
 import org.apache.commons.io.FileUtils
 import scala.collection.JavaConversions._
+import java.util.Date
 
 object LoadTriples extends App {
 
@@ -26,11 +27,14 @@ object LoadTriples extends App {
   val bigdata = repository.getUnisolatedConnection()
   val baseURI = ""
   for (triplesFile <- FileUtils.listFiles(inputFolder, Array("ttl"), true)) {
+    val start = new Date()
     println(s"Loading $triplesFile")
     bigdata.begin()
     bigdata.add(triplesFile, baseURI, RDFFormat.TURTLE, graphURI)
     bigdata.commit()
-    println(s"Done loading $triplesFile")
+    val end = new Date()
+    val seconds = (end.getTime - start.getTime).toDouble / 1000
+    println(s"Done loading $triplesFile; $seconds seconds")
   }
   bigdata.close()
 
