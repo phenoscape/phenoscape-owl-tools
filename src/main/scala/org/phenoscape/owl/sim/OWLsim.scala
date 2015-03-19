@@ -201,7 +201,7 @@ case class GroupWiseSimilarity(queryIndividual: OWLNamedIndividual, corpusIndivi
 
   def toTriples: Set[Statement] = {
     val self = new URIImpl(OntologyUtil.nextIRI.toString)
-    val bestSubsumers = pairs.toSeq.sortBy(_.maxSubsumerIC).takeRight(10).map(_.maxSubsumer)
+    val bestSubsumers = pairs.map(pair => (pair.maxSubsumer, pair.maxSubsumerIC)).toSeq.sortBy(_._2).takeRight(10).map(_._1)
     val subsumerTriples = for {
       node <- bestSubsumers
       term <- node.classes
