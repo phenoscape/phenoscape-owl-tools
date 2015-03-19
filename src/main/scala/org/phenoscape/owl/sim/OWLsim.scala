@@ -180,6 +180,17 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
       }.toSet
     }
 
+  def classICScoresAsTriples: Set[Statement] = {
+    val has_ic = new URIImpl("http://purl.org/phenoscape/vocab.owl#has_ic")
+    (for {
+      (node, ic) <- nodeIC
+      term <- node.classes
+    } yield {
+      val termURL = new URIImpl(term.getIRI.toString)
+      new StatementImpl(termURL, has_ic, new NumericLiteralImpl(ic))
+    }).toSet
+  }
+
 }
 
 case class Node(classes: Set[OWLClass])
@@ -201,7 +212,8 @@ case class GroupWiseSimilarity(queryIndividual: OWLNamedIndividual, corpusIndivi
 
   def toTriples: Set[Statement] = {
     val self = new URIImpl(OntologyUtil.nextIRI.toString)
-    val bestSubsumers = pairs.map(pair => (pair.maxSubsumer, pair.maxSubsumerIC)).toSeq.sortBy(_._2).takeRight(10).map(_._1)
+    val distinctSubsumers: Set[(Node, Double)] = pairs.map(pair => (pair.maxSubsumer, pair.maxSubsumerIC))
+    val bestSubsumers = distinctSubsumers.toSeq.sortBy(_._2).takeRight(10).map(_._1)
     val subsumerTriples = for {
       node <- bestSubsumers
       term <- node.classes

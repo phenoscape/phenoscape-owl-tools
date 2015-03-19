@@ -15,12 +15,12 @@ import com.bigdata.rdf.store.DataLoader
 
 object LoadTriples extends App {
 
-  val bigdataPropertiesFiles = new File(args(0))
+  val bigdataPropertiesFile = new File(args(0))
   val bigdataJournalFile = new File(args(1))
   val inputFolder = new File(args(2))
   val graphURI = args(3)
   val bigdataProperties = new Properties()
-  bigdataProperties.load(new FileReader(bigdataPropertiesFiles))
+  bigdataProperties.load(new FileReader(bigdataPropertiesFile))
   bigdataProperties.setProperty(Options.FILE, bigdataJournalFile.getAbsolutePath)
   val sail = new BigdataSail(bigdataProperties)
   //val repository = new BigdataSailRepository(sail)
@@ -31,18 +31,20 @@ object LoadTriples extends App {
   val baseURI = ""
   val stats = loader.loadFiles(inputFolder, baseURI, RDFFormat.TURTLE, graphURI, null)
   println(stats)
-//  for (triplesFile <- FileUtils.listFiles(inputFolder, Array("ttl"), true)) {
-//    val start = new Date()
-//    println(s"Loading $triplesFile")
-//    val stats = loader.loadFiles(triplesFile, baseURI, RDFFormat.TURTLE, graphURI, null)
-//    println(stats)
-//    //bigdata.begin()
-//    //bigdata.add(triplesFile, baseURI, RDFFormat.TURTLE, graphURI)
-//    //bigdata.commit()
-//    val end = new Date()
-//    val seconds = (end.getTime - start.getTime).toDouble / 1000
-//    println(s"Done loading $triplesFile; $seconds seconds")
-//  }
+  loader.endSource()
+  tripleStore.commit()
+  //  for (triplesFile <- FileUtils.listFiles(inputFolder, Array("ttl"), true)) {
+  //    val start = new Date()
+  //    println(s"Loading $triplesFile")
+  //    val stats = loader.loadFiles(triplesFile, baseURI, RDFFormat.TURTLE, graphURI, null)
+  //    println(stats)
+  //    //bigdata.begin()
+  //    //bigdata.add(triplesFile, baseURI, RDFFormat.TURTLE, graphURI)
+  //    //bigdata.commit()
+  //    val end = new Date()
+  //    val seconds = (end.getTime - start.getTime).toDouble / 1000
+  //    println(s"Done loading $triplesFile; $seconds seconds")
+  //  }
   //bigdata.close()
 
 }
