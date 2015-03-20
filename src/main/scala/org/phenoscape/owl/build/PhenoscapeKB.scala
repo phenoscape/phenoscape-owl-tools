@@ -131,6 +131,8 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     val mpEQ = loadNormalized(new File(cwd + "/staging/sources/mp-equivalence-axioms-subq-ubr.owl"))
     write(mpEQ, cwd + "/staging/kb/mp-logical-definitions.owl")
 
+    val caroToUberon = loadNormalized(new File(cwd + "/staging/sources/uberon-bridge-to-caro.owl"))
+    write(caroToUberon, cwd + "/staging/kb/uberon-bridge-to-caro.owl")
     val zfaToUberon = loadNormalized(new File(cwd + "/staging/sources/uberon-ext-bridge-to-zfa.owl"))
     write(zfaToUberon, cwd + "/staging/kb/uberon-ext-bridge-to-zfa.owl")
     val xaoToUberon = loadNormalized(new File(cwd + "/staging/sources/uberon-bridge-to-xao.owl"))
@@ -255,7 +257,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
         anatomicalEntities.map(SimilarityTemplates.entityAndParts)).toSet[OWLAxiom])
 
     val allTBox = combine(uberon, homology, pato, bspo, go, vto, zfa, xao, hp, //mp,
-      hpEQ, mpEQ, zfaToUberon, xaoToUberon, fmaToUberon, mgiToEMAPA, emapa, emapaToUberon,
+      hpEQ, mpEQ, caroToUberon, zfaToUberon, xaoToUberon, fmaToUberon, mgiToEMAPA, emapa, emapaToUberon,
       hasParts, hasPartsInheringIns, presences, absences, absenceNegationEquivalences, developsFromRulesForAbsence, subsumers, tboxFromData, ro, phenoscapeVocab) // , eqCharacters
     println("tbox class count: " + allTBox.getClassesInSignature().size())
     println("tbox logical axiom count: " + allTBox.getLogicalAxiomCount())
