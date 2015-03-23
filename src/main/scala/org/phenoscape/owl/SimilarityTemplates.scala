@@ -6,17 +6,17 @@ import org.phenoscape.owl.Vocab._
 import org.phenoscape.owl.util.OntologyUtil
 import org.semanticweb.owlapi.model.OWLClassExpression
 import org.semanticweb.owlapi.model.OWLEquivalentClassesAxiom
+import org.phenoscape.owl.util.ExpressionUtil
+import org.semanticweb.owlapi.model.OWLAxiom
 
 object SimilarityTemplates {
 
-  def entity(entity: OWLClass) = name(has_part some (phenotype_of some entity))
+  def entity(entity: OWLClass): (OWLClass, Set[OWLAxiom]) = ExpressionUtil.nameForExpressionWithAxioms(has_part some (phenotype_of some entity))
 
-  def entityAndParts(entity: OWLClass) = name(has_part some (phenotype_of some (part_of some entity)))
+  def entityAndParts(entity: OWLClass): (OWLClass, Set[OWLAxiom]) = ExpressionUtil.nameForExpressionWithAxioms(has_part some (phenotype_of some (part_of some entity)))
 
-  def entityWithQuality(entity: OWLClass, quality: OWLClass) = name(has_part some (quality and (phenotype_of some entity)))
+  def entityWithQuality(entity: OWLClass, quality: OWLClass): (OWLClass, Set[OWLAxiom]) = ExpressionUtil.nameForExpressionWithAxioms(has_part some (quality and (phenotype_of some entity)))
 
-  def entityAndPartsWithQuality(entity: OWLClass, quality: OWLClass) = name(has_part some (quality and (phenotype_of some (part_of some entity))))
-
-  private def name(expression: OWLClassExpression) = OntologyUtil.nextClass() EquivalentTo expression
+  def entityAndPartsWithQuality(entity: OWLClass, quality: OWLClass): (OWLClass, Set[OWLAxiom]) = ExpressionUtil.nameForExpressionWithAxioms(has_part some (quality and (phenotype_of some (part_of some entity))))
 
 }

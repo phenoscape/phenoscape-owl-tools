@@ -2,6 +2,7 @@ package org.phenoscape.owl
 
 import scala.collection.GenMap
 import scala.collection.JavaConversions._
+import scala.language.implicitConversions
 
 import org.openrdf.model.Statement
 import org.openrdf.model.impl.StatementImpl
@@ -74,7 +75,7 @@ object EvolutionaryProfiles {
 
   implicit def taxonToOWLClass(taxon: TaxonNode): OWLClass = factory.getOWLClass(taxon.iri)
 
-  def taxonProfileURI(taxon: TaxonNode) = s"http://phenoscape.org/profile/${taxon.iri.toString.split("/").last}"
+  def taxonProfileURI(taxon: TaxonNode) = s"${taxon.iri.toString}#profile"
 
   def toSequential(associations: StateAssociations): Map[TaxonNode, Map[Character, Set[State]]] = associations.map({ case (taxon, states) => taxon -> states.seq.toMap }).seq.toMap
 

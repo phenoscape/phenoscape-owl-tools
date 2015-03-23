@@ -57,8 +57,8 @@ object ZFINPhenotypesToOWL extends OWLTask {
       val superStructure = Class(OBOUtil.iriForTermID(superStructureID))
       val subStructure = Class(OBOUtil.iriForTermID(subStructureID))
       val relation = ObjectProperty(OBOUtil.iriForTermID(relationID))
-      val namedComposition = OntologyUtil.nextClass()
-      axioms.add(namedComposition EquivalentTo (subStructure and (relation some superStructure)))
+      val (namedComposition, compositionAxioms) = ExpressionUtil.nameForExpressionWithAxioms(subStructure and (relation some superStructure))
+      axioms.addAll(compositionAxioms)
       namedComposition
     }
     val qualityTerm = Class(OBOUtil.iriForTermID(StringUtils.stripToNull(items(9))))
@@ -73,29 +73,29 @@ object ZFINPhenotypesToOWL extends OWLTask {
       val relatedSuperStructure = Class(OBOUtil.iriForTermID(relatedSuperStructureID))
       val relatedSubStructure = Class(OBOUtil.iriForTermID(relatedSubStructureID))
       val relatedRelation = ObjectProperty(OBOUtil.iriForTermID(relatedRelationID))
-      val namedComposition = OntologyUtil.nextClass()
-      axioms.add(namedComposition EquivalentTo (relatedSubStructure and (relatedRelation some relatedSuperStructure)))
+      val (namedComposition, compositionAxioms) = ExpressionUtil.nameForExpressionWithAxioms(relatedSubStructure and (relatedRelation some relatedSuperStructure))
+      axioms.addAll(compositionAxioms)
       namedComposition
     }
     val eq_phenotype = (entityTerm, qualityTerm, relatedEntityTerm) match {
-      case (null, null, _) => null
+      case (null, null, _)                => null
       case (entity: OWLClass, null, null) => (Present and (inheres_in some entity))
       case (entity: OWLClass, null, relatedEntity: OWLClass) => {
         logger.warn("Related entity with no quality.")
         (Present and (inheres_in some entity))
       }
-      case (entity: OWLClass, Absent, null) => (LacksAllPartsOfType and (inheres_in some MultiCellularOrganism) and (towards value Individual(entity.getIRI)))
+      case (entity: OWLClass, Absent, null)                                 => (LacksAllPartsOfType and (inheres_in some MultiCellularOrganism) and (towards value Individual(entity.getIRI)))
       case (entity: OWLClass, LacksAllPartsOfType, relatedEntity: OWLClass) => (LacksAllPartsOfType and (inheres_in some entity) and (towards value Individual(relatedEntity.getIRI)))
-      case (null, quality: OWLClass, null) => quality
-      case (null, quality: OWLClass, relatedEntity: OWLClass) => (quality and (towards some relatedEntity))
-      case (entity: OWLClass, quality: OWLClass, null) => (quality and (inheres_in some entity))
-      case (entity: OWLClass, quality: OWLClass, relatedEntity: OWLClass) => (quality and (inheres_in some entity) and (towards some relatedEntity))
+      case (null, quality: OWLClass, null)                                  => quality
+      case (null, quality: OWLClass, relatedEntity: OWLClass)               => (quality and (towards some relatedEntity))
+      case (entity: OWLClass, quality: OWLClass, null)                      => (quality and (inheres_in some entity))
+      case (entity: OWLClass, quality: OWLClass, relatedEntity: OWLClass)   => (quality and (inheres_in some entity) and (towards some relatedEntity))
     }
     if (eq_phenotype != null) {
       axioms.add(factory.getOWLDeclarationAxiom(MultiCellularOrganism))
-      val phenotypeClass = OntologyUtil.nextClass()
+      val (phenotypeClass, phenotypeAxioms) = ExpressionUtil.nameForExpressionWithAxioms(eq_phenotype)
       axioms.add(factory.getOWLDeclarationAxiom(phenotypeClass))
-      axioms.add(phenotypeClass SubClassOf eq_phenotype)
+      axioms.addAll(phenotypeAxioms)
       axioms.add(phenotype Type phenotypeClass)
       val geneIRI = IRI.create("http://zfin.org/" + StringUtils.stripToNull(items(2)))
       val gene = Individual(geneIRI)

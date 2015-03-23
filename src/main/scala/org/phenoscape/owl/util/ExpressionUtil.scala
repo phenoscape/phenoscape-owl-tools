@@ -4,33 +4,62 @@ import java.io.StringWriter
 import java.util.ArrayList
 import scala.collection.JavaConversions._
 import scala.collection.mutable
-import org.phenoscape.owl.OWLTask
-import org.phenoscape.owl.OWLTask
-import org.phenoscape.owl.OWLTask
+import org.phenoscape.scowl.OWL._
 import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model.OWLAnnotationProperty
 import org.semanticweb.owlapi.model.OWLAxiom
+import org.semanticweb.owlapi.model.OWLClass
 import org.semanticweb.owlapi.model.OWLClassExpression
+import org.semanticweb.owlapi.model.OWLClassExpressionVisitor
 import org.semanticweb.owlapi.model.OWLEntity
 import org.semanticweb.owlapi.model.OWLIndividual
 import org.semanticweb.owlapi.model.OWLLiteral
+import org.semanticweb.owlapi.model.OWLObject
 import org.semanticweb.owlapi.model.OWLObjectIntersectionOf
-import org.semanticweb.owlapi.model.OWLObjectPropertyExpression
+import org.semanticweb.owlapi.model.OWLObjectSomeValuesFrom
 import org.semanticweb.owlapi.model.OWLOntology
 import org.semanticweb.owlapi.model.OWLOntologySetProvider
 import org.semanticweb.owlapi.model.OWLQuantifiedObjectRestriction
-import org.semanticweb.owlapi.util.AnnotationValueShortFormProvider
-import uk.ac.manchester.cs.owl.owlapi.mansyntaxrenderer.ManchesterOWLSyntaxObjectRenderer
-import uk.ac.manchester.cs.owl.owlapi.mansyntaxrenderer.ManchesterOWLSyntaxOWLObjectRendererImpl
-import org.semanticweb.owlapi.model.OWLObject
-import org.semanticweb.owlapi.model.OWLObjectSomeValuesFrom
 import org.semanticweb.owlapi.reasoner.OWLReasoner
-import org.phenoscape.scowl.OWL._
-import org.semanticweb.owlapi.model.OWLClass
+import org.semanticweb.owlapi.util.AnnotationValueShortFormProvider
+import org.semanticweb.owlapi.util.ShortFormProvider
+import uk.ac.manchester.cs.owl.owlapi.mansyntaxrenderer.ManchesterOWLSyntaxOWLObjectRendererImpl
+import uk.ac.manchester.cs.owl.owlapi.mansyntaxrenderer.ManchesterOWLSyntaxObjectRenderer
+import java.net.URLEncoder
+import java.net.URLDecoder
+import java.util.regex.Pattern
+import org.phenoscape.owlet.ManchesterSyntaxClassExpressionParser
+import scalaz.Validation
 
 object ExpressionUtil {
 
   val factory = OWLManager.getOWLDataFactory
+  val namedExpressionPrefix = "http://purl.org/phenoscape/expression?value="
+
+  def nameForExpression(expression: OWLClassExpression): OWLClass = expression match {
+    case named: OWLClass => named
+    case _ => {
+      val writer = new StringWriter()
+      val renderer = new ManchesterOWLSyntaxObjectRenderer(writer, FullIRIProvider)
+      renderer.setUseWrapping(false)
+      expression.accept(renderer: OWLClassExpressionVisitor)
+      writer.close()
+      Class(s"http://purl.org/phenoscape/expression?value=${URLEncoder.encode(writer.toString, "UTF-8")}")
+    }
+  }
+
+  def nameForExpressionWithAxioms(expression: OWLClassExpression): (OWLClass, Set[OWLAxiom]) = expression match {
+    case named: OWLClass => (named, Set.empty)
+    case _ => {
+      val named = nameForExpression(expression)
+      (named, Set(named EquivalentTo expression))
+    }
+  }
+
+  def expressionForName(named: OWLClass): Validation[String, OWLClassExpression] = {
+    val expression = URLDecoder.decode(named.getIRI.toString.replaceFirst(Pattern.quote(namedExpressionPrefix), ""), "UTF-8")
+    ManchesterSyntaxClassExpressionParser.parse(expression)
+  }
 
   def instantiateClassAssertion(individual: OWLIndividual, aClass: OWLClassExpression): scala.collection.Set[OWLAxiom] = {
     val axioms = mutable.Set[OWLAxiom]()
@@ -73,10 +102,10 @@ object ExpressionUtil {
   }
 
   def permute(expression: OWLClassExpression)(implicit reasoner: OWLReasoner): Set[OWLClassExpression] = expression match {
-    case namedClass: OWLClass => reasoner.getSuperClasses(namedClass, true).getFlattened.toSet + namedClass
+    case namedClass: OWLClass                    => reasoner.getSuperClasses(namedClass, true).getFlattened.toSet + namedClass
     case someValuesFrom: OWLObjectSomeValuesFrom => permute(someValuesFrom)
-    case intersection: OWLObjectIntersectionOf => permute(intersection)
-    case _ => Set(expression)
+    case intersection: OWLObjectIntersectionOf   => permute(intersection)
+    case _                                       => Set(expression)
   }
 
   def permute(expression: OWLObjectSomeValuesFrom)(implicit reasoner: OWLReasoner): Set[OWLObjectSomeValuesFrom] = {
@@ -96,6 +125,14 @@ object ExpressionUtil {
       item <- itemsToCombine
     } yield combination + item
     sets.foldLeft(Set[Set[T]]())(combine)
+  }
+
+  object FullIRIProvider extends ShortFormProvider {
+
+    def getShortForm(entity: OWLEntity): String = s"<${entity.getIRI.toString}>"
+
+    def dispose(): Unit = Unit
+
   }
 
 }

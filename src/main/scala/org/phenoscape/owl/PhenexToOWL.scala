@@ -228,23 +228,22 @@ object PhenexToOWL extends OWLTask {
         (owlPhenotype Annotation (related_entity_term, relatedEntity.getIRI)))
     })
     val eqPhenotypeOption = (entityOption, qualityOption, relatedEntityOption) match {
-      case (None, None, _) => None
+      case (None, None, _)            => None
       case (Some(entity), None, None) => Option(Present and (inheres_in some entity))
       case (Some(entity), None, Some(relatedEntity)) => {
         logger.warn("Related entity with no quality. Shouldn't be possible.")
         Option(Present and (inheres_in some entity))
       }
-      case (Some(entity), Some(Absent), None) => Option(LacksAllPartsOfType and (inheres_in some MultiCellularOrganism) and (towards value Individual(entity.getIRI)))
+      case (Some(entity), Some(Absent), None)                             => Option(LacksAllPartsOfType and (inheres_in some MultiCellularOrganism) and (towards value Individual(entity.getIRI)))
       case (Some(entity), Some(LacksAllPartsOfType), Some(relatedEntity)) => Option(LacksAllPartsOfType and (inheres_in some entity) and (towards value Individual(relatedEntity.getIRI)))
-      case (None, Some(quality), None) => Option(quality)
-      case (None, Some(quality), Some(relatedEntity)) => Option(quality and (towards some relatedEntity))
-      case (Some(entity), Some(quality), None) => Option(quality and (inheres_in some entity))
-      case (Some(entity), Some(quality), Some(relatedEntity)) => Option(quality and (inheres_in some entity) and (towards some relatedEntity))
+      case (None, Some(quality), None)                                    => Option(quality)
+      case (None, Some(quality), Some(relatedEntity))                     => Option(quality and (towards some relatedEntity))
+      case (Some(entity), Some(quality), None)                            => Option(quality and (inheres_in some entity))
+      case (Some(entity), Some(quality), Some(relatedEntity))             => Option(quality and (inheres_in some entity) and (towards some relatedEntity))
       //TODO comparisons, etc.
     }
     val phenotypeAxioms = eqPhenotypeOption.toSet.flatMap { eqPhenotype: OWLClassExpression =>
-      Set(owlPhenotype SubClassOf eqPhenotype,
-        owlPhenotype SubClassOf EQCharacterToken)
+      Set(owlPhenotype SubClassOf eqPhenotype, owlPhenotype Annotation (rdfsLabel, labelRenderer(eqPhenotype)))
     }
     entityAxioms ++ qualityAxioms ++ relatedEntityAxioms ++ phenotypeAxioms
   }
@@ -261,9 +260,9 @@ object PhenexToOWL extends OWLTask {
     classFromTyperef(typeref) match {
       case named: OWLClass => (named, Set.empty)
       case expression => {
-        val named = OntologyUtil.nextClass()
+        val (named, axioms) = ExpressionUtil.nameForExpressionWithAxioms(expression)
         val label = s"[${labelRenderer(expression)}]"
-        (named, Set(named SubClassOf expression, named Annotation (factory.getRDFSLabel, label)))
+        (named, axioms + (named Annotation (factory.getRDFSLabel, label)))
       }
     }
   }

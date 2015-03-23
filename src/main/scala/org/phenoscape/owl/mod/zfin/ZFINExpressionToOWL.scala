@@ -18,6 +18,7 @@ import org.semanticweb.owlapi.model.OWLAxiom
 import org.semanticweb.owlapi.model.OWLOntology
 import org.semanticweb.owlapi.apibinding.OWLManager
 import org.phenoscape.owl.util.OntologyUtil
+import org.phenoscape.owl.util.ExpressionUtil
 
 object ZFINExpressionToOWL extends OWLTask {
 
@@ -55,8 +56,7 @@ object ZFINExpressionToOWL extends OWLTask {
       } else {
         val superStructure = Class(OBOUtil.iriForTermID(superStructureID))
         val subStructure = Class(OBOUtil.iriForTermID(subStructureID))
-        val structureType = OntologyUtil.nextClass()
-        axioms.add(structureType SubClassOf (subStructure and (part_of some superStructure)))
+        val (structureType, structureAxioms) = ExpressionUtil.nameForExpressionWithAxioms(subStructure and (part_of some superStructure))
         axioms.add(structure Type structureType)
       }
       val geneIRI = OBOUtil.zfinIRI(StringUtils.stripToNull(items(0)))

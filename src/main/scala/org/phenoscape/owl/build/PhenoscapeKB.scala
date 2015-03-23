@@ -252,9 +252,15 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     //      (anatomicalEntities.map(SimilarityTemplates.entity) ++
     //        anatomicalEntities.map(SimilarityTemplates.entityAndParts) ++
     //        dualSubsumers).toSet[OWLAxiom])
-    val subsumers = manager.createOntology(
-      (anatomicalEntities.map(SimilarityTemplates.entity) ++
-        anatomicalEntities.map(SimilarityTemplates.entityAndParts)).toSet[OWLAxiom])
+    val entitySubsumerAxioms = for {
+      (term, axioms) <- anatomicalEntities.map(SimilarityTemplates.entity)
+      axiom <- axioms
+    } yield axiom
+    val entityPartsSubsumerAxioms = for {
+      (term, axioms) <- anatomicalEntities.map(SimilarityTemplates.entityAndParts)
+      axiom <- axioms
+    } yield axiom
+    val subsumers = manager.createOntology(entitySubsumerAxioms ++ entityPartsSubsumerAxioms)
 
     val allTBox = combine(uberon, homology, pato, bspo, go, vto, zfa, xao, hp, //mp,
       hpEQ, mpEQ, caroToUberon, zfaToUberon, xaoToUberon, fmaToUberon, mgiToEMAPA, emapa, emapaToUberon,

@@ -10,6 +10,7 @@ import org.semanticweb.owlapi.model.OWLObjectProperty
 import org.semanticweb.owlapi.model.OWLOntology
 import org.semanticweb.owlapi.model.OWLAxiom
 import org.phenoscape.scowl.OWL._
+import org.phenoscape.owl.util.ExpressionUtil
 
 object NamedRestrictionGenerator extends OWLTask {
 
@@ -33,15 +34,13 @@ object NamedRestrictionGenerator extends OWLTask {
 
   def createRestriction(property: OWLObjectProperty, ontClass: OWLClass): Set[OWLAxiom] = {
     val annotationProperty = factory.getOWLAnnotationProperty(getClassRelationIRI(property.getIRI))
-    val newClassIRI = getRestrictionIRI(property.getIRI, ontClass.getIRI)
-    val namedRestriction = factory.getOWLClass(newClassIRI)
-    val equivAxiom = (namedRestriction EquivalentTo (property some ontClass))
+    val (namedRestriction, axioms) = ExpressionUtil.nameForExpressionWithAxioms(property some ontClass)
     val annotation = namedRestriction Annotation (annotationProperty, ontClass.getIRI())
-    Set(equivAxiom, annotation)
+    axioms + (namedRestriction Annotation (annotationProperty, ontClass.getIRI))
   }
 
   def getRestrictionIRI(propertyIRI: IRI, classIRI: IRI): IRI = {
-    return IRI.create(propertyIRI.toString + "_some_" + classIRI.toString)
+    ExpressionUtil.nameForExpression(ObjectProperty(propertyIRI) some Class(classIRI)).getIRI
   }
 
   def getClassRelationIRI(propertyIRI: IRI): IRI = IRI.create(propertyIRI.toString + "_some")

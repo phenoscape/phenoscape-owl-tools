@@ -28,7 +28,7 @@ object OBOUtil {
   def mgiReferenceIRI(identifier: String): IRI = IRI.create("http://www.informatics.jax.org/reference/summary?id=" + identifier)
 
   def xenbaseImageIRI(identifier: String): IRI = IRI.create("http://www.xenbase.org/common/ViewImageActionNonAdmin.do?imageId=" + identifier.replaceFirst(".*IMG-", ""))
-  
+
   def xenbaseArticleIRI(identifier: String): IRI = IRI.create(s"http://www.xenbase.org/literature/article.do?method=display&articleId=${identifier.replaceFirst(".*ART-", "")}")
 
   def createDefinedByAnnotation(term: OWLEntity): Option[OWLAnnotationAssertionAxiom] = {
@@ -42,14 +42,9 @@ object OBOUtil {
 
   def translatePostComposition(id: String): OWLClassExpression = PostCompositionParser.parseExpression(id).get
 
-  def translatePostCompositionNamed(id: String): (OWLClass, Set[OWLAxiom]) = {
-    translatePostComposition(id) match {
-      case named: OWLClass => (named, Set())
-      case expression => {
-        val term = OntologyUtil.nextClass
-        (term, Set(term EquivalentTo translatePostComposition(id)))
-      }
-    }
+  def translatePostCompositionNamed(id: String): (OWLClass, Set[OWLAxiom]) = translatePostComposition(id) match {
+    case named: OWLClass => (named, Set.empty)
+    case expression      => ExpressionUtil.nameForExpressionWithAxioms(expression)
   }
 
 }

@@ -18,7 +18,7 @@ object GeneProfiles {
     query.evaluate().map { bindings =>
       val geneURIString = bindings.getValue("gene").stringValue
       val phenotypeURI = new URIImpl(bindings.getValue("phenotype_class").stringValue)
-      val profileURI = new URIImpl(geneURIString + "#profile")
+      val profileURI = new URIImpl(s"$geneURIString#profile")
       Set(new StatementImpl(profileURI, RDF.TYPE, phenotypeURI),
         new StatementImpl(new URIImpl(geneURIString), new URIImpl(has_phenotypic_profile.toString), profileURI))
     }.flatten.toSet
