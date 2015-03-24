@@ -17,12 +17,15 @@ object TestNewOWLSim extends App {
 
   val taskCount = args(0).toInt
   val taskNum = args(1).toInt
+  val ontfile = new File(args(2))
+  val profilesFile = new File(args(3))
 
   val manager = OWLManager.createOWLOntologyManager()
-  val ontfile = new File("../staging/kb/tbox-hierarchy-and-profiles-2015-2-24-with-caro-bridge.owl")
   val ontology = manager.loadOntologyFromOntologyDocument(ontfile)
+  val profiles = manager.loadOntologyFromOntologyDocument(profilesFile)
+  val combined = manager.createOntology((ontology.getAxioms.asScala ++ profiles.getAxioms.asScala).asJava)
   println("Creating OWLSim")
-  val owlSim = new OWLsim(ontology, ind => ind.getIRI.toString.contains("VTO_"))
+  val owlSim = new OWLsim(combined, ind => ind.getIRI.toString.contains("VTO_"))
   println("Done creating OWLSim")
   val geneProfiles = owlSim.allIndividuals.filterNot(ind => ind.getIRI.toString.contains("VTO_"))
   val orderedProfiles = geneProfiles.toSeq.sortBy(_.getIRI.toString())
