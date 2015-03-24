@@ -35,8 +35,13 @@ object ExpressionUtil {
 
   val factory = OWLManager.getOWLDataFactory
   val namedExpressionPrefix = "http://purl.org/phenoscape/expression?value="
+  val namedSubClassPrefix = "http://purl.org/phenoscape/subclassof?value="
 
-  def nameForExpression(expression: OWLClassExpression): OWLClass = expression match {
+  def nameForExpression(expression: OWLClassExpression): OWLClass = name(expression, namedExpressionPrefix)
+
+  def nameForSubClassOf(expression: OWLClassExpression): OWLClass = name(expression, namedSubClassPrefix)
+
+  private def name(expression: OWLClassExpression, prefix: String) = expression match {
     case named: OWLClass => named
     case _ => {
       val writer = new StringWriter()
@@ -44,7 +49,7 @@ object ExpressionUtil {
       renderer.setUseWrapping(false)
       expression.accept(renderer: OWLClassExpressionVisitor)
       writer.close()
-      Class(s"http://purl.org/phenoscape/expression?value=${URLEncoder.encode(writer.toString, "UTF-8")}")
+      Class(s"$prefix${URLEncoder.encode(writer.toString, "UTF-8")}")
     }
   }
 
@@ -56,8 +61,20 @@ object ExpressionUtil {
     }
   }
 
+  def nameForSubClassWithAxioms(expression: OWLClassExpression): (OWLClass, Set[OWLAxiom]) = expression match {
+    case named: OWLClass => (named, Set.empty)
+    case _ => {
+      val named = nameForSubClassOf(expression)
+      (named, Set(named SubClassOf expression))
+    }
+  }
+
   def expressionForName(named: OWLClass): Validation[String, OWLClassExpression] = {
-    val expression = URLDecoder.decode(named.getIRI.toString.replaceFirst(Pattern.quote(namedExpressionPrefix), ""), "UTF-8")
+    val iri = named.getIRI.toString
+    val expressionString =
+      if (iri.startsWith(namedExpressionPrefix)) iri.replaceFirst(Pattern.quote(namedExpressionPrefix), "")
+      else iri.replaceFirst(Pattern.quote(namedSubClassPrefix), "")
+    val expression = URLDecoder.decode(expressionString, "UTF-8")
     ManchesterSyntaxClassExpressionParser.parse(expression)
   }
 

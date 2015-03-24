@@ -329,10 +329,10 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
   val repository = new BigdataSailRepository(sail)
   repository.initialize()
   val bigdata = repository.getUnisolatedConnection()
+  bigdata.setAutoCommit(false)
 
   val baseURI = ""
   val graphURI = new URIImpl("http://kb.phenoscape.org/")
-  bigdata.begin()
   for (rdfFile <- FileUtils.listFiles(KB, Array("owl"), true)) {
     bigdata.add(rdfFile, baseURI, RDFFormat.RDFXML, graphURI)
   }
@@ -340,7 +340,6 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
   bigdata.commit()
 
   step("Building evolutionary profiles using ancestral states reconstruction")
-  bigdata.begin()
   bigdata.add(EvolutionaryProfiles.computePhenotypeProfiles(TaxonNode(CHORDATA), fullReasoner, bigdata), graphURI)
   bigdata.commit()
 
@@ -348,28 +347,22 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
   System.gc()
 
   step("Building gene profiles")
-  bigdata.begin()
   bigdata.add(GeneProfiles.generateGeneProfiles(bigdata), graphURI)
   bigdata.commit()
 
   step("Exporting presence assertions")
   val presencesFile = new File(cwd + "/staging/kb/presences.ttl")
   val presencesOutput = new BufferedOutputStream(new FileOutputStream(presencesFile))
-  //bigdata.begin()
   bigdata.prepareGraphQuery(QueryLanguage.SPARQL, presencesQuery.toString).evaluate(new TurtleWriter(presencesOutput))
   presencesOutput.close()
-  //bigdata.commit()
 
   step("Exporting absence assertions")
   val absencesFile = new File(cwd + "/staging/kb/absences.ttl")
   val absencesOutput = new BufferedOutputStream(new FileOutputStream(absencesFile))
-  //bigdata.begin()
   bigdata.prepareGraphQuery(QueryLanguage.SPARQL, absencesQuery.toString).evaluate(new TurtleWriter(absencesOutput))
   absencesOutput.close()
-  //bigdata.commit()
 
   step("Load presence/absence data")
-  bigdata.begin()
   bigdata.add(presencesFile, baseURI, RDFFormat.TURTLE, graphURI)
   bigdata.add(absencesFile, baseURI, RDFFormat.TURTLE, graphURI)
   bigdata.commit()
@@ -388,7 +381,6 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
   val triplesOutput = new BufferedOutputStream(new FileOutputStream(new File(cwd + "/staging/kb/kb.ttl")))
   triplesQuery.evaluate(new TurtleWriter(triplesOutput))
   triplesOutput.close()
-  //bigdata.commit()
 
   step("Exporting phenotypic profiles for semantic similarity")
   val profilesQuery = bigdata.prepareGraphQuery(QueryLanguage.SPARQL, """
@@ -405,11 +397,9 @@ WHERE {
   ?profile rdf:type ?phenotype .
 }
     """)
-  //bigdata.begin()
   val profilesOutput = new BufferedOutputStream(new FileOutputStream(new File(cwd + "/staging/kb/profiles.ttl")))
   profilesQuery.evaluate(new TurtleWriter(profilesOutput))
   profilesOutput.close()
-  //bigdata.commit()
 
   bigdata.close()
 

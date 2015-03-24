@@ -34,7 +34,10 @@ object TestNewOWLSim extends App {
   val similarityMatrix = owlSim.computeAllSimilarityToCorpus(group.toSet)
   println("Writing results to file")
   val triplesOutput = new BufferedOutputStream(new FileOutputStream(new File(s"similarities-$taskNum.ttl")))
-  Rio.write(similarityMatrix.asJava, triplesOutput, RDFFormat.TURTLE)
+  val writer = Rio.createWriter(RDFFormat.TURTLE, triplesOutput)
+  writer.startRDF()
+  similarityMatrix.foreach(writer.handleStatement)
+  writer.endRDF()
   triplesOutput.close()
   println("Done: " + new Date())
 

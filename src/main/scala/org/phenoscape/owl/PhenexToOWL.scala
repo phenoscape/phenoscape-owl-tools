@@ -260,7 +260,7 @@ object PhenexToOWL extends OWLTask {
     classFromTyperef(typeref) match {
       case named: OWLClass => (named, Set.empty)
       case expression => {
-        val (named, axioms) = ExpressionUtil.nameForExpressionWithAxioms(expression)
+        val (named, axioms) = ExpressionUtil.nameForSubClassWithAxioms(expression)
         val label = s"[${labelRenderer(expression)}]"
         (named, axioms + (named Annotation (factory.getRDFSLabel, label)))
       }
