@@ -9,6 +9,7 @@ import java.util.Properties
 import scala.collection.JavaConversions._
 import scala.collection.mutable
 import scala.io.Source
+import scala.language.postfixOps
 
 import org.apache.commons.io.FileUtils
 import org.apache.log4j.BasicConfigurator
@@ -339,16 +340,18 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
 
   bigdata.commit()
 
+  val profilePhenotypeFilter = has_part some (phenotype_of some (part_of some AppendageGirdleComplex))
+
   step("Building evolutionary profiles using ancestral states reconstruction")
-  bigdata.add(EvolutionaryProfiles.computePhenotypeProfiles(TaxonNode(CHORDATA), fullReasoner, bigdata), graphURI)
+  bigdata.add(EvolutionaryProfiles.computePhenotypeProfiles(TaxonNode(CHORDATA), profilePhenotypeFilter, fullReasoner, bigdata), graphURI)
+  bigdata.commit()
+
+  step("Building gene profiles")
+  bigdata.add(GeneProfiles.generateGeneProfiles(bigdata, profilePhenotypeFilter, fullReasoner), graphURI)
   bigdata.commit()
 
   fullReasoner.dispose()
   System.gc()
-
-  step("Building gene profiles")
-  bigdata.add(GeneProfiles.generateGeneProfiles(bigdata), graphURI)
-  bigdata.commit()
 
   step("Exporting presence assertions")
   val presencesFile = new File(cwd + "/staging/kb/presences.ttl")

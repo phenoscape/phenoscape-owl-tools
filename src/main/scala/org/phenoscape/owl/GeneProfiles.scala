@@ -1,27 +1,34 @@
 package org.phenoscape.owl
 
+import org.openrdf.model.Statement
+import org.openrdf.model.impl.StatementImpl
+import org.openrdf.model.impl.URIImpl
+import org.openrdf.model.vocabulary.RDF
+import org.openrdf.query.QueryLanguage
 import org.openrdf.repository.sail.SailRepositoryConnection
 import org.phenoscape.owl.Vocab._
-import org.phenoscape.owlet.SPARQLComposer._
-import com.hp.hpl.jena.query.Query
-import org.openrdf.query.QueryLanguage
 import org.phenoscape.owl.util.SesameIterationIterator.iterationToIterator
-import org.openrdf.model.impl.URIImpl
-import org.openrdf.model.impl.StatementImpl
-import org.openrdf.model.Statement
-import org.openrdf.model.vocabulary.RDF
+import org.phenoscape.owlet.SPARQLComposer._
+import org.semanticweb.owlapi.reasoner.OWLReasoner
+import com.hp.hpl.jena.query.Query
+import org.semanticweb.owlapi.model.OWLClassExpression
+import org.phenoscape.scowl.OWL._
 
 object GeneProfiles {
 
-  def generateGeneProfiles(db: SailRepositoryConnection): Set[Statement] = {
+  def generateGeneProfiles(db: SailRepositoryConnection, phenotypeFilter: OWLClassExpression, reasoner: OWLReasoner): Set[Statement] = {
+    val filteredPhenotypes = reasoner.getSubClasses(phenotypeFilter, false).getFlattened
     val query = db.prepareTupleQuery(QueryLanguage.SPARQL, genePhenotypesQuery.toString)
-    query.evaluate().map { bindings =>
-      val geneURIString = bindings.getValue("gene").stringValue
-      val phenotypeURI = new URIImpl(bindings.getValue("phenotype_class").stringValue)
-      val profileURI = new URIImpl(s"$geneURIString#profile")
-      Set(new StatementImpl(profileURI, RDF.TYPE, phenotypeURI),
+    (for {
+      bindings <- query.evaluate
+      phenotypeURIString = bindings.getValue("phenotype_class").stringValue
+      if filteredPhenotypes.contains(Class(phenotypeURIString))
+      geneURIString = bindings.getValue("gene").stringValue
+      phenotypeURI = new URIImpl(phenotypeURIString)
+      profileURI = new URIImpl(s"$geneURIString#profile")
+      statement <- Set(new StatementImpl(profileURI, RDF.TYPE, phenotypeURI),
         new StatementImpl(new URIImpl(geneURIString), new URIImpl(has_phenotypic_profile.toString), profileURI))
-    }.flatten.toSet
+    } yield statement).toSet
   }
 
   val genePhenotypesQuery: Query =

@@ -65,6 +65,7 @@ object Vocab {
   val DEPICTS = ObjectProperty("http://xmlns.com/foaf/0.1/depicts")
   val IMAGE = IRI.create("http://xmlns.com/foaf/0.1/Image")
   val LIMB_FIN = IRI.create("http://purl.obolibrary.org/obo/UBERON_0004708")
+  val AppendageGirdleComplex = Class("http://purl.obolibrary.org/obo/UBERON_0010707")
   val HOMOLOGOUS_TO = ObjectProperty("http://purl.obolibrary.org/obo/RO_0002158")
   val DERIVED_BY_DESCENT_FROM = ObjectProperty("http://purl.obolibrary.org/obo/RO_0002156")
   val HAS_DERIVED_BY_DESCENDANT = ObjectProperty("http://purl.obolibrary.org/obo/RO_0002157")
