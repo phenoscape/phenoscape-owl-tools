@@ -1,14 +1,9 @@
 package org.phenoscape.owl.build
 
-import java.io.BufferedOutputStream
 import java.io.File
-import java.io.FileOutputStream
-import java.util.Date
 
 import scala.collection.JavaConverters._
 
-import org.openrdf.rio.RDFFormat
-import org.openrdf.rio.Rio
 import org.phenoscape.owl.sim.OWLsim
 import org.phenoscape.owl.util.OntologyUtil
 import org.semanticweb.owlapi.apibinding.OWLManager
@@ -25,7 +20,7 @@ object PrintTaxonAndGeneProfileSizes extends App {
   val owlSim = new OWLsim(combined, ind => ind.getIRI.toString.contains("VTO_"))
   owlSim.directAssociationsByIndividual.foreach {
     case (profile, annotations) =>
-      println(s"${profile.getIRI.toString}: ${annotations.size}")
+      println(s"${profile.getIRI.toString}\t${annotations.size}")
   }
 
 }
