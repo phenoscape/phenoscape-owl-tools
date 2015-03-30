@@ -241,27 +241,20 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     val developsFromRulesForAbsence = manager.createOntology(anatomicalEntities.flatMap(ReverseDevelopsFromRuleGenerator.createRules).toSet[OWLAxiom])
 
     step("Generating semantic similarity subsumers")
-    //    val dualSubsumers = for {
-    //      entity <- anatomicalEntities
-    //      attribute <- attributeQualities
-    //      subsumer <- Set(SimilarityTemplates.entityWithQuality(entity, attribute),
-    //        SimilarityTemplates.entityAndPartsWithQuality(entity, attribute))
-    //    } yield {
-    //      subsumer
-    //    }
-    //    val subsumers = manager.createOntology(
-    //      (anatomicalEntities.map(SimilarityTemplates.entity) ++
-    //        anatomicalEntities.map(SimilarityTemplates.entityAndParts) ++
-    //        dualSubsumers).toSet[OWLAxiom])
     val entitySubsumerAxioms = for {
-      (term, axioms) <- anatomicalEntities.map(SimilarityTemplates.entity)
-      axiom <- axioms
+      entity <- anatomicalEntities
+      (term, entityAxioms) = SimilarityTemplates.entity(entity)
+      (partsTerm, entityPartsAxioms) = SimilarityTemplates.entityAndParts(entity)
+      axiom <- (entityAxioms ++ entityPartsAxioms)
     } yield axiom
-    val entityPartsSubsumerAxioms = for {
-      (term, axioms) <- anatomicalEntities.map(SimilarityTemplates.entityAndParts)
-      axiom <- axioms
+    val entityQualitySubsumerAxioms = for {
+      entity <- anatomicalEntities
+      attribute <- attributeQualities
+      (term, entityAxioms) = SimilarityTemplates.entityWithQuality(entity, attribute)
+      (partsTerm, entityPartsAxioms) = SimilarityTemplates.entityAndPartsWithQuality(entity, attribute)
+      axiom <- (entityAxioms ++ entityPartsAxioms)
     } yield axiom
-    val subsumers = manager.createOntology(entitySubsumerAxioms ++ entityPartsSubsumerAxioms)
+    val subsumers = manager.createOntology(entitySubsumerAxioms ++ entityQualitySubsumerAxioms)
 
     val allTBox = combine(uberon, homology, pato, bspo, go, vto, zfa, xao, hp, //mp,
       hpEQ, mpEQ, caroToUberon, zfaToUberon, xaoToUberon, fmaToUberon, mgiToEMAPA, emapa, emapaToUberon,
@@ -340,14 +333,16 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
 
   bigdata.commit()
 
-  val profilePhenotypeFilter = has_part some (phenotype_of some (part_of some AppendageGirdleComplex))
+  val profileEntityFilterExpression = (part_of some AppendageGirdleComplex)
+  val validAbsencePhenotypes = fullReasoner.getSubClasses(profileEntityFilterExpression, false).getFlattened.map(_.getIRI).map(AbsenceClassGenerator.getAbsenceIRI).map(Class(_))
+  val profilePhenotypeFilter = (fullReasoner.getSubClasses(has_part some (phenotype_of some profileEntityFilterExpression), false).getFlattened).toSet ++ validAbsencePhenotypes
 
   step("Building evolutionary profiles using ancestral states reconstruction")
   bigdata.add(EvolutionaryProfiles.computePhenotypeProfiles(TaxonNode(CHORDATA), profilePhenotypeFilter, fullReasoner, bigdata), graphURI)
   bigdata.commit()
 
   step("Building gene profiles")
-  bigdata.add(GeneProfiles.generateGeneProfiles(bigdata, profilePhenotypeFilter, fullReasoner), graphURI)
+  bigdata.add(GeneProfiles.generateGeneProfiles(bigdata, profilePhenotypeFilter), graphURI)
   bigdata.commit()
 
   fullReasoner.dispose()

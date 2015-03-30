@@ -9,20 +9,19 @@ import org.openrdf.repository.sail.SailRepositoryConnection
 import org.phenoscape.owl.Vocab._
 import org.phenoscape.owl.util.SesameIterationIterator.iterationToIterator
 import org.phenoscape.owlet.SPARQLComposer._
-import org.semanticweb.owlapi.reasoner.OWLReasoner
-import com.hp.hpl.jena.query.Query
-import org.semanticweb.owlapi.model.OWLClassExpression
 import org.phenoscape.scowl.OWL._
+import org.semanticweb.owlapi.model.OWLClass
+
+import com.hp.hpl.jena.query.Query
 
 object GeneProfiles {
 
-  def generateGeneProfiles(db: SailRepositoryConnection, phenotypeFilter: OWLClassExpression, reasoner: OWLReasoner): Set[Statement] = {
-    val filteredPhenotypes = reasoner.getSubClasses(phenotypeFilter, false).getFlattened
+  def generateGeneProfiles(db: SailRepositoryConnection, phenotypeFilter: OWLClass => Boolean): Set[Statement] = {
     val query = db.prepareTupleQuery(QueryLanguage.SPARQL, genePhenotypesQuery.toString)
     (for {
       bindings <- query.evaluate
       phenotypeURIString = bindings.getValue("phenotype_class").stringValue
-      if filteredPhenotypes.contains(Class(phenotypeURIString))
+      if phenotypeFilter(Class(phenotypeURIString))
       geneURIString = bindings.getValue("gene").stringValue
       phenotypeURI = new URIImpl(phenotypeURIString)
       profileURI = new URIImpl(s"$geneURIString#profile")
