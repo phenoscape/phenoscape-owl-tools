@@ -333,16 +333,12 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
 
   bigdata.commit()
 
-  val profileEntityFilterExpression = (part_of some AppendageGirdleComplex)
-  val validAbsencePhenotypes = fullReasoner.getSubClasses(profileEntityFilterExpression, false).getFlattened.map(_.getIRI).map(AbsenceClassGenerator.getAbsenceIRI).map(Class(_))
-  val profilePhenotypeFilter = (fullReasoner.getSubClasses(has_part some (phenotype_of some profileEntityFilterExpression), false).getFlattened).toSet ++ validAbsencePhenotypes
-
   step("Building evolutionary profiles using ancestral states reconstruction")
-  bigdata.add(EvolutionaryProfiles.computePhenotypeProfiles(TaxonNode(CHORDATA), profilePhenotypeFilter, fullReasoner, bigdata), graphURI)
+  bigdata.add(EvolutionaryProfiles.computePhenotypeProfiles(TaxonNode(CHORDATA), fullReasoner, bigdata), graphURI)
   bigdata.commit()
 
   step("Building gene profiles")
-  bigdata.add(GeneProfiles.generateGeneProfiles(bigdata, profilePhenotypeFilter), graphURI)
+  bigdata.add(GeneProfiles.generateGeneProfiles(bigdata), graphURI)
   bigdata.commit()
 
   fullReasoner.dispose()

@@ -29,11 +29,11 @@ object EvolutionaryProfiles {
 
   type StateAssociations = GenMap[TaxonNode, GenMap[Character, Set[State]]]
 
-  def computePhenotypeProfiles(rootTaxon: TaxonNode, phenotypeFilter: OWLClass => Boolean, reasoner: OWLReasoner, db: SailRepositoryConnection): Set[Statement] = {
+  def computePhenotypeProfiles(rootTaxon: TaxonNode, reasoner: OWLReasoner, db: SailRepositoryConnection): Set[Statement] = {
     val observedAssociations = queryAssociations(db)
     val associationsIndex = index(observedAssociations)
     val (associations, profiles) = postorder(rootTaxon, reasoner, index(observedAssociations), Map.empty)
-    profilesToRDF(profiles, phenotypeFilter, reasoner, db)
+    profilesToRDF(profiles, reasoner, db)
   }
 
   def report(profiles: Map[TaxonNode, Map[Character, Set[State]]], reasoner: OWLReasoner): Unit = {
@@ -59,14 +59,13 @@ object EvolutionaryProfiles {
         }
     }
 
-  def profilesToRDF(profiles: StateAssociations, phenotypeFilter: OWLClass => Boolean, reasoner: OWLReasoner, db: SailRepositoryConnection): Set[Statement] = {
+  def profilesToRDF(profiles: StateAssociations, reasoner: OWLReasoner, db: SailRepositoryConnection): Set[Statement] = {
     val statePhenotypes: Map[State, Set[Phenotype]] = queryStatePhenotypes(db)
     (for {
       (taxon, profile) <- toSequential(profiles)
       (character, states) <- profile
       state <- states
       phenotype <- statePhenotypes.getOrElse(state, Set.empty)
-      if phenotypeFilter(Class(phenotype.iri))
       profileURI = new URIImpl(taxonProfileURI(taxon))
       statement <- Set(new StatementImpl(profileURI, RDF.TYPE, new URIImpl(phenotype.iri.toString)),
         new StatementImpl(new URIImpl(taxon.iri.toString), new URIImpl(has_phenotypic_profile.toString), profileURI))

@@ -16,12 +16,11 @@ import com.hp.hpl.jena.query.Query
 
 object GeneProfiles {
 
-  def generateGeneProfiles(db: SailRepositoryConnection, phenotypeFilter: OWLClass => Boolean): Set[Statement] = {
+  def generateGeneProfiles(db: SailRepositoryConnection): Set[Statement] = {
     val query = db.prepareTupleQuery(QueryLanguage.SPARQL, genePhenotypesQuery.toString)
     (for {
       bindings <- query.evaluate
       phenotypeURIString = bindings.getValue("phenotype_class").stringValue
-      if phenotypeFilter(Class(phenotypeURIString))
       geneURIString = bindings.getValue("gene").stringValue
       phenotypeURI = new URIImpl(phenotypeURIString)
       profileURI = new URIImpl(s"$geneURIString#profile")
