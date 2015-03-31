@@ -37,7 +37,7 @@ libraryDependencies ++= {
       "org.jdom"               %   "jdom"                          % "2.0.2",
       "com.github.scala-blitz" %%  "scala-blitz"                   % "1.2",
       "net.sourceforge.owlapi" %   "owlapi-distribution"           % "3.5.0",
-      "org.semanticweb.elk"    %   "elk-owlapi"                    % "0.4.1",
+      "org.semanticweb.elk"    %   "elk-owlapi"                    % "0.4.2",
       "com.bigdata"            %   "bigdata"                       % "1.3.4",
       "org.openrdf.sesame"     %   "sesame-rio"                    % "2.6.10",
       "org.phenoscape"         %   "scowl"                         % "0.9",
