@@ -94,4 +94,6 @@ object Vocab {
   val has_subsumer = ObjectProperty("http://purl.org/phenoscape/vocab.owl#has_subsumer")
   val for_query_profile = ObjectProperty("http://purl.org/phenoscape/vocab.owl#for_query_profile")
   val for_corpus_profile = ObjectProperty("http://purl.org/phenoscape/vocab.owl#for_corpus_profile")
+  val for_query_annotation = ObjectProperty("http://purl.org/phenoscape/vocab.owl#for_query_annotation")
+  val for_corpus_annotation = ObjectProperty("http://purl.org/phenoscape/vocab.owl#for_corpus_annotation")
 }
