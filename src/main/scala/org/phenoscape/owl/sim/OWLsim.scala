@@ -53,8 +53,9 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
   }
 
   val corpusSize: Int = individualsInCorpus.size
-  
-  val MaximumIC = -Math.log((1.0 / corpusSize)) / Math.log(2)
+  private def uncorrectedIC(numInstances: Int): Double = -Math.log((numInstances.toDouble / corpusSize)) / Math.log(2)
+  val MaximumIC: Double = uncorrectedIC(1)
+  def normalizedIC(numInstances: Int): Double = uncorrectedIC(numInstances) / MaximumIC
 
   val directAndIndirectAssociationsByNode: Map[Node, Set[OWLNamedIndividual]] = accumulateAssociations(classToNode(OWLThing))
 
@@ -138,7 +139,7 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
         val ic = if (freq == 0) {
           parents.map(ics).max
         } else {
-          (-Math.log((freq.toDouble / corpusSize)) / Math.log(2)) / MaximumIC
+          normalizedIC(freq)
         }
         ics += (node -> ic)
       }
