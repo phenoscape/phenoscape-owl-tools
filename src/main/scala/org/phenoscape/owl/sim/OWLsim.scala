@@ -210,28 +210,21 @@ case class GroupWiseSimilarity(queryIndividual: OWLNamedIndividual, corpusIndivi
 
   private val combined_score = new URIImpl(Vocab.combined_score.getIRI.toString)
   private val has_subsumer = new URIImpl(Vocab.has_subsumer.getIRI.toString)
-  private val has_pair_comparison = new URIImpl(Vocab.has_subsumer.getIRI.toString)
   private val for_query_profile = new URIImpl(Vocab.for_query_profile.getIRI.toString)
   private val for_corpus_profile = new URIImpl(Vocab.for_corpus_profile.getIRI.toString)
-  private val for_query_annotation = new URIImpl(Vocab.for_query_annotation.getIRI.toString)
-  private val for_corpus_annotation = new URIImpl(Vocab.for_corpus_annotation.getIRI.toString)
 
   def toTriples: Set[Statement] = {
     val self = new URIImpl(OntologyUtil.nextIRI.toString)
-    val comparisonTriples = for {
-      pair <- pairs.filter(_.maxSubsumerIC > 0).toSeq.sortBy(_.maxSubsumerIC).takeRight(10)
-      pairNode = new URIImpl(OntologyUtil.nextIRI.toString)
-      term <- pair.maxSubsumer.classes
-      triple <- Set(
-        new StatementImpl(self, has_pair_comparison, pairNode),
-        new StatementImpl(pairNode, for_query_annotation, new URIImpl(pair.queryAnnotation.classes.head.getIRI.toString)),
-        new StatementImpl(pairNode, for_corpus_annotation, new URIImpl(pair.corpusAnnotation.classes.head.getIRI.toString)),
-        new StatementImpl(pairNode, has_subsumer, new URIImpl(term.getIRI.toString)))
-    } yield triple
+    val bestPairComparisons = pairs.toSeq.sortBy(_.maxSubsumerIC).takeRight(20)
+    val distinctSubsumers: Set[Node] = bestPairComparisons.map(_.maxSubsumer).toSet
+    val subsumerTriples = for {
+      node <- distinctSubsumers
+      term <- node.classes
+    } yield new StatementImpl(self, has_subsumer, new URIImpl(term.getIRI.toString))
     Set(
       new StatementImpl(self, combined_score, new NumericLiteralImpl(score)),
       new StatementImpl(self, for_query_profile, new URIImpl(queryIndividual.getIRI.toString)),
-      new StatementImpl(self, for_corpus_profile, new URIImpl(corpusIndividual.getIRI.toString))) ++ comparisonTriples
+      new StatementImpl(self, for_corpus_profile, new URIImpl(corpusIndividual.getIRI.toString))) ++ subsumerTriples
   }
 
 }
