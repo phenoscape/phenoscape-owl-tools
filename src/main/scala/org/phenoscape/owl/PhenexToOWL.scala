@@ -3,6 +3,7 @@ package org.phenoscape.owl
 import java.io.File
 import java.util.UUID
 import scala.collection.JavaConversions._
+import scala.collection.mutable
 import org.apache.commons.lang3.StringUtils
 import org.jdom2.Element
 import org.jdom2.Namespace
@@ -24,6 +25,7 @@ import org.semanticweb.owlapi.model.OWLEquivalentClassesAxiom
 import org.phenoscape.owl.util.ExpressionUtil
 import org.semanticweb.owlapi.model.OWLObject
 import org.phenoscape.owl.util.OntologyUtil.optionWithSet
+import org.semanticweb.owlapi.model.OWLAnnotation
 
 object PhenexToOWL extends OWLTask {
 
@@ -191,21 +193,21 @@ object PhenexToOWL extends OWLTask {
   }
 
   def translatePhenotype(phenotypeElement: Element, owlState: OWLNamedIndividual, labelRenderer: LabelRenderer): Set[OWLAxiom] = {
-    val owlPhenotype = OntologyUtil.nextClass()
-    val phenotypeAxioms = translatePhenotypeSemantics(phenotypeElement, owlPhenotype, labelRenderer)
-    phenotypeAxioms + (owlState Annotation (describes_phenotype, owlPhenotype.getIRI))
+    val (phenotypeOption, phenotypeAxioms) = translatePhenotypeSemantics(phenotypeElement, labelRenderer)
+    val link = phenotypeOption.map(term => owlState Annotation (describes_phenotype, term.getIRI)).toSet
+    phenotypeAxioms ++ link
   }
 
-  def translatePhenotypeSemantics(phenotypeElement: Element, owlPhenotype: OWLClass, labelRenderer: LabelRenderer): Set[OWLAxiom] = {
+  def translatePhenotypeSemantics(phenotypeElement: Element, labelRenderer: LabelRenderer): (Option[OWLClass], Set[OWLAxiom]) = {
+    val annotations = mutable.Set.empty[OWLAnnotation]
     val (entityOption, entityAxioms) = optionWithSet(for {
       bearerElement <- Option(phenotypeElement.getChild("bearer", phenoNS))
       bearerType <- Option(bearerElement.getChild("typeref", phenoNS))
     } yield {
       val (entity, axioms) = namedClassFromTyperef(bearerType, labelRenderer)
+      annotations += factory.getOWLAnnotation(entity_term, entity.getIRI)
       (entity,
-        axioms ++
-        AbsenceClassGenerator.generateAllAbsenceAxiomsForEntity(entity) +
-        (owlPhenotype Annotation (entity_term, entity.getIRI)))
+        axioms ++ AbsenceClassGenerator.generateAllAbsenceAxiomsForEntity(entity))
     })
     val qualityElementOption = Option(phenotypeElement.getChild("quality", phenoNS))
     val (qualityOption, qualityAxioms) = optionWithSet(for {
@@ -213,8 +215,8 @@ object PhenexToOWL extends OWLTask {
       qualityType <- Option(qualityElement.getChild("typeref", phenoNS))
     } yield {
       val (quality, axioms) = namedClassFromTyperef(qualityType, labelRenderer)
-      (quality,
-        axioms + (owlPhenotype Annotation (quality_term, quality.getIRI)))
+      annotations += factory.getOWLAnnotation(quality_term, quality.getIRI)
+      (quality, axioms)
     })
     val (relatedEntityOption, relatedEntityAxioms) = optionWithSet(for {
       qualityElement <- qualityElementOption
@@ -222,10 +224,9 @@ object PhenexToOWL extends OWLTask {
       relatedEntityType <- Option(relatedEntityElement.getChild("typeref", phenoNS))
     } yield {
       val (relatedEntity, axioms) = namedClassFromTyperef(relatedEntityType, labelRenderer)
+      annotations += factory.getOWLAnnotation(related_entity_term, relatedEntity.getIRI)
       (relatedEntity,
-        axioms ++
-        AbsenceClassGenerator.generateAllAbsenceAxiomsForEntity(relatedEntity) +
-        (owlPhenotype Annotation (related_entity_term, relatedEntity.getIRI)))
+        axioms ++ AbsenceClassGenerator.generateAllAbsenceAxiomsForEntity(relatedEntity))
     })
     val eqPhenotypeOption = (entityOption, qualityOption, relatedEntityOption) match {
       case (None, None, _)            => None
@@ -242,10 +243,9 @@ object PhenexToOWL extends OWLTask {
       case (Some(entity), Some(quality), Some(relatedEntity))             => Option(quality and (inheres_in some entity) and (towards some relatedEntity))
       //TODO comparisons, etc.
     }
-    val phenotypeAxioms = eqPhenotypeOption.toSet.flatMap { eqPhenotype: OWLClassExpression =>
-      Set(owlPhenotype SubClassOf eqPhenotype, owlPhenotype Annotation (rdfsLabel, labelRenderer(eqPhenotype)))
-    }
-    entityAxioms ++ qualityAxioms ++ relatedEntityAxioms ++ phenotypeAxioms
+    val (phenotypeClass, phenotypeAxioms) = optionWithSet(eqPhenotypeOption.map(ExpressionUtil.nameForExpressionWithAxioms))
+    val annotationAxioms = phenotypeClass.map(term => annotations.map(factory.getOWLAnnotationAssertionAxiom(term.getIRI, _))).toSet.flatten
+    (phenotypeClass, (entityAxioms ++ qualityAxioms ++ relatedEntityAxioms ++ phenotypeAxioms ++ annotationAxioms))
   }
 
   def classFromTyperef(typeref: Element): OWLClassExpression = {

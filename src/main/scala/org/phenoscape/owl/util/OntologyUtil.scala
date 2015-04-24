@@ -30,7 +30,7 @@ object OntologyUtil {
 
   def nextIndividual(): OWLNamedIndividual = factory.getOWLNamedIndividual(this.nextIRI)
 
-  def nextClass(): OWLClass = factory.getOWLClass(this.nextIRI)
+  //def nextClass(): OWLClass = factory.getOWLClass(this.nextIRI)
 
   def nextIRI(): IRI = {
     val uuid = UUID.randomUUID.toString
