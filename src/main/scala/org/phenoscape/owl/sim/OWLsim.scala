@@ -18,6 +18,7 @@ import org.openrdf.model.impl.URIImpl
 import org.openrdf.model.impl.StatementImpl
 import org.phenoscape.owl.Vocab
 import org.openrdf.model.impl.NumericLiteralImpl
+import org.openrdf.model.vocabulary.RDF
 
 class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
 
@@ -212,9 +213,14 @@ case class GroupWiseSimilarity(queryIndividual: OWLNamedIndividual, corpusIndivi
   private val has_subsumer = new URIImpl(Vocab.has_subsumer.getIRI.toString)
   private val for_query_profile = new URIImpl(Vocab.for_query_profile.getIRI.toString)
   private val for_corpus_profile = new URIImpl(Vocab.for_corpus_profile.getIRI.toString)
+  private val FoundAsMICA = new URIImpl(Vocab.FoundAsMICA.getIRI.toString)
 
   def toTriples: Set[Statement] = {
     val self = new URIImpl(OntologyUtil.nextIRI.toString)
+    val micasTriples = for {
+      pair <- pairs
+      subsumer <- pair.maxSubsumer.classes
+    } yield new StatementImpl(new URIImpl(subsumer.getIRI.toString), RDF.TYPE, FoundAsMICA)
     val bestPairComparisons = pairs.toSeq.sortBy(_.maxSubsumerIC).takeRight(20).filter(_.maxSubsumerIC > 0)
     val distinctSubsumers: Set[Node] = bestPairComparisons.map(_.maxSubsumer).toSet
     val subsumerTriples = for {
@@ -224,7 +230,7 @@ case class GroupWiseSimilarity(queryIndividual: OWLNamedIndividual, corpusIndivi
     Set(
       new StatementImpl(self, combined_score, new NumericLiteralImpl(score)),
       new StatementImpl(self, for_query_profile, new URIImpl(queryIndividual.getIRI.toString)),
-      new StatementImpl(self, for_corpus_profile, new URIImpl(corpusIndividual.getIRI.toString))) ++ subsumerTriples
+      new StatementImpl(self, for_corpus_profile, new URIImpl(corpusIndividual.getIRI.toString))) ++ subsumerTriples ++ micasTriples
   }
 
 }

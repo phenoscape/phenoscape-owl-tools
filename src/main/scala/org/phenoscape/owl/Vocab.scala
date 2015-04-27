@@ -97,4 +97,6 @@ object Vocab {
   val for_corpus_profile = ObjectProperty("http://purl.org/phenoscape/vocab.owl#for_corpus_profile")
   val for_query_annotation = ObjectProperty("http://purl.org/phenoscape/vocab.owl#for_query_annotation")
   val for_corpus_annotation = ObjectProperty("http://purl.org/phenoscape/vocab.owl#for_corpus_annotation")
+  val FoundAsMICA = Class("http://purl.org/phenoscape/vocab.owl#FoundAsMICA")
+  
 }
