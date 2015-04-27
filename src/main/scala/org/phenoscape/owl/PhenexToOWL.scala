@@ -243,7 +243,7 @@ object PhenexToOWL extends OWLTask {
       case (Some(entity), Some(quality), Some(relatedEntity))             => Option(quality and (inheres_in some entity) and (towards some relatedEntity))
       //TODO comparisons, etc.
     }
-    val (phenotypeClass, phenotypeAxioms) = optionWithSet(eqPhenotypeOption.map(ExpressionUtil.nameForExpressionWithAxioms))
+    val (phenotypeClass, phenotypeAxioms) = optionWithSet(eqPhenotypeOption.map(ExpressionUtil.uniqueNameForExpressionWithAxioms))
     val annotationAxioms = phenotypeClass.map(term => annotations.map(factory.getOWLAnnotationAssertionAxiom(term.getIRI, _))).toSet.flatten
     (phenotypeClass, (entityAxioms ++ qualityAxioms ++ relatedEntityAxioms ++ phenotypeAxioms ++ annotationAxioms))
   }

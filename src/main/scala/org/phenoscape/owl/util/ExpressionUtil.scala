@@ -30,6 +30,10 @@ import java.net.URLDecoder
 import java.util.regex.Pattern
 import org.phenoscape.owlet.ManchesterSyntaxClassExpressionParser
 import scalaz.Validation
+import java.net.URL
+import java.net.URI
+import org.apache.http.client.utils.URLEncodedUtils
+import java.util.UUID
 
 object ExpressionUtil {
 
@@ -37,11 +41,11 @@ object ExpressionUtil {
   val namedExpressionPrefix = "http://purl.org/phenoscape/expression?value="
   val namedSubClassPrefix = "http://purl.org/phenoscape/subclassof?value="
 
-  def nameForExpression(expression: OWLClassExpression): OWLClass = name(expression, namedExpressionPrefix)
+  def nameForExpression(expression: OWLClassExpression): OWLClass = name(expression, namedExpressionPrefix, false)
 
-  def nameForSubClassOf(expression: OWLClassExpression): OWLClass = name(expression, namedSubClassPrefix)
+  def nameForSubClassOf(expression: OWLClassExpression): OWLClass = name(expression, namedSubClassPrefix, false)
 
-  private def name(expression: OWLClassExpression, prefix: String) = expression match {
+  private def name(expression: OWLClassExpression, prefix: String, unique: Boolean): OWLClass = expression match {
     case named: OWLClass => named
     case _ => {
       val writer = new StringWriter()
@@ -49,7 +53,8 @@ object ExpressionUtil {
       renderer.setUseWrapping(false)
       expression.accept(renderer: OWLClassExpressionVisitor)
       writer.close()
-      Class(s"$prefix${URLEncoder.encode(writer.toString, "UTF-8")}")
+      val fragment = if (unique) s"#${UUID.randomUUID.toString}" else ""
+      Class(s"$prefix${URLEncoder.encode(writer.toString, "UTF-8")}$fragment")
     }
   }
 
@@ -57,6 +62,14 @@ object ExpressionUtil {
     case named: OWLClass => (named, Set.empty)
     case _ => {
       val named = nameForExpression(expression)
+      (named, Set(named EquivalentTo expression))
+    }
+  }
+
+  def uniqueNameForExpressionWithAxioms(expression: OWLClassExpression): (OWLClass, Set[OWLAxiom]) = expression match {
+    case named: OWLClass => (named, Set.empty)
+    case _ => {
+      val named = name(expression, namedExpressionPrefix, true)
       (named, Set(named EquivalentTo expression))
     }
   }
@@ -70,12 +83,10 @@ object ExpressionUtil {
   }
 
   def expressionForName(named: OWLClass): Validation[String, OWLClassExpression] = {
-    val iri = named.getIRI.toString
-    val expressionString =
-      if (iri.startsWith(namedExpressionPrefix)) iri.replaceFirst(Pattern.quote(namedExpressionPrefix), "")
-      else iri.replaceFirst(Pattern.quote(namedSubClassPrefix), "")
-    val expression = URLDecoder.decode(expressionString, "UTF-8")
-    ManchesterSyntaxClassExpressionParser.parse(expression)
+    val parameters = URLEncodedUtils.parse(URI.create(named.getIRI.toString), "UTF-8")
+    parameters.collectFirst({
+      case pair if pair.getName == "value" => pair.getValue
+    }).map(ManchesterSyntaxClassExpressionParser.parse).getOrElse(Validation.failure("Invalid expression URI"))
   }
 
   def instantiateClassAssertion(individual: OWLIndividual, aClass: OWLClassExpression): scala.collection.Set[OWLAxiom] = {
