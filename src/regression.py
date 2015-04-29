@@ -4,7 +4,6 @@ def main():
 	numoftaxa=int(sys.argv[1])
 
 
-	# query for scores - necessary only after KB update.
 	get_scores()
 	
 	# Load taxon, gene profile sizes and similarity scores
