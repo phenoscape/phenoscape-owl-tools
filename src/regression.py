@@ -18,8 +18,9 @@ def main():
 	taxoncoeff=results.params[1]
 	constant=results.params[2]
 	
-	# Plot residual plot - necessary only after KB update.
-	plot_residuals(taxonprofilesizes, geneprofilesizes,scores,taxoncoeff,genecoeff,constant)
+	# Plot residual plot - uncomment if profile sizes or similarity scores have changed due to updated data.
+	
+	#plot_residuals(taxonprofilesizes, geneprofilesizes,scores,taxoncoeff,genecoeff,constant)
 	
 
 	# Compute studentized residuals
@@ -32,8 +33,11 @@ def get_scores():
 	resultdir="../results/"
 	if not os.path.exists(resultdir):
 		os.makedirs(resultdir)		
-	query="curl -X POST --data-binary @getscores-URI.rq --header \"Content-Type:application/sparql-query\" --header \"Accept: text/tab-separated-values\" http://kb-dev.phenoscape.org/bigsparql > ../results/Scores_Gene_Taxon.tsv"
-	os.system(query)
+
+	# Uncomment if similarity scores have changed due to updated data
+
+	#query="curl -X POST --data-binary @getscores-URI.rq --header \"Content-Type:application/sparql-query\" --header \"Accept: text/tab-separated-values\" http://kb-dev.phenoscape.org/bigsparql > ../results/Scores_Gene_Taxon.tsv"
+	#os.system(query)
 	size=loadprofilesizes()
 	query_parse_results(size)
 
@@ -97,6 +101,7 @@ def studentize(results):
 
 def compute_expect_scores(studentizedresiduals,numoftaxa):
 	print "Computing p-values"
+	outfile=open("../results/SemanticSimilarityResults.tsv",'w')
 	ranks=open("../results/RankStatistics.txt",'w')
 	ranks.write("URI\tStudentized Residuals\tp-value\tExpect Score\n")
 	
@@ -110,11 +115,12 @@ def compute_expect_scores(studentizedresiduals,numoftaxa):
 			b=math.sqrt(6)-0.5772156649
 			pvalue=1-math.exp(-math.exp(a/b))
 			expect=pvalue*numoftaxa
-			ranks.write(uri+"\t"+str(studentizedresiduals[i])+"\t"+str(round(pvalue,2))+"\t"+str(round(expect,2))+"\n")
+			ranks.write(uri+"\t"+str(studentizedresiduals[i])+"\t"+str(round(pvalue,2))+"\t"+str(expect)+"\n")
+			outfile.write(gene+"\t"+genename+"\t"+taxon+"\t"+taxonname+"\t"+str(round(score,2))+"\t"+str(expect)+"\n")
 			i+=1
 	ranks.close()	
 	infile.close()	
-
+	outfile.close()
 
 def reg_m(scores, sizes):
 	print "Doing regression"
