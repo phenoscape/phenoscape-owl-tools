@@ -159,10 +159,11 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
   def groupWiseSimilarity(queryIndividual: OWLNamedIndividual, corpusIndividual: OWLNamedIndividual): GroupWiseSimilarity = optimize {
     val pairScores = for {
       queryAnnotation <- directAssociationsByIndividual(queryIndividual)
-      corpusAnnotation <- directAssociationsByIndividual(corpusIndividual)
     } yield {
-      val maxSubsumer = maxICSubsumer(queryAnnotation, corpusAnnotation)
-      PairScore(queryAnnotation, corpusAnnotation, maxSubsumer, nodeIC(maxSubsumer))
+      directAssociationsByIndividual(corpusIndividual).map { corpusAnnotation =>
+        val maxSubsumer = maxICSubsumer(queryAnnotation, corpusAnnotation)
+        PairScore(queryAnnotation, corpusAnnotation, maxSubsumer, nodeIC(maxSubsumer))
+      }.maxBy(_.maxSubsumerIC)
     }
     val medianScore = median(pairScores.map(_.maxSubsumerIC).toSeq)
     GroupWiseSimilarity(queryIndividual, corpusIndividual, medianScore, pairScores)
