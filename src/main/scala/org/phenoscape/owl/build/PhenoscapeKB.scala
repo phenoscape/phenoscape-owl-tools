@@ -84,6 +84,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     val bfoMinimal = loadNormalized(new File(cwd + "/staging/sources/bfo-classes-minimal.owl"))
     val roCore = loadNormalized(new File(cwd + "/staging/sources/ro-core.owl"))
     val temporalIntervals = loadNormalized(new File(cwd + "/staging/sources/temporal-intervals.owl"))
+    val elConstraints = loadNormalized(new File(cwd + "/staging/sources/el-constraints.owl"))
     val roRelease = loadNormalized(new File(cwd + "/staging/sources/ro.owl"))
     val ro = combine(roRelease, temporalIntervals, roCore, bfoMinimal, roAnnotations)
     write(ro, cwd + "/staging/kb/ro.owl")
