@@ -48,6 +48,15 @@ class KnowledgeBaseBuilder extends App {
     PropertyNormalizer.normalize(ont)
   }
 
+  def loadFromWebWithImports(iri: IRI): OWLOntology = {
+    val manager = OWLManager.createOWLOntologyManager()
+    val ont = manager.loadOntology(iri)
+    val importsAxioms = (ont.getImportsClosure - ont).flatMap(_.getAxioms)
+    manager.addAxioms(ont, importsAxioms)
+    PropertyNormalizer.normalize(ont)
+    ont
+  }
+
   def write(ontology: OWLOntology, filename: String): Unit = {
     val ontManager = ontology.getOWLOntologyManager()
     ontManager.saveOntology(ontology, new RDFXMLOntologyFormat(), new FileDocumentTarget(new File(filename)))
