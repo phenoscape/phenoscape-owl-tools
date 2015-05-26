@@ -19,7 +19,7 @@ class NegationHierarchyAsserterTest {
     input.close()
     expectation.close()
     Assert.assertTrue(ontology.getAxiomCount() < expectedOntology.getAxiomCount())
-    manager.addAxioms(ontology, NegationHierarchyAsserter.assertNegationHierarchy(ontology))
+    manager.addAxioms(ontology, NegationHierarchyAsserter.assertNegationHierarchy(ontology.getAxioms.toSet))
     Assert.assertTrue(ontology.getAxiomCount() == expectedOntology.getAxiomCount())
     Assert.assertEquals(ontology.getAxioms(), expectedOntology.getAxioms())
   }

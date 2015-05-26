@@ -51,11 +51,10 @@ object AbsenceClassGenerator extends OWLTask {
 
   def generateAllAbsenceAxiomsForEntity(ontClass: OWLClass): Set[OWLAxiom] = {
     val hasPartAxioms = NamedRestrictionGenerator.createRestriction(has_part, ontClass)
-    val tempOntology = manager.createOntology(hasPartAxioms)
     val namedHasPartClass = Class(NamedRestrictionGenerator.getRestrictionIRI(has_part.getIRI, ontClass.getIRI()))
     hasPartAxioms ++
       createAbsenceClass(ontClass) ++
-      NegationClassGenerator.createNegationClassAxioms(namedHasPartClass, tempOntology)
+      NegationClassGenerator.createNegationClassAxioms(namedHasPartClass)
   }
 
 }

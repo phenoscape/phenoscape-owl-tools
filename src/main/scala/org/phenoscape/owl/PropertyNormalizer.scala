@@ -8,6 +8,7 @@ import org.semanticweb.owlapi.util.OWLEntityRenamer
 import org.semanticweb.owlapi.model.AddImport
 import org.semanticweb.owlapi.io.RDFXMLOntologyFormat
 import org.semanticweb.owlapi.apibinding.OWLManager
+import org.semanticweb.owlapi.model.OWLAxiom
 
 object PropertyNormalizer extends OWLTask {
 
@@ -61,6 +62,12 @@ object PropertyNormalizer extends OWLTask {
       if (key != value) manager.applyChanges(renamer.changeIRI(key, value))
     }
     return ontology
+  }
+
+  def normalize(axioms: Set[OWLAxiom]): Set[OWLAxiom] = {
+    val manager = OWLManager.createOWLOntologyManager()
+    val ontology = manager.createOntology(axioms)
+    normalize(ontology).getAxioms.toSet
   }
 
 }

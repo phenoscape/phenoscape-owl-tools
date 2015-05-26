@@ -2,7 +2,6 @@ package org.phenoscape.owl.mod.zfin
 
 import java.io.File
 import scala.collection.JavaConversions._
-import scala.collection.Set
 import scala.collection.TraversableOnce.flattenTraversableOnce
 import scala.collection.mutable
 import scala.io.Source
@@ -24,23 +23,13 @@ object ZFINExpressionToOWL extends OWLTask {
 
   val manager = OWLManager.createOWLOntologyManager()
 
-  def main(args: Array[String]): Unit = {
-    val file = Source.fromFile(args(0), "ISO-8859-1")
-    val ontology = convert(file)
-    file.close()
-    manager.saveOntology(ontology, IRI.create(new File(args(1))))
-  }
-
-  def convert(expressionData: Source): OWLOntology = {
-    val axioms = expressionData.getLines.map(translate(_)).flatten.toSet[OWLAxiom]
-    manager.createOntology(axioms, IRI.create("http://purl.obolibrary.org/obo/phenoscape/zfin_gene_expression.owl"))
-  }
+  def convert(expressionData: Source): Set[OWLAxiom] = expressionData.getLines.flatMap(translate).toSet[OWLAxiom]
 
   def translate(expressionLine: String): Set[OWLAxiom] = {
     val items = expressionLine.split("\t", -1)
     val axioms = mutable.Set[OWLAxiom]()
     if (items(0).startsWith("ZDB-EFG")) {
-      return axioms
+      return axioms.toSet
     } else {
       val expression = OntologyUtil.nextIndividual()
       axioms.add(factory.getOWLDeclarationAxiom(expression))
@@ -67,7 +56,7 @@ object ZFINExpressionToOWL extends OWLTask {
       val publicationID = StringUtils.stripToNull(items(10))
       val publication = Individual(OBOUtil.zfinIRI(publicationID))
       axioms.add(expression Fact (dcSource, publication))
-      return axioms
+      return axioms.toSet
     }
   }
 

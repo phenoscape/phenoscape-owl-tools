@@ -1,45 +1,23 @@
 package org.phenoscape.owl.mod.zfin
 
-import org.phenoscape.owl.OWLTask
-import org.phenoscape.scowl.OWL._
 import scala.collection.JavaConversions._
 import scala.collection.mutable
-import scala.collection.Set
-import org.semanticweb.owlapi.model.OWLOntology
-import java.io.File
 import scala.io.Source
-import org.semanticweb.owlapi.model.OWLAxiom
-import org.phenoscape.owl.Vocab
-import org.phenoscape.owl.Vocab._
+
 import org.apache.commons.lang3.StringUtils
-import org.phenoscape.owl.util.OBOUtil
-import org.semanticweb.owlapi.model.IRI
-import org.phenoscape.owl.NamedRestrictionGenerator
-import org.semanticweb.owlapi.model.OWLClass
+import org.phenoscape.owl.OWLTask
+import org.phenoscape.owl.Vocab._
 import org.phenoscape.owl.util.ExpressionUtil
-import org.semanticweb.owlapi.model.AddImport
-import org.semanticweb.owlapi.apibinding.OWLManager
-import org.apache.log4j.Logger
-import org.semanticweb.owlapi.vocab.OWLRDFVocabulary
-import org.semanticweb.owlapi.vocab.DublinCoreVocabulary
+import org.phenoscape.owl.util.OBOUtil
 import org.phenoscape.owl.util.OntologyUtil
+import org.phenoscape.scowl.OWL._
+import org.semanticweb.owlapi.model.IRI
+import org.semanticweb.owlapi.model.OWLAxiom
+import org.semanticweb.owlapi.model.OWLClass
 
 object ZFINPhenotypesToOWL extends OWLTask {
 
-  val manager = OWLManager.createOWLOntologyManager()
-
-  def main(args: Array[String]): Unit = {
-    val file = Source.fromFile(args(0), "ISO-8859-1")
-    val ontology = convert(file)
-    file.close()
-    manager.saveOntology(ontology, IRI.create(new File(args(1))))
-  }
-
-  def convert(phenotypeData: Source): OWLOntology = {
-    val ontology = manager.createOntology(IRI.create("http://purl.obolibrary.org/obo/phenoscape/zfin_phenotypes.owl"))
-    manager.addAxioms(ontology, phenotypeData.getLines.map(translate(_)).flatten.toSet[OWLAxiom])
-    return ontology
-  }
+  def convert(phenotypeData: Source): Set[OWLAxiom] = phenotypeData.getLines.flatMap(translate).toSet[OWLAxiom]
 
   def translate(expressionLine: String): Set[OWLAxiom] = {
     val items = expressionLine.split("\t")
@@ -106,7 +84,7 @@ object ZFINPhenotypesToOWL extends OWLTask {
     val figureID = StringUtils.stripToNull(items(25))
     val figure = Individual(OBOUtil.zfinIRI(figureID))
     axioms.add(phenotype Fact (dcSource, figure))
-    return axioms
+    return axioms.toSet
   }
 
 }

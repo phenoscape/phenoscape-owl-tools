@@ -5,12 +5,10 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.FileReader
 import java.util.Properties
-
 import scala.collection.JavaConversions._
 import scala.collection.mutable
 import scala.io.Source
 import scala.language.postfixOps
-
 import org.apache.commons.io.FileUtils
 import org.apache.log4j.BasicConfigurator
 import org.apache.log4j.Level
@@ -54,10 +52,11 @@ import org.semanticweb.owlapi.model.IRI
 import org.semanticweb.owlapi.model.OWLAxiom
 import org.semanticweb.owlapi.reasoner.OWLReasoner
 import org.semanticweb.owlapi.vocab.OWLRDFVocabulary
-
 import com.bigdata.journal.Options
 import com.bigdata.rdf.sail.BigdataSail
 import com.bigdata.rdf.sail.BigdataSailRepository
+import org.semanticweb.owlapi.model.AxiomType
+import org.phenoscape.owl.SourcedAxioms
 
 object PhenoscapeKB extends KnowledgeBaseBuilder {
 
@@ -81,74 +80,36 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
   def loadOntologiesAndCreateReasoner(): OWLReasoner = {
     step("Loading ontologies")
     val ro = loadFromWebWithImports(IRI.create("http://purl.obolibrary.org/obo/ro.owl"))
-    write(ro, cwd + "/staging/kb/ro.owl")
     val phenoscapeVocab = loadFromWebWithImports(IRI.create("http://purl.org/phenoscape/vocab.owl"))
-    write(phenoscapeVocab, cwd + "/staging/kb/phenoscape-vocab.owl")
     val attributes = loadFromWebWithImports(IRI.create("http://svn.code.sf.net/p/phenoscape/code/trunk/vocab/character_slims.obo"))
-    write(attributes, cwd + "/staging/kb/attributes.owl")
     val uberon = loadFromWebWithImports(IRI.create("http://purl.obolibrary.org/obo/uberon/ext.owl"))
-    write(uberon, cwd + "/staging/kb/uberon.owl")
-    val homology = loadNormalized(new File(cwd + "/staging/sources/homology.owl"))
-    write(homology, cwd + "/staging/kb/homology.owl")
+    val homology = SourcedAxioms(loadNormalized(new File(cwd + "/staging/sources/homology.owl")))
     val pato = loadFromWebWithImports(IRI.create("http://purl.obolibrary.org/obo/pato.owl"))
-    write(pato, cwd + "/staging/kb/pato.owl")
     val bspo = loadFromWebWithImports(IRI.create("http://purl.obolibrary.org/obo/bspo.owl"))
-    write(bspo, cwd + "/staging/kb/bspo.owl")
     val go = loadFromWebWithImports(IRI.create("http://purl.obolibrary.org/obo/go.owl"))
-    write(go, cwd + "/staging/kb/go.owl")
     val taxrank = loadFromWebWithImports(IRI.create("http://purl.obolibrary.org/obo/taxrank.owl"))
-    write(taxrank, cwd + "/staging/kb/taxrank.owl")
     val vto = loadFromWebWithImports(IRI.create("http://purl.obolibrary.org/obo/vto.owl"))
-    write(vto, cwd + "/staging/kb/vto.owl")
     val collections = loadFromWebWithImports(IRI.create("http://svn.code.sf.net/p/phenoscape/code/trunk/vocab/fish_collection_abbreviation.obo"))
-    write(collections, cwd + "/staging/kb/fish_collection_abbreviation.owl")
     val zfa = loadFromWebWithImports(IRI.create("http://purl.obolibrary.org/obo/zfa.owl"))
-    write(zfa, cwd + "/staging/kb/zfa.owl")
     val xao = loadFromWebWithImports(IRI.create("http://purl.obolibrary.org/obo/xao.owl"))
-    write(xao, cwd + "/staging/kb/xao.owl")
     val hp = loadFromWebWithImports(IRI.create("http://purl.obolibrary.org/obo/hp.owl"))
-    write(hp, cwd + "/staging/kb/hp.owl")
     val mp = loadFromWebWithImports(IRI.create("http://purl.obolibrary.org/obo/mp.owl"))
-    write(mp, cwd + "/staging/kb/mp.owl")
 
     val hpEQ = loadFromWebWithImports(IRI.create("https://phenotype-ontologies.googlecode.com/svn/trunk/src/ontology/hp/hp-equivalence-axioms-subq-ubr.owl"))
-    write(hpEQ, cwd + "/staging/kb/hp-logical-definitions.owl")
     val mpEQ = loadFromWebWithImports(IRI.create("https://phenotype-ontologies.googlecode.com/svn/trunk/src/ontology/mp/mp-equivalence-axioms-subq-ubr.owl"))
-    write(mpEQ, cwd + "/staging/kb/mp-logical-definitions.owl")
 
     val caroToUberon = loadFromWebWithImports(IRI.create("http://purl.obolibrary.org/obo/uberon/bridge/uberon-bridge-to-caro.owl"))
-    write(caroToUberon, cwd + "/staging/kb/uberon-bridge-to-caro.owl")
     val zfaToUberon = loadFromWebWithImports(IRI.create("http://purl.obolibrary.org/obo/uberon/bridge/uberon-ext-bridge-to-zfa.owl"))
-    write(zfaToUberon, cwd + "/staging/kb/uberon-ext-bridge-to-zfa.owl")
     val xaoToUberon = loadFromWebWithImports(IRI.create("http://purl.obolibrary.org/obo/uberon/bridge/uberon-bridge-to-xao.owl"))
-    write(xaoToUberon, cwd + "/staging/kb/uberon-bridge-to-xao.owl")
     val fmaToUberon = loadFromWebWithImports(IRI.create("http://purl.obolibrary.org/obo/uberon/bridge/uberon-bridge-to-fma.owl"))
-    write(fmaToUberon, cwd + "/staging/kb/uberon-bridge-to-fma.owl")
-    val mgiToEMAPA = loadNormalized(new File(cwd + "/staging/sources/mgi_anatomy.owl"))
-    write(mgiToEMAPA, cwd + "/staging/kb/mgi_anatomy.owl")
-    val emapa = loadNormalized(new File(cwd + "/staging/sources/emapa.owl"))
-    write(emapa, cwd + "/staging/kb/emapa.owl")
+    val mgiToEMAPA = SourcedAxioms(loadNormalized(new File(cwd + "/staging/sources/mgi_anatomy.owl")))
+    val emapa = SourcedAxioms(loadNormalized(new File(cwd + "/staging/sources/emapa.owl")))
     val emapaToUberon = loadFromWebWithImports(IRI.create("http://purl.obolibrary.org/obo/uberon/bridge/uberon-bridge-to-emapa.owl"))
-    write(mgiToEMAPA, cwd + "/staging/kb/uberon-bridge-to-emapa.owl.owl")
 
     step("Querying entities and qualities")
-    val coreReasoner = reasoner(uberon, pato, bspo, go, ro, phenoscapeVocab)
+    val coreReasoner = reasoner(Set(uberon, pato, bspo, go, ro, phenoscapeVocab).flatMap(_.axioms))
     val anatomicalEntities = coreReasoner.getSubClasses(Class(Vocab.ANATOMICAL_ENTITY), false).getFlattened.filterNot(_.isOWLNothing)
-    //val qualities = coreReasoner.getSubClasses(Class(Vocab.QUALITY), false).getFlattened().filterNot(_.isOWLNothing())
     coreReasoner.dispose()
-
-    //  step("Generating EQ characters for analyses")
-    val attributeQualities = attributes.getClassesInSignature + HasNumberOf
-    //  val eqCharacters = manager.createOntology(EQCharactersGenerator.generateEQCharacters(anatomicalEntities, attributeQualities))
-
-    step("Creating VTO instances")
-    val vtoIndividuals = TaxonomyConverter.createInstanceOntology(vto)
-    write(vtoIndividuals, cwd + "/staging/kb/vto-individuals.owl")
-    //step("Materializing VTO closure")
-    //val materializedVTOClasses = MaterializeSubClassOfClosure.materialize(vto)
-    //val materializedVTOIndividuals = TaxonomyConverter.createInstanceOntology(materializedVTOClasses)
-    //step("Writing VTO closure")
-    //write(materializedVTOIndividuals, cwd + "/staging/kb/vto-individuals-closure.owl")
 
     step("Converting NeXML to OWL")
     val vocabForNeXML = combine(uberon, pato, bspo, go, ro, phenoscapeVocab)
@@ -166,65 +127,54 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
 
     step("Converting ZFIN data")
     val zfinGenes = PropertyNormalizer.normalize(ZFINGeneticMarkersToOWL.convert(Source.fromFile(new File(cwd + "/staging/sources/zfin_genetic_markers.txt"), "ISO-8859-1")))
-    write(zfinGenes, cwd + "/staging/kb/zfin-genes.owl")
     val zfinPreviousGeneNames = PropertyNormalizer.normalize(ZFINPreviousGeneNamesToOWL.convert(Source.fromFile(new File(cwd + "/staging/sources/zfin_aliases.txt"), "ISO-8859-1")))
-    write(zfinPreviousGeneNames, cwd + "/staging/kb/zfin-previous-gene-names.owl")
     val zfinExpressionData = PropertyNormalizer.normalize(ZFINExpressionToOWL.convert(Source.fromFile(new File(cwd + "/staging/sources/zfin_wildtype_expression.txt"), "ISO-8859-1")))
-    write(zfinExpressionData, cwd + "/staging/kb/zfin-expression-data.owl")
     val zfinPhenotypeData = PropertyNormalizer.normalize(ZFINPhenotypesToOWL.convert(Source.fromFile(new File(cwd + "/staging/sources/zfin_phenotypes.txt"), "ISO-8859-1")))
-    write(zfinPhenotypeData, cwd + "/staging/kb/zfin-phenotype-data.owl")
 
     step("Converting MGI data")
     val mgiGenes = PropertyNormalizer.normalize(MGIGeneticMarkersToOWL.convert(Source.fromFile(new File(cwd + "/staging/sources/mgi_genes.txt"), "utf-8")))
-    write(mgiGenes, cwd + "/staging/kb/mgi-genes.owl")
     val mgiExpressionData = PropertyNormalizer.normalize(MGIExpressionToOWL.convert(Source.fromFile(new File(cwd + "/staging/sources/mgi_expression_data.txt"), "utf-8")))
-    write(mgiExpressionData, cwd + "/staging/kb/mgi-expression-data.owl")
     val mgiPhenotypeData = PropertyNormalizer.normalize(MGIPhenotypesToOWL.convert(Source.fromFile(new File(cwd + "/staging/sources/mgi_phenotypes.txt"), "utf-8")))
-    write(mgiPhenotypeData, cwd + "/staging/kb/mgi-phenotype-data.owl")
 
     step("Converting Xenbase data")
     val xenbaseGenes = PropertyNormalizer.normalize(XenbaseGenesToOWL.convert(Source.fromFile(new File(cwd + "/staging/sources/xenbase_genes.txt"), "utf-8")))
-    write(xenbaseGenes, cwd + "/staging/kb/xenbase-genes.owl")
     val xenbaseExpressionData = PropertyNormalizer.normalize(XenbaseExpressionToOWL.convert(
       Source.fromFile(new File(cwd + "/staging/sources/xenbase_genepage_mappings.txt"), "utf-8"),
       Source.fromFile(new File(cwd + "/staging/sources/GeneExpression_laevis.txt"), "utf-8"),
       Source.fromFile(new File(cwd + "/staging/sources/GeneExpression_tropicalis.txt"), "utf-8")))
-    write(xenbaseExpressionData, cwd + "/staging/kb/xenbase-expression-data.owl")
     val xenbasePhenotypeFiles = FileUtils.listFiles(new File(cwd + "/staging/sources/xenbase-phenotypes"), Array("txt"), true)
-    val xenbasePhenotypeData = PropertyNormalizer.normalize(manager.createOntology(xenbasePhenotypeFiles.flatMap(f =>
-      XenbasePhenotypesToOWL.convertToAxioms(Source.fromFile(f))).toSet))
-    write(xenbasePhenotypeData, cwd + "/staging/kb/xenbase-phenotype-data.owl")
+    val xenbasePhenotypeData = PropertyNormalizer.normalize(xenbasePhenotypeFiles.flatMap(f => XenbasePhenotypesToOWL.convertToAxioms(Source.fromFile(f))).toSet)
 
     step("Converting human data")
     val humanPhenotypeData = PropertyNormalizer.normalize(HumanPhenotypesToOWL.convert(Source.fromFile(new File(cwd + "/staging/sources/hp_phenotypes.txt"), "utf-8")))
-    write(humanPhenotypeData, cwd + "/staging/kb/human-phenotypes.owl")
 
     step("Generating tbox")
-    val tboxFromData = manager.createOntology(
-      zfinGenes.getTBoxAxioms(false) ++
-        zfinPreviousGeneNames.getTBoxAxioms(false) ++
-        zfinExpressionData.getTBoxAxioms(false) ++
-        zfinPhenotypeData.getTBoxAxioms(false) ++
-        mgiGenes.getTBoxAxioms(false) ++
-        mgiExpressionData.getTBoxAxioms(false) ++
-        mgiPhenotypeData.getTBoxAxioms(false) ++
-        xenbaseGenes.getTBoxAxioms(false) ++
-        xenbaseExpressionData.getTBoxAxioms(false) ++
-        xenbasePhenotypeData.getTBoxAxioms(false) ++
-        humanPhenotypeData.getTBoxAxioms(false) ++
+    val tboxFromData =
+      zfinGenes.filter(isTboxAxiom) ++
+        zfinPreviousGeneNames.filter(isTboxAxiom) ++
+        zfinExpressionData.filter(isTboxAxiom) ++
+        zfinPhenotypeData.filter(isTboxAxiom) ++
+        mgiGenes.filter(isTboxAxiom) ++
+        mgiExpressionData.filter(isTboxAxiom) ++
+        mgiPhenotypeData.filter(isTboxAxiom) ++
+        xenbaseGenes.filter(isTboxAxiom) ++
+        xenbaseExpressionData.filter(isTboxAxiom) ++
+        xenbasePhenotypeData.filter(isTboxAxiom) ++
+        humanPhenotypeData.filter(isTboxAxiom) ++
         nexmlTBoxAxioms +
-        (has_part_inhering_in SubPropertyChain (has_part o inheres_in))) //TODO add this to Phenoscape vocab ontology
+        (has_part_inhering_in SubPropertyChain (has_part o inheres_in)) //TODO add this to Phenoscape vocab ontology
 
     //val parts = manager.createOntology(anatomicalEntities.map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.PART_OF), _)).flatten)
-    val hasParts = manager.createOntology(anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(has_part, _)))
-    val presences = manager.createOntology(anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(Vocab.IMPLIES_PRESENCE_OF, _)))
-    val hasPartsInheringIns = manager.createOntology(anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(has_part_inhering_in, _)))
-    val absences = manager.createOntology(anatomicalEntities.flatMap(AbsenceClassGenerator.createAbsenceClass))
-    val namedHasPartClasses = anatomicalEntities.map(_.getIRI()).map(NamedRestrictionGenerator.getRestrictionIRI(has_part.getIRI, _)).map(Class(_))
-    val absenceNegationEquivalences = manager.createOntology(namedHasPartClasses.flatMap(NegationClassGenerator.createNegationClassAxioms(_, hasParts)))
-    val developsFromRulesForAbsence = manager.createOntology(anatomicalEntities.flatMap(ReverseDevelopsFromRuleGenerator.createRules).toSet[OWLAxiom])
+    val hasParts = anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(has_part, _))
+    val presences = anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(Vocab.IMPLIES_PRESENCE_OF, _))
+    val hasPartsInheringIns = anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(has_part_inhering_in, _))
+    val absences = anatomicalEntities.flatMap(AbsenceClassGenerator.createAbsenceClass)
+    val namedHasPartClasses = anatomicalEntities.map(_.getIRI).map(NamedRestrictionGenerator.getRestrictionIRI(has_part.getIRI, _)).map(Class(_))
+    val absenceNegationEquivalences = namedHasPartClasses.flatMap(NegationClassGenerator.createNegationClassAxioms)
+    val developsFromRulesForAbsence = anatomicalEntities.flatMap(ReverseDevelopsFromRuleGenerator.createRules).toSet[OWLAxiom]
 
     step("Generating semantic similarity subsumers")
+    val attributeQualities = attributes.axioms.flatMap(_.getClassesInSignature) + HasNumberOf
     val entitySubsumerAxioms = for {
       entity <- anatomicalEntities
       (term, entityAxioms) = SimilarityTemplates.entity(entity)
@@ -238,16 +188,14 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
       (partsTerm, entityPartsAxioms) = SimilarityTemplates.entityAndPartsWithQuality(entity, attribute)
       axiom <- (entityAxioms ++ entityPartsAxioms)
     } yield axiom
-    val subsumers = manager.createOntology(entitySubsumerAxioms ++ entityQualitySubsumerAxioms)
+    val subsumers = entitySubsumerAxioms ++ entityQualitySubsumerAxioms
 
-    val allTBox = combine(uberon, homology, pato, bspo, go, vto, zfa, xao, hp, //mp,
-      hpEQ, mpEQ, caroToUberon, zfaToUberon, xaoToUberon, fmaToUberon, mgiToEMAPA, emapa, emapaToUberon,
-      hasParts, hasPartsInheringIns, presences, absences, absenceNegationEquivalences, developsFromRulesForAbsence, subsumers, tboxFromData, ro, phenoscapeVocab) // , eqCharacters
-    println("tbox class count: " + allTBox.getClassesInSignature().size())
-    println("tbox logical axiom count: " + allTBox.getLogicalAxiomCount())
-    val tBoxWithoutDisjoints = OntologyUtil.ontologyWithoutDisjointAxioms(allTBox)
-    //write(allTBox, cwd + "/staging/kb/asserted_tbox.owl")
-    //write(tBoxWithoutDisjoints, cwd + "/staging/kb/asserted_tbox_no_disjoints.owl")
+    val allTBox = uberon.axioms ++ homology.axioms ++ pato.axioms ++ bspo.axioms ++ go.axioms ++ vto.axioms ++ zfa.axioms ++ xao.axioms ++ hp.axioms ++
+      hpEQ.axioms ++ mpEQ.axioms ++ caroToUberon.axioms ++ zfaToUberon.axioms ++ xaoToUberon.axioms ++ fmaToUberon.axioms ++ mgiToEMAPA.axioms ++ emapa.axioms ++ emapaToUberon.axioms ++
+      hasParts ++ hasPartsInheringIns ++ presences ++ absences ++ absenceNegationEquivalences ++ developsFromRulesForAbsence ++ subsumers ++ tboxFromData ++ ro.axioms ++ phenoscapeVocab.axioms // , eqCharacters //mp,
+    println("tbox class count: " + allTBox.flatMap(_.getClassesInSignature).size)
+    println("tbox logical axiom count: " + allTBox.filter(_.isLogicalAxiom).size)
+    val tBoxWithoutDisjoints = OntologyUtil.filterDisjointAxioms(allTBox)
 
     step("Materializing tbox classification")
     val tboxReasoner = reasoner(tBoxWithoutDisjoints)
@@ -256,9 +204,9 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     tboxReasoner.dispose()
 
     step("Asserting reverse negation hierarchy")
-    val hierarchyAxioms = NegationHierarchyAsserter.assertNegationHierarchy(tBoxWithoutDisjoints, inferredAxioms)
+    val hierarchyAxioms = NegationHierarchyAsserter.assertNegationHierarchy(tBoxWithoutDisjoints ++ inferredAxioms.getAxioms)
     manager.addAxioms(inferredAxioms, hierarchyAxioms)
-    implicit val negationReasoner = reasoner(tBoxWithoutDisjoints, inferredAxioms)
+    implicit val negationReasoner = reasoner(tBoxWithoutDisjoints ++ inferredAxioms.getAxioms)
     MaterializeInferences.materializeInferences(inferredAxioms, negationReasoner)
 
     if (negationReasoner.getUnsatisfiableClasses().getEntitiesMinusBottom().isEmpty()) {
@@ -268,11 +216,8 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
       println(negationReasoner.getUnsatisfiableClasses())
     }
 
-    step("Writing generated and inferred tbox axioms")
-    write(combine(hasParts, hasPartsInheringIns, presences, absences, absenceNegationEquivalences, developsFromRulesForAbsence, inferredAxioms), cwd + "/staging/kb/generated.owl") //, eqCharacters
-
     step("Writing tbox axioms for ELK")
-    val tboxOut = combine(tBoxWithoutDisjoints, inferredAxioms)
+    val tboxOut = OWLManager.createOWLOntologyManager().createOntology((tBoxWithoutDisjoints ++ inferredAxioms.getAxioms))
     write(tboxOut, cwd + "/staging/kb/tbox.owl")
 
     step("Reducing tbox for OWLsim")

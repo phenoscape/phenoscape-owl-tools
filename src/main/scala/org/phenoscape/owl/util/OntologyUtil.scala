@@ -19,14 +19,16 @@ object OntologyUtil {
 
   def ontologyWithoutDisjointAxioms(ontology: OWLOntology): OWLOntology = {
     val manager = OWLManager.createOWLOntologyManager
-    val axioms = ontology.getAxioms
-      .filterNot { _.getAxiomType == AxiomType.DISJOINT_CLASSES }
-      .filterNot {
-        case axiom: OWLEquivalentClassesAxiom => axiom.getNamedClasses.contains(factory.getOWLNothing) || axiom.getClassExpressions.contains(factory.getOWLNothing)
-        case _                                => false
-      }
+    val axioms = filterDisjointAxioms(ontology.getAxioms.toSet)
     manager.createOntology(axioms)
   }
+
+  def filterDisjointAxioms(axioms: Set[OWLAxiom]): Set[OWLAxiom] = axioms
+    .filterNot { _.getAxiomType == AxiomType.DISJOINT_CLASSES }
+    .filterNot {
+      case axiom: OWLEquivalentClassesAxiom => axiom.getNamedClasses.contains(factory.getOWLNothing) || axiom.getClassExpressions.contains(factory.getOWLNothing)
+      case _                                => false
+    }
 
   def nextIndividual(): OWLNamedIndividual = factory.getOWLNamedIndividual(this.nextIRI)
 

@@ -3,7 +3,6 @@ package org.phenoscape.owl.mod.xenbase
 import java.io.File
 import scala.collection.JavaConversions._
 import scala.collection.Map
-import scala.collection.Set
 import scala.collection.TraversableOnce.flattenTraversableOnce
 import scala.collection.mutable
 import scala.io.Source
@@ -25,24 +24,11 @@ object XenbaseExpressionToOWL extends OWLTask {
   val laevis = Individual(Vocab.XENOPUS_LAEVIS)
   val tropicalis = Individual(Vocab.XENOPUS_TROPICALIS)
   val manager = OWLManager.createOWLOntologyManager()
+  val rdfsLabel = factory.getRDFSLabel()
 
-  def main(args: Array[String]): Unit = {
-    val genepageMappingsFile = Source.fromFile(args(0), "utf-8")
-    val laevisExpressionFile = Source.fromFile(args(1), "utf-8")
-    val tropicalisExpressionFile = Source.fromFile(args(2))
-    val ontology = convert(genepageMappingsFile, laevisExpressionFile, tropicalisExpressionFile)
-    genepageMappingsFile.close()
-    laevisExpressionFile.close()
-    tropicalisExpressionFile.close()
-    manager.saveOntology(ontology, IRI.create(new File(args(3))))
-  }
-
-  def convert(genepageMappingsFile: Source, laevisExpressionFile: Source, tropicalisExpressionFile: Source): OWLOntology = {
+  def convert(genepageMappingsFile: Source, laevisExpressionFile: Source, tropicalisExpressionFile: Source): Set[OWLAxiom] = {
     val mappings = indexGenepageMappings(genepageMappingsFile)
-    val ontology = convert(laevisExpressionFile, mappings, laevis)
-    val tropicalisOntology = convert(tropicalisExpressionFile, mappings, tropicalis)
-    manager.addAxioms(ontology, tropicalisOntology.getAxioms())
-    return ontology
+    convert(laevisExpressionFile, mappings, laevis) ++ convert(tropicalisExpressionFile, mappings, tropicalis)
   }
 
   def indexGenepageMappings(mappings: Source): Map[String, String] = {
@@ -57,22 +43,18 @@ object XenbaseExpressionToOWL extends OWLTask {
     return index
   }
 
-  def convert(expressionData: Source, genepageMappings: Map[String, String], species: OWLNamedIndividual): OWLOntology = {
-    val id = if (species == laevis) "http://purl.obolibrary.org/obo/phenoscape/xenbase_gene_expression.owl" else ""
-    val ontology = manager.createOntology(IRI.create(id))
-    manager.addAxioms(ontology, expressionData.getLines.map(translate(_, genepageMappings, species)).flatten.toSet[OWLAxiom])
-    val rdfsLabel = factory.getRDFSLabel()
-    manager.addAxiom(ontology, laevis Annotation (rdfsLabel, factory.getOWLLiteral("Xenopus laevis")))
-    manager.addAxiom(ontology, tropicalis Annotation (rdfsLabel, factory.getOWLLiteral("Xenopus tropicalis")))
-    return ontology
+  def convert(expressionData: Source, genepageMappings: Map[String, String], species: OWLNamedIndividual): Set[OWLAxiom] = {
+    expressionData.getLines.flatMap(translate(_, genepageMappings, species)).toSet[OWLAxiom] +
+      (laevis Annotation (rdfsLabel, factory.getOWLLiteral("Xenopus laevis"))) +
+      (tropicalis Annotation (rdfsLabel, factory.getOWLLiteral("Xenopus tropicalis")))
   }
 
   def translate(expressionLine: String, genepageMappings: Map[String, String], species: OWLNamedIndividual): Set[OWLAxiom] = {
     val items = expressionLine.split("\t")
-    val axioms = mutable.Set[OWLAxiom]()
     if (StringUtils.stripToEmpty(items(3)) == "unspecified") {
-      return axioms
+      Set.empty
     } else {
+      val axioms = mutable.Set[OWLAxiom]()
       val expression = OntologyUtil.nextIndividual()
       axioms.add(factory.getOWLDeclarationAxiom(expression))
       axioms.add(expression Type GeneExpression)
@@ -96,7 +78,7 @@ object XenbaseExpressionToOWL extends OWLTask {
       axioms.add(factory.getOWLDeclarationAxiom(gene))
       axioms.add(expression Fact (associated_with_gene, gene))
       axioms.add(expression Fact (associated_with_taxon, species))
-      return axioms
+      axioms.toSet
     }
   }
 

@@ -10,39 +10,55 @@ import org.semanticweb.owlapi.model.OWLOntology
 import org.semanticweb.owlapi.model.OWLSubClassOfAxiom
 import org.semanticweb.owlapi.model.OWLAxiom
 import org.phenoscape.scowl.OWL._
+import org.semanticweb.owlapi.model.OWLAnnotationAssertionAxiom
+import org.semanticweb.owlapi.model.OWLClassExpression
 
 object NegationHierarchyAsserter extends OWLTask {
 
   val negates = factory.getOWLAnnotationProperty(Vocab.NEGATES)
 
-  def main(args: Array[String]): Unit = {
-    val manager = OWLManager.createOWLOntologyManager
-    val ontology = manager.loadOntologyFromOntologyDocument(new File(args(0)))
-    assertNegationHierarchy(ontology)
-    if (args.size > 1) {
-      manager.saveOntology(ontology, IRI.create(new File(args(1))))
-    } else {
-      manager.saveOntology(ontology)
-    }
-  }
+  //  def assertNegationHierarchy(ontologies: OWLOntology*): Set[OWLAxiom] = {
+  //    val allClasses = ontologies flatMap (_.getClassesInSignature(true))
+  //    val negatesPairs = for {
+  //      ont <- ontologies
+  //      annotationAxiom <- ont.getAxioms(AxiomType.ANNOTATION_ASSERTION, false)
+  //      if annotationAxiom.getProperty == negates
+  //    } yield (annotationAxiom.getSubject().asInstanceOf[IRI], annotationAxiom.getValue().asInstanceOf[IRI])
+  //    val negatesIndex = buildIndex(negatesPairs)
+  //    val negatedByIndex = buildReverseIndex(negatesPairs)
+  //    val superToSubclassPairs = for {
+  //      subClassOfAxiom <- axioms.collect { case ax: OWLSubClassOfAxiom => ax }
+  //      if !subClassOfAxiom.getSubClass.isAnonymous
+  //      if !subClassOfAxiom.getSuperClass.isAnonymous
+  //    } yield (subClassOfAxiom.getSuperClass.asOWLClass, subClassOfAxiom.getSubClass.asOWLClass)
+  //    val subclassesIndex = buildIndex(superToSubclassPairs)
+  //    val axioms = allClasses.flatMap(createSubclassOfAxioms(_, negatesIndex, negatedByIndex, subclassesIndex))
+  //    axioms.toSet
+  //  }
 
-  def assertNegationHierarchy(ontologies: OWLOntology*): Set[OWLAxiom] = {
-    val allClasses = ontologies flatMap (_.getClassesInSignature(true))
+  def assertNegationHierarchy(axioms: Set[OWLAxiom]): Set[OWLAxiom] = {
     val negatesPairs = for {
-      ont <- ontologies
-      annotationAxiom <- ont.getAxioms(AxiomType.ANNOTATION_ASSERTION, false)
+      annotationAxiom <- axioms.collect { case ax: OWLAnnotationAssertionAxiom => ax }
       if annotationAxiom.getProperty == negates
     } yield (annotationAxiom.getSubject().asInstanceOf[IRI], annotationAxiom.getValue().asInstanceOf[IRI])
     val negatesIndex = buildIndex(negatesPairs)
     val negatedByIndex = buildReverseIndex(negatesPairs)
-    val axioms = allClasses.flatMap(createSubclassOfAxioms(_, negatesIndex, negatedByIndex, ontologies.toSet))
-    axioms.toSet
+    val superToSubclassPairs = for {
+      subClassOfAxiom <- axioms.collect { case ax: OWLSubClassOfAxiom => ax }
+      if !subClassOfAxiom.getSubClass.isAnonymous
+      if !subClassOfAxiom.getSuperClass.isAnonymous
+    } yield (subClassOfAxiom.getSuperClass.asOWLClass, subClassOfAxiom.getSubClass.asOWLClass)
+    val subclassesIndex = buildIndex(superToSubclassPairs)
+    for {
+      term <- axioms.flatMap(_.getClassesInSignature)
+      axiom <- createSubclassOfAxioms(term, negatesIndex, negatedByIndex, subclassesIndex)
+    } yield axiom
   }
 
-  def createSubclassOfAxioms(ontClass: OWLClass, negatesIndex: Map[IRI, Set[IRI]], negatedByIndex: Map[IRI, Set[IRI]], ontologies: Set[OWLOntology]): Set[OWLSubClassOfAxiom] = {
+  def createSubclassOfAxioms(ontClass: OWLClass, negatesIndex: Map[IRI, Set[IRI]], negatedByIndex: Map[IRI, Set[IRI]], subclassesIndex: Map[OWLClass, Set[OWLClass]]): Set[OWLSubClassOfAxiom] = {
     for {
       negatedClassIRI <- negatesIndex(ontClass.getIRI)
-      subClassOfNegatedClass <- Class(negatedClassIRI).getSubClasses(ontologies)
+      subClassOfNegatedClass <- subclassesIndex(Class(negatedClassIRI))
       if !subClassOfNegatedClass.isAnonymous()
       superClassOfOntClassIRI <- negatedByIndex(subClassOfNegatedClass.asOWLClass.getIRI)
     } yield ontClass SubClassOf Class(superClassOfOntClassIRI)

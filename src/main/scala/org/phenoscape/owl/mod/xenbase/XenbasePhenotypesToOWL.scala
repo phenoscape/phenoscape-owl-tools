@@ -1,28 +1,19 @@
 package org.phenoscape.owl.mod.xenbase
 
-import org.phenoscape.owl.OWLTask
-import org.phenoscape.scowl.OWL._
-import scala.collection.JavaConversions._
-import scala.collection.mutable
 import scala.collection.Map
-import org.semanticweb.owlapi.model.OWLOntology
-import java.io.File
 import scala.io.Source
-import org.semanticweb.owlapi.model.OWLAxiom
+
+import org.apache.commons.lang3.StringUtils
+import org.phenoscape.owl.OWLTask
 import org.phenoscape.owl.Vocab
 import org.phenoscape.owl.Vocab._
-import org.apache.commons.lang3.StringUtils
-import org.phenoscape.owl.util.OBOUtil
-import org.semanticweb.owlapi.model.IRI
-import org.phenoscape.owl.NamedRestrictionGenerator
-import org.semanticweb.owlapi.model.OWLClass
 import org.phenoscape.owl.util.ExpressionUtil
-import org.semanticweb.owlapi.model.AddImport
-import org.semanticweb.owlapi.apibinding.OWLManager
-import org.semanticweb.owlapi.model.OWLNamedIndividual
-import org.semanticweb.owlapi.model.OWLClassExpression
-import org.phenoscape.owl.Vocab._
+import org.phenoscape.owl.util.OBOUtil
 import org.phenoscape.owl.util.OntologyUtil
+import org.phenoscape.scowl.OWL._
+import org.semanticweb.owlapi.apibinding.OWLManager
+import org.semanticweb.owlapi.model.OWLAxiom
+import org.semanticweb.owlapi.model.OWLNamedIndividual
 
 object XenbasePhenotypesToOWL extends OWLTask {
 
@@ -30,15 +21,7 @@ object XenbasePhenotypesToOWL extends OWLTask {
   val tropicalis = Individual(Vocab.XENOPUS_TROPICALIS)
   val manager = OWLManager.createOWLOntologyManager()
 
-  def convertToOntology(genepageMappingsFile: Source, phenotypeData: Source): OWLOntology = {
-    val ontology = manager.createOntology(IRI.create("http://purl.obolibrary.org/obo/phenoscape/xenbase_phenotypes.owl"))
-    manager.addAxioms(ontology, convertToAxioms(phenotypeData))
-    return ontology
-  }
-
-  def convertToAxioms(phenotypeData: Source): Set[OWLAxiom] = {
-    phenotypeData.getLines.drop(1).flatMap(translate).toSet[OWLAxiom]
-  }
+  def convertToAxioms(phenotypeData: Source): Set[OWLAxiom] = phenotypeData.getLines.drop(1).flatMap(translate).toSet
 
   def translate(annotationLine: String): Set[OWLAxiom] = {
     val items = annotationLine.split("\t")
@@ -72,7 +55,7 @@ object XenbasePhenotypesToOWL extends OWLTask {
         factory.getOWLDeclarationAxiom(species)) ++
         entityAxioms ++
         relatedEntityAxioms
-    } else Set()
+    } else Set.empty
   }
 
   def fixGeneID(id: String): String = "XB-GENEPAGE-" + id.split(":")(1)

@@ -16,6 +16,8 @@ import org.phenoscape.owl.util.NullIRIMapper
 import java.util.Date
 import org.phenoscape.owl.util.OBOUtil
 import org.semanticweb.owlapi.model.OWLOntologyManager
+import org.semanticweb.owlapi.model.OWLAxiom
+import org.semanticweb.owlapi.model.AxiomType
 
 class KnowledgeBaseBuilder extends App {
 
@@ -36,10 +38,14 @@ class KnowledgeBaseBuilder extends App {
     }
   }
 
+  def combine(ontology: SourcedAxioms, ontologies: SourcedAxioms*): OWLOntology = OWLManager.createOWLOntologyManager().createOntology(ontologies.flatMap(_.axioms).toSet)
+
   def reasoner(ontologies: OWLOntology*): OWLReasoner = {
     val allAxioms = combine(ontologies: _*)
     new ElkReasonerFactory().createReasoner(allAxioms)
   }
+
+  def reasoner(axioms: Set[OWLAxiom]): OWLReasoner = new ElkReasonerFactory().createReasoner(OWLManager.createOWLOntologyManager().createOntology(axioms))
 
   def loadNormalized(location: File): OWLOntology = {
     val ont = globalManager.loadOntologyFromOntologyDocument(location)
@@ -48,13 +54,13 @@ class KnowledgeBaseBuilder extends App {
     PropertyNormalizer.normalize(ont)
   }
 
-  def loadFromWebWithImports(iri: IRI): OWLOntology = {
+  def loadFromWebWithImports(iri: IRI): SourcedAxioms = {
     val manager = OWLManager.createOWLOntologyManager()
     val ont = manager.loadOntology(iri)
     val importsAxioms = (ont.getImportsClosure - ont).flatMap(_.getAxioms)
     manager.addAxioms(ont, importsAxioms)
     PropertyNormalizer.normalize(ont)
-    ont
+    SourcedAxioms(ont.getAxioms.toSet, iri, Option(ont.getOntologyID.getVersionIRI))
   }
 
   def write(ontology: OWLOntology, filename: String): Unit = {
@@ -73,5 +79,15 @@ class KnowledgeBaseBuilder extends App {
   def step(message: String): Unit = {
     println(new Date() + ": " + message)
   }
+
+  def isTboxAxiom(axiom: OWLAxiom): Boolean = axiom.isOfType(AxiomType.TBoxAxiomTypes)
+
+}
+
+case class SourcedAxioms(axioms: Set[OWLAxiom], ont: IRI, ontVersion: Option[IRI])
+
+object SourcedAxioms {
+
+  def apply(ont: OWLOntology): SourcedAxioms = SourcedAxioms(ont.getAxioms.toSet, ont.getOntologyID.getOntologyIRI, Option(ont.getOntologyID.getVersionIRI))
 
 }

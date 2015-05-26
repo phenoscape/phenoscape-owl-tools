@@ -1,19 +1,15 @@
 package org.phenoscape.owl.mod.xenbase
 
-import java.io.File
-import scala.collection.JavaConversions._
-import scala.collection.TraversableOnce.flattenTraversableOnce
-import scala.collection.Set
 import scala.collection.mutable
 import scala.io.Source
+
 import org.apache.commons.lang3.StringUtils
 import org.phenoscape.owl.OWLTask
 import org.phenoscape.owl.Vocab._
+import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model.IRI
 import org.semanticweb.owlapi.model.OWLAxiom
-import org.semanticweb.owlapi.model.OWLOntology
 import org.semanticweb.owlapi.vocab.OWLRDFVocabulary
-import org.semanticweb.owlapi.apibinding.OWLManager
 
 object XenbaseGenesToOWL extends OWLTask {
 
@@ -22,18 +18,7 @@ object XenbaseGenesToOWL extends OWLTask {
   val hasExactSynonym = factory.getOWLAnnotationProperty(HAS_EXACT_SYNONYM)
   val hasRelatedSynonym = factory.getOWLAnnotationProperty(HAS_RELATED_SYNONYM)
 
-  def main(args: Array[String]): Unit = {
-    val file = Source.fromFile(args(0), "utf-8")
-    val ontology = convert(file)
-    file.close()
-    manager.saveOntology(ontology, IRI.create(new File(args(1))))
-  }
-
-  def convert(markersData: Source): OWLOntology = {
-    val ontology = manager.createOntology(IRI.create("http://purl.obolibrary.org/obo/phenoscape/xenbase_genes.owl"))
-    manager.addAxioms(ontology, markersData.getLines.map(translate(_)).flatten.toSet[OWLAxiom])
-    return ontology
-  }
+  def convert(markersData: Source): Set[OWLAxiom] = markersData.getLines.flatMap(translate).toSet[OWLAxiom]
 
   def translate(line: String): Set[OWLAxiom] = {
     val items = line.split("\t")
@@ -53,7 +38,7 @@ object XenbaseGenesToOWL extends OWLTask {
         axioms.add(factory.getOWLAnnotationAssertionAxiom(hasRelatedSynonym, geneIRI, factory.getOWLLiteral(synonym)))
       })
     }
-    return axioms
+    axioms.toSet
 
   }
 

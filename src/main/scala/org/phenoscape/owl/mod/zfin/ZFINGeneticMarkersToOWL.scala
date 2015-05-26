@@ -3,7 +3,6 @@ package org.phenoscape.owl.mod.zfin
 import java.io.File
 import scala.collection.JavaConversions._
 import scala.collection.TraversableOnce.flattenTraversableOnce
-import scala.collection.Set
 import scala.collection.mutable
 import scala.io.Source
 import org.apache.commons.lang3.StringUtils
@@ -21,24 +20,16 @@ object ZFINGeneticMarkersToOWL extends OWLTask {
   val rdfsLabel = factory.getOWLAnnotationProperty(OWLRDFVocabulary.RDFS_LABEL.getIRI())
   val hasExactSynonym = factory.getOWLAnnotationProperty(HAS_EXACT_SYNONYM)
 
-  def main(args: Array[String]): Unit = {
-    val file = Source.fromFile(args(0), "ISO-8859-1")
-    val ontology = convert(file)
-    file.close()
-    manager.saveOntology(ontology, IRI.create(new File(args(1))))
-  }
+  def convert(markersData: Source): Set[OWLAxiom] = {
+    markersData.getLines.map(translate(_)).flatten.toSet[OWLAxiom]
 
-  def convert(markersData: Source): OWLOntology = {
-    val ontology = manager.createOntology(IRI.create("http://purl.obolibrary.org/obo/phenoscape/zfin_genes.owl"))
-    manager.addAxioms(ontology, markersData.getLines.map(translate(_)).flatten.toSet[OWLAxiom])
-    return ontology
   }
 
   def translate(line: String): Set[OWLAxiom] = {
     val items = line.split("\t")
     val axioms = mutable.Set[OWLAxiom]()
     if (items(3) != "GENE") {
-      return axioms
+      axioms.toSet
     } else {
       val geneID = StringUtils.stripToNull(items(0))
       val geneSymbol = StringUtils.stripToNull(items(1))
@@ -49,7 +40,7 @@ object ZFINGeneticMarkersToOWL extends OWLTask {
       axioms.add(factory.getOWLClassAssertionAxiom(Gene, gene))
       axioms.add(factory.getOWLAnnotationAssertionAxiom(rdfsLabel, geneIRI, factory.getOWLLiteral(geneSymbol)))
       axioms.add(factory.getOWLAnnotationAssertionAxiom(hasExactSynonym, geneIRI, factory.getOWLLiteral(geneFullName)))
-      return axioms
+      axioms.toSet
     }
   }
 
