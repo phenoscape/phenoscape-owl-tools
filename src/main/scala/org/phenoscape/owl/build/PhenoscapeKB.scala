@@ -214,12 +214,18 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
 
     //val parts = manager.createOntology(anatomicalEntities.map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.PART_OF), _)).flatten)
     val hasParts = anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(has_part, _))
+    addTriples(hasParts, bigdata, graphURI)
     val presences = anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(Vocab.IMPLIES_PRESENCE_OF, _))
+    addTriples(presences, bigdata, graphURI)
     val hasPartsInheringIns = anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(has_part_inhering_in, _))
+    addTriples(hasPartsInheringIns, bigdata, graphURI)
     val absences = anatomicalEntities.flatMap(AbsenceClassGenerator.createAbsenceClass)
+    addTriples(absences, bigdata, graphURI)
     val namedHasPartClasses = anatomicalEntities.map(_.getIRI).map(NamedRestrictionGenerator.getRestrictionIRI(has_part.getIRI, _)).map(Class(_))
     val absenceNegationEquivalences = namedHasPartClasses.flatMap(NegationClassGenerator.createNegationClassAxioms)
+    addTriples(absenceNegationEquivalences, bigdata, graphURI)
     val developsFromRulesForAbsence = anatomicalEntities.flatMap(ReverseDevelopsFromRuleGenerator.createRules).toSet[OWLAxiom]
+    addTriples(developsFromRulesForAbsence, bigdata, graphURI)
 
     step("Generating semantic similarity subsumers")
     val attributeQualities = attributes.axioms.flatMap(_.getClassesInSignature) + HasNumberOf
@@ -264,9 +270,8 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
       println(negationReasoner.getUnsatisfiableClasses())
     }
 
-    step("Writing generated and inferred tbox axioms")
-    addTriples(hasParts ++ hasPartsInheringIns ++ presences ++ absences ++ absenceNegationEquivalences ++
-      developsFromRulesForAbsence ++ inferredAxioms.getAxioms, bigdata, graphURI)
+    step("Writing inferred tbox axioms")
+    addTriples(inferredAxioms, bigdata, graphURI)
 
     step("Writing tbox axioms for ELK")
     val tboxOut = OWLManager.createOWLOntologyManager().createOntology((tBoxWithoutDisjoints ++ inferredAxioms.getAxioms))
