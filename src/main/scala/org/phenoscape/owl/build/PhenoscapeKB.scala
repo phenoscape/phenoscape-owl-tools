@@ -95,8 +95,6 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
 
   def loadOntologiesAndCreateReasoner(): OWLReasoner = {
     step("Loading ontologies")
-    val ro = loadFromWebWithImports(IRI.create("http://purl.obolibrary.org/obo/ro.owl"))
-    addTriples(ro, bigdata, graphURI)
     val phenoscapeVocab = loadFromWebWithImports(IRI.create("http://purl.org/phenoscape/vocab.owl"))
     addTriples(phenoscapeVocab, bigdata, graphURI)
     val attributes = loadFromWebWithImports(IRI.create("http://svn.code.sf.net/p/phenoscape/code/trunk/vocab/character_slims.obo"))
@@ -147,12 +145,12 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     addTriples(emapaToUberon, bigdata, graphURI)
 
     step("Querying entities and qualities")
-    val coreReasoner = reasoner(Set(uberon, pato, bspo, go, ro, phenoscapeVocab).flatMap(_.axioms))
+    val coreReasoner = reasoner(Set(uberon, pato, bspo, go, phenoscapeVocab).flatMap(_.axioms))
     val anatomicalEntities = coreReasoner.getSubClasses(Class(Vocab.ANATOMICAL_ENTITY), false).getFlattened.filterNot(_.isOWLNothing)
     coreReasoner.dispose()
 
     step("Converting NeXML to OWL")
-    val vocabForNeXML = combine(uberon, pato, bspo, go, ro, phenoscapeVocab)
+    val vocabForNeXML = combine(uberon, pato, bspo, go, phenoscapeVocab)
     cd(NEXML)
     val filesToConvert = (FileUtils.listFiles(new File(cwd + "/staging/nexml/completed-phenex-files"), Array("xml"), true) ++
       FileUtils.listFiles(new File(cwd + "/staging/nexml/fin_limb-incomplete-files"), Array("xml"), true) ++
@@ -242,7 +240,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
 
     val allTBox = uberon.axioms ++ homology.axioms ++ pato.axioms ++ bspo.axioms ++ go.axioms ++ vto.axioms ++ zfa.axioms ++ xao.axioms ++ hp.axioms ++
       hpEQ.axioms ++ mpEQ.axioms ++ caroToUberon.axioms ++ zfaToUberon.axioms ++ xaoToUberon.axioms ++ fmaToUberon.axioms ++ mgiToEMAPA.axioms ++ emapa.axioms ++ emapaToUberon.axioms ++
-      hasParts ++ hasPartsInheringIns ++ presences ++ absences ++ absenceNegationEquivalences ++ developsFromRulesForAbsence ++ subsumers ++ tboxFromData ++ ro.axioms ++ phenoscapeVocab.axioms // , eqCharacters //mp,
+      hasParts ++ hasPartsInheringIns ++ presences ++ absences ++ absenceNegationEquivalences ++ developsFromRulesForAbsence ++ subsumers ++ tboxFromData ++ phenoscapeVocab.axioms // , eqCharacters //mp,
     println("tbox class count: " + allTBox.flatMap(_.getClassesInSignature).size)
     println("tbox logical axiom count: " + allTBox.filter(_.isLogicalAxiom).size)
     val tBoxWithoutDisjoints = OntologyUtil.filterDisjointAxioms(allTBox)
