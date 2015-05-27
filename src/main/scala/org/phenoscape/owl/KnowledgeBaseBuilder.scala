@@ -1,23 +1,28 @@
 package org.phenoscape.owl
 
-import scala.collection.JavaConversions._
-import org.semanticweb.owlapi.apibinding.OWLManager
-import org.semanticweb.elk.owlapi.ElkReasonerFactory
-import org.semanticweb.owlapi.model.IRI
-import org.semanticweb.owlapi.reasoner.OWLReasoner
-import org.semanticweb.owlapi.model.OWLOntology
-import org.semanticweb.owlapi.io.RDFXMLOntologyFormat
-import org.semanticweb.owlapi.io.FileDocumentTarget
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 import java.io.File
-import scala.io.Source
-import java.io.BufferedReader
-import java.net.URL
-import org.phenoscape.owl.util.NullIRIMapper
 import java.util.Date
+
+import scala.annotation.migration
+import scala.collection.JavaConversions._
+
+import org.openrdf.model.URI
+import org.openrdf.repository.sail.SailRepositoryConnection
+import org.openrdf.rio.RDFFormat
+import org.phenoscape.owl.util.NullIRIMapper
 import org.phenoscape.owl.util.OBOUtil
-import org.semanticweb.owlapi.model.OWLOntologyManager
-import org.semanticweb.owlapi.model.OWLAxiom
+import org.semanticweb.elk.owlapi.ElkReasonerFactory
+import org.semanticweb.owlapi.apibinding.OWLManager
+import org.semanticweb.owlapi.io.FileDocumentTarget
+import org.semanticweb.owlapi.io.RDFXMLOntologyFormat
 import org.semanticweb.owlapi.model.AxiomType
+import org.semanticweb.owlapi.model.IRI
+import org.semanticweb.owlapi.model.OWLAxiom
+import org.semanticweb.owlapi.model.OWLOntology
+import org.semanticweb.owlapi.model.OWLOntologyManager
+import org.semanticweb.owlapi.reasoner.OWLReasoner
 
 class KnowledgeBaseBuilder extends App {
 
@@ -81,6 +86,26 @@ class KnowledgeBaseBuilder extends App {
   }
 
   def isTboxAxiom(axiom: OWLAxiom): Boolean = axiom.isOfType(AxiomType.TBoxAxiomTypes)
+
+  def addTriples(ontology: OWLOntology, db: SailRepositoryConnection, graph: URI): Unit = {
+    val manager = ontology.getOWLOntologyManager
+    val outStream = new ByteArrayOutputStream()
+    manager.saveOntology(ontology, new RDFXMLOntologyFormat(), outStream)
+    outStream.close()
+    val inStream = new ByteArrayInputStream(outStream.toByteArray())
+    db.add(inStream, "", RDFFormat.RDFXML, graph)
+    inStream.close()
+  }
+
+  def addTriples(axioms: SourcedAxioms, db: SailRepositoryConnection, graph: URI): Unit = {
+    addTriples(axioms.axioms, db, graph)
+  }
+
+  def addTriples(axioms: Iterable[OWLAxiom], db: SailRepositoryConnection, graph: URI): Unit = {
+    val manager = OWLManager.createOWLOntologyManager()
+    val ont = manager.createOntology(axioms.toSet)
+    addTriples(ont, db, graph)
+  }
 
 }
 

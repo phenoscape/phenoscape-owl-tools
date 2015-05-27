@@ -57,6 +57,9 @@ import com.bigdata.rdf.sail.BigdataSail
 import com.bigdata.rdf.sail.BigdataSailRepository
 import org.semanticweb.owlapi.model.AxiomType
 import org.phenoscape.owl.SourcedAxioms
+import org.semanticweb.owlapi.io.RDFXMLOntologyFormat
+import java.io.ByteArrayOutputStream
+import java.io.ByteArrayInputStream
 
 object PhenoscapeKB extends KnowledgeBaseBuilder {
 
@@ -77,34 +80,71 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
   KB.mkdir()
   cd(KB)
 
+  step("Loading Bigdata")
+  val bigdataProperties = new Properties()
+  bigdataProperties.load(new FileReader(BIGDATA_PROPERTIES))
+  bigdataProperties.setProperty(Options.FILE, BIGDATA_JOURNAL.getAbsolutePath)
+  val sail = new BigdataSail(bigdataProperties)
+  val repository = new BigdataSailRepository(sail)
+  repository.initialize()
+  val bigdata = repository.getUnisolatedConnection()
+  bigdata.setAutoCommit(false)
+
+  val baseURI = ""
+  val graphURI = new URIImpl("http://kb.phenoscape.org/")
+
   def loadOntologiesAndCreateReasoner(): OWLReasoner = {
     step("Loading ontologies")
     val ro = loadFromWebWithImports(IRI.create("http://purl.obolibrary.org/obo/ro.owl"))
+    addTriples(ro, bigdata, graphURI)
     val phenoscapeVocab = loadFromWebWithImports(IRI.create("http://purl.org/phenoscape/vocab.owl"))
+    addTriples(phenoscapeVocab, bigdata, graphURI)
     val attributes = loadFromWebWithImports(IRI.create("http://svn.code.sf.net/p/phenoscape/code/trunk/vocab/character_slims.obo"))
+    addTriples(attributes, bigdata, graphURI)
     val uberon = loadFromWebWithImports(IRI.create("http://purl.obolibrary.org/obo/uberon/ext.owl"))
+    addTriples(uberon, bigdata, graphURI)
     val homology = SourcedAxioms(loadNormalized(new File(cwd + "/staging/sources/homology.owl")))
+    addTriples(homology, bigdata, graphURI)
     val pato = loadFromWebWithImports(IRI.create("http://purl.obolibrary.org/obo/pato.owl"))
+    addTriples(pato, bigdata, graphURI)
     val bspo = loadFromWebWithImports(IRI.create("http://purl.obolibrary.org/obo/bspo.owl"))
+    addTriples(bspo, bigdata, graphURI)
     val go = loadFromWebWithImports(IRI.create("http://purl.obolibrary.org/obo/go.owl"))
+    addTriples(go, bigdata, graphURI)
     val taxrank = loadFromWebWithImports(IRI.create("http://purl.obolibrary.org/obo/taxrank.owl"))
+    addTriples(taxrank, bigdata, graphURI)
     val vto = loadFromWebWithImports(IRI.create("http://purl.obolibrary.org/obo/vto.owl"))
+    addTriples(vto, bigdata, graphURI)
     val collections = loadFromWebWithImports(IRI.create("http://svn.code.sf.net/p/phenoscape/code/trunk/vocab/fish_collection_abbreviation.obo"))
+    addTriples(collections, bigdata, graphURI)
     val zfa = loadFromWebWithImports(IRI.create("http://purl.obolibrary.org/obo/zfa.owl"))
+    addTriples(zfa, bigdata, graphURI)
     val xao = loadFromWebWithImports(IRI.create("http://purl.obolibrary.org/obo/xao.owl"))
+    addTriples(xao, bigdata, graphURI)
     val hp = loadFromWebWithImports(IRI.create("http://purl.obolibrary.org/obo/hp.owl"))
+    addTriples(hp, bigdata, graphURI)
     val mp = loadFromWebWithImports(IRI.create("http://purl.obolibrary.org/obo/mp.owl"))
+    addTriples(mp, bigdata, graphURI)
 
     val hpEQ = loadFromWebWithImports(IRI.create("https://phenotype-ontologies.googlecode.com/svn/trunk/src/ontology/hp/hp-equivalence-axioms-subq-ubr.owl"))
+    addTriples(hpEQ, bigdata, graphURI)
     val mpEQ = loadFromWebWithImports(IRI.create("https://phenotype-ontologies.googlecode.com/svn/trunk/src/ontology/mp/mp-equivalence-axioms-subq-ubr.owl"))
+    addTriples(mpEQ, bigdata, graphURI)
 
     val caroToUberon = loadFromWebWithImports(IRI.create("http://purl.obolibrary.org/obo/uberon/bridge/uberon-bridge-to-caro.owl"))
+    addTriples(caroToUberon, bigdata, graphURI)
     val zfaToUberon = loadFromWebWithImports(IRI.create("http://purl.obolibrary.org/obo/uberon/bridge/uberon-ext-bridge-to-zfa.owl"))
+    addTriples(zfaToUberon, bigdata, graphURI)
     val xaoToUberon = loadFromWebWithImports(IRI.create("http://purl.obolibrary.org/obo/uberon/bridge/uberon-bridge-to-xao.owl"))
+    addTriples(xaoToUberon, bigdata, graphURI)
     val fmaToUberon = loadFromWebWithImports(IRI.create("http://purl.obolibrary.org/obo/uberon/bridge/uberon-bridge-to-fma.owl"))
+    addTriples(fmaToUberon, bigdata, graphURI)
     val mgiToEMAPA = SourcedAxioms(loadNormalized(new File(cwd + "/staging/sources/mgi_anatomy.owl")))
+    addTriples(mgiToEMAPA, bigdata, graphURI)
     val emapa = SourcedAxioms(loadNormalized(new File(cwd + "/staging/sources/emapa.owl")))
+    addTriples(emapa, bigdata, graphURI)
     val emapaToUberon = loadFromWebWithImports(IRI.create("http://purl.obolibrary.org/obo/uberon/bridge/uberon-bridge-to-emapa.owl"))
+    addTriples(emapaToUberon, bigdata, graphURI)
 
     step("Querying entities and qualities")
     val coreReasoner = reasoner(Set(uberon, pato, bspo, go, ro, phenoscapeVocab).flatMap(_.axioms))
@@ -122,31 +162,42 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     for (file <- filesToConvert) {
       val nexOntology = PropertyNormalizer.normalize(PhenexToOWL.convert(file, vocabForNeXML))
       nexmlTBoxAxioms.addAll(nexOntology.getTBoxAxioms(false))
-      write(nexOntology, cwd + "/staging/kb/" + file.getName().replaceAll(".xml$", ".owl"))
+      addTriples(nexOntology, bigdata, graphURI)
     }
 
     step("Converting ZFIN data")
     val zfinGenes = PropertyNormalizer.normalize(ZFINGeneticMarkersToOWL.convert(Source.fromFile(new File(cwd + "/staging/sources/zfin_genetic_markers.txt"), "ISO-8859-1")))
+    addTriples(zfinGenes, bigdata, graphURI)
     val zfinPreviousGeneNames = PropertyNormalizer.normalize(ZFINPreviousGeneNamesToOWL.convert(Source.fromFile(new File(cwd + "/staging/sources/zfin_aliases.txt"), "ISO-8859-1")))
+    addTriples(zfinPreviousGeneNames, bigdata, graphURI)
     val zfinExpressionData = PropertyNormalizer.normalize(ZFINExpressionToOWL.convert(Source.fromFile(new File(cwd + "/staging/sources/zfin_wildtype_expression.txt"), "ISO-8859-1")))
+    addTriples(zfinExpressionData, bigdata, graphURI)
     val zfinPhenotypeData = PropertyNormalizer.normalize(ZFINPhenotypesToOWL.convert(Source.fromFile(new File(cwd + "/staging/sources/zfin_phenotypes.txt"), "ISO-8859-1")))
+    addTriples(zfinPhenotypeData, bigdata, graphURI)
 
     step("Converting MGI data")
     val mgiGenes = PropertyNormalizer.normalize(MGIGeneticMarkersToOWL.convert(Source.fromFile(new File(cwd + "/staging/sources/mgi_genes.txt"), "utf-8")))
+    addTriples(mgiGenes, bigdata, graphURI)
     val mgiExpressionData = PropertyNormalizer.normalize(MGIExpressionToOWL.convert(Source.fromFile(new File(cwd + "/staging/sources/mgi_expression_data.txt"), "utf-8")))
+    addTriples(mgiExpressionData, bigdata, graphURI)
     val mgiPhenotypeData = PropertyNormalizer.normalize(MGIPhenotypesToOWL.convert(Source.fromFile(new File(cwd + "/staging/sources/mgi_phenotypes.txt"), "utf-8")))
+    addTriples(mgiPhenotypeData, bigdata, graphURI)
 
     step("Converting Xenbase data")
     val xenbaseGenes = PropertyNormalizer.normalize(XenbaseGenesToOWL.convert(Source.fromFile(new File(cwd + "/staging/sources/xenbase_genes.txt"), "utf-8")))
+    addTriples(xenbaseGenes, bigdata, graphURI)
     val xenbaseExpressionData = PropertyNormalizer.normalize(XenbaseExpressionToOWL.convert(
       Source.fromFile(new File(cwd + "/staging/sources/xenbase_genepage_mappings.txt"), "utf-8"),
       Source.fromFile(new File(cwd + "/staging/sources/GeneExpression_laevis.txt"), "utf-8"),
       Source.fromFile(new File(cwd + "/staging/sources/GeneExpression_tropicalis.txt"), "utf-8")))
+    addTriples(xenbaseExpressionData, bigdata, graphURI)
     val xenbasePhenotypeFiles = FileUtils.listFiles(new File(cwd + "/staging/sources/xenbase-phenotypes"), Array("txt"), true)
     val xenbasePhenotypeData = PropertyNormalizer.normalize(xenbasePhenotypeFiles.flatMap(f => XenbasePhenotypesToOWL.convertToAxioms(Source.fromFile(f))).toSet)
+    addTriples(xenbasePhenotypeData, bigdata, graphURI)
 
     step("Converting human data")
     val humanPhenotypeData = PropertyNormalizer.normalize(HumanPhenotypesToOWL.convert(Source.fromFile(new File(cwd + "/staging/sources/hp_phenotypes.txt"), "utf-8")))
+    addTriples(humanPhenotypeData, bigdata, graphURI)
 
     step("Generating tbox")
     val tboxFromData =
@@ -161,8 +212,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
         xenbaseExpressionData.filter(isTboxAxiom) ++
         xenbasePhenotypeData.filter(isTboxAxiom) ++
         humanPhenotypeData.filter(isTboxAxiom) ++
-        nexmlTBoxAxioms +
-        (has_part_inhering_in SubPropertyChain (has_part o inheres_in)) //TODO add this to Phenoscape vocab ontology
+        nexmlTBoxAxioms
 
     //val parts = manager.createOntology(anatomicalEntities.map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.PART_OF), _)).flatten)
     val hasParts = anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(has_part, _))
@@ -216,6 +266,10 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
       println(negationReasoner.getUnsatisfiableClasses())
     }
 
+    step("Writing generated and inferred tbox axioms")
+    addTriples(hasParts ++ hasPartsInheringIns ++ presences ++ absences ++ absenceNegationEquivalences ++
+      developsFromRulesForAbsence ++ inferredAxioms.getAxioms, bigdata, graphURI)
+
     step("Writing tbox axioms for ELK")
     val tboxOut = OWLManager.createOWLOntologyManager().createOntology((tBoxWithoutDisjoints ++ inferredAxioms.getAxioms))
     write(tboxOut, cwd + "/staging/kb/tbox.owl")
@@ -229,6 +283,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
   }
 
   implicit val fullReasoner = loadOntologiesAndCreateReasoner()
+  bigdata.commit()
 
   val presencesQuery = construct(t('taxon, Vocab.has_presence_of, 'entity)) from "http://kb.phenoscape.org/" where (
     bgp(
@@ -243,24 +298,6 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
       t('entity, OWLRDFVocabulary.RDFS_IS_DEFINED_BY.getIRI, IRI.create("http://purl.obolibrary.org/obo/uberon.owl"))),
       subClassOf('taxon, Class(Vocab.CHORDATA)),
       subClassOf('entity, Class(Vocab.ANATOMICAL_ENTITY)))
-
-  step("Loading Bigdata")
-  val bigdataProperties = new Properties()
-  bigdataProperties.load(new FileReader(BIGDATA_PROPERTIES))
-  bigdataProperties.setProperty(Options.FILE, BIGDATA_JOURNAL.getAbsolutePath)
-  val sail = new BigdataSail(bigdataProperties)
-  val repository = new BigdataSailRepository(sail)
-  repository.initialize()
-  val bigdata = repository.getUnisolatedConnection()
-  bigdata.setAutoCommit(false)
-
-  val baseURI = ""
-  val graphURI = new URIImpl("http://kb.phenoscape.org/")
-  for (rdfFile <- FileUtils.listFiles(KB, Array("owl"), true)) {
-    bigdata.add(rdfFile, baseURI, RDFFormat.RDFXML, graphURI)
-  }
-
-  bigdata.commit()
 
   step("Building evolutionary profiles using ancestral states reconstruction")
   bigdata.add(EvolutionaryProfiles.computePhenotypeProfiles(TaxonNode(CHORDATA), fullReasoner, bigdata), graphURI)
