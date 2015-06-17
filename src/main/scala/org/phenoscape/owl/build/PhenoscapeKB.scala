@@ -231,14 +231,24 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     val attributeQualities = attributes.axioms.flatMap(_.getClassesInSignature) + HasNumberOf
     val entitySubsumerAxioms = for {
       entity <- anatomicalEntities
+      (term, entityAxioms) = SimilarityTemplates.entity(entity)
       (partsTerm, entityPartsAxioms) = SimilarityTemplates.entityAndParts(entity)
+      axiom <- (entityAxioms ++ entityPartsAxioms)
       axiom <- entityPartsAxioms
     } yield axiom
-    addTriples(entitySubsumerAxioms, bigdata, graphURI)
+    val entityQualitySubsumerAxioms = for {
+      entity <- anatomicalEntities
+      attribute <- attributeQualities
+      (term, entityAxioms) = SimilarityTemplates.entityWithQuality(entity, attribute)
+      (partsTerm, entityPartsAxioms) = SimilarityTemplates.entityAndPartsWithQuality(entity, attribute)
+      axiom <- (entityAxioms ++ entityPartsAxioms)
+    } yield axiom
+    val subsumers = entitySubsumerAxioms ++ entityQualitySubsumerAxioms
+    addTriples(subsumers, bigdata, graphURI)
 
     val allTBox = uberon.axioms ++ homology.axioms ++ pato.axioms ++ bspo.axioms ++ go.axioms ++ vto.axioms ++ zfa.axioms ++ xao.axioms ++ hp.axioms ++
       hpEQ.axioms ++ mpEQ.axioms ++ caroToUberon.axioms ++ zfaToUberon.axioms ++ xaoToUberon.axioms ++ fmaToUberon.axioms ++ mgiToEMAPA.axioms ++ emapa.axioms ++ emapaToUberon.axioms ++
-      hasParts ++ hasPartsInheringIns ++ presences ++ absences ++ absenceNegationEquivalences ++ developsFromRulesForAbsence ++ entitySubsumerAxioms ++ tboxFromData ++ phenoscapeVocab.axioms // , eqCharacters //mp,
+      hasParts ++ hasPartsInheringIns ++ presences ++ absences ++ absenceNegationEquivalences ++ developsFromRulesForAbsence ++ subsumers ++ tboxFromData ++ phenoscapeVocab.axioms // , eqCharacters //mp,
     println("tbox class count: " + allTBox.flatMap(_.getClassesInSignature).size)
     println("tbox logical axiom count: " + allTBox.filter(_.isLogicalAxiom).size)
     val tBoxWithoutDisjoints = OntologyUtil.filterDisjointAxioms(allTBox)
