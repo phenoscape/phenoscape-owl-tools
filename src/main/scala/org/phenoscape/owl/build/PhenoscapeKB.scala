@@ -272,12 +272,13 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
       println(negationReasoner.getUnsatisfiableClasses())
     }
 
-    step("Writing inferred tbox axioms")
-    addTriples(inferredAxioms, bigdata, graphURI)
+    //step("Writing inferred tbox axioms")
+    //addTriples(inferredAxioms, bigdata, graphURI)
 
     step("Writing tbox axioms for ELK")
     val tboxOut = OWLManager.createOWLOntologyManager().createOntology((tBoxWithoutDisjoints ++ inferredAxioms.getAxioms))
     write(tboxOut, cwd + "/staging/kb/tbox.owl")
+    bigdata.add(new File(cwd + "/staging/kb/tbox.owl"), "", RDFFormat.RDFXML, graphURI)
 
     step("Reducing tbox for OWLsim")
     val reducedTbox = OntologyUtil.reduceOntologyToHierarchy(tboxOut)
