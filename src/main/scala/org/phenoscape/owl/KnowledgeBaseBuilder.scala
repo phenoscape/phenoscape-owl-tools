@@ -64,6 +64,8 @@ class KnowledgeBaseBuilder extends App {
     val ont = manager.loadOntology(iri)
     val importsAxioms = (ont.getImportsClosure - ont).flatMap(_.getAxioms)
     manager.addAxioms(ont, importsAxioms)
+    val definedByAxioms = ont.getClassesInSignature.flatMap(OBOUtil.createDefinedByAnnotation)
+    globalManager.addAxioms(ont, definedByAxioms)
     PropertyNormalizer.normalize(ont)
     SourcedAxioms(ont.getAxioms.toSet, iri, Option(ont.getOntologyID.getVersionIRI))
   }
