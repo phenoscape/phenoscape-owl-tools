@@ -37,6 +37,8 @@ object PhenexToOWL extends OWLTask {
   val rdfsLabel = factory.getRDFSLabel
   val rdfsComment = factory.getRDFSComment
   val dcDescription = factory.getOWLAnnotationProperty(DublinCoreVocabulary.DESCRIPTION.getIRI)
+  val dcSource = factory.getOWLAnnotationProperty(DublinCoreVocabulary.SOURCE.getIRI)
+  val dcBibliographicCitation = factory.getOWLAnnotationProperty(IRI.create("http://rs.tdwg.org/dwc/terms/bibliographicCitation"))
   val phenoscapeComplement = IRI.create("http://purl.obolibrary.org/obo/PHENOSCAPE_complement_of")
   val manager = OWLManager.createOWLOntologyManager
   type LabelRenderer = OWLObject => String
@@ -45,10 +47,7 @@ object PhenexToOWL extends OWLTask {
     val labelRenderer = ExpressionUtil.createEntityRenderer(factory.getRDFSLabel, vocabulary)
     val doc = new SAXBuilder().build(file)
     val nexml = doc.getRootElement
-    val matrix = OntologyUtil.nextIndividual
-    val axioms = Set(
-      matrix Annotation (rdfsLabel, file.getName),
-      matrix Type CharacterStateDataMatrix)
+    val (matrix, axioms) = translateMatrix(nexml, file.getName)
     val descriptionAxiom = for { value <- getLiteralMetaValues(nexml, "description", dcTermsNS) }
       yield matrix Annotation (rdfsComment, value)
     val (otusAxioms, taxonOTUToOWLMap) = translateOTUs(nexml, matrix)
@@ -56,6 +55,29 @@ object PhenexToOWL extends OWLTask {
     val matrixAxioms = translateMatrixRows(nexml, matrix, taxonOTUToOWLMap, characterToOWLMap)
     val allAxioms = axioms ++ descriptionAxiom ++ otusAxioms ++ charactersAxioms ++ matrixAxioms
     manager.createOntology(allAxioms, IRI.create("http://example.org/" + UUID.randomUUID().toString()))
+  }
+
+  def translateMatrix(nexml: Element, fileName: String): (OWLNamedIndividual, Set[OWLAxiom]) = {
+    val sourceAxioms = for {
+      sourceMeta <- getResourceMetasForProperty(nexml, "source", dcTermsNS)
+      matrix <- getLiteralMetaValues(sourceMeta, "identifier", dcTermsNS).map(Individual(_))
+      citation <- getLiteralMetaValues(sourceMeta, "bibliographicCitation", dcTermsNS)
+      label <- getLiteralMetaValues(sourceMeta, "title", dcTermsNS)
+    } yield {
+      (matrix,
+        Set[OWLAxiom](
+          matrix Type CharacterStateDataMatrix,
+          matrix Annotation (dcBibliographicCitation, citation),
+          matrix Annotation (rdfsLabel, label)))
+    }
+    sourceAxioms.headOption.getOrElse {
+      val matrix = OntologyUtil.nextIndividual()
+      (matrix,
+        Set[OWLAxiom](
+          matrix Type CharacterStateDataMatrix,
+          matrix Annotation (dcBibliographicCitation, "<missing citation>"),
+          matrix Annotation (rdfsLabel, fileName)))
+    }
   }
 
   def translateMatrixRows(nexml: Element, matrix: OWLNamedIndividual, taxonOTUToOWLMap: Map[String, OWLNamedIndividual], characterToOWLMap: Map[String, OWLNamedIndividual]): Set[OWLAxiom] = {
