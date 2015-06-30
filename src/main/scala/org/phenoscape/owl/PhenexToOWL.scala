@@ -38,6 +38,7 @@ object PhenexToOWL extends OWLTask {
   val rdfsComment = factory.getRDFSComment
   val dcDescription = factory.getOWLAnnotationProperty(DublinCoreVocabulary.DESCRIPTION.getIRI)
   val dcSource = factory.getOWLAnnotationProperty(DublinCoreVocabulary.SOURCE.getIRI)
+  val dcCreator = factory.getOWLAnnotationProperty(DublinCoreVocabulary.CREATOR.getIRI)
   val dcBibliographicCitation = factory.getOWLAnnotationProperty(IRI.create("http://rs.tdwg.org/dwc/terms/bibliographicCitation"))
   val phenoscapeComplement = IRI.create("http://purl.obolibrary.org/obo/PHENOSCAPE_complement_of")
   val manager = OWLManager.createOWLOntologyManager
@@ -50,6 +51,8 @@ object PhenexToOWL extends OWLTask {
     val (matrix, axioms) = translateMatrix(nexml, file.getName)
     val descriptionAxiom = for { value <- getLiteralMetaValues(nexml, "description", dcTermsNS) }
       yield matrix Annotation (rdfsComment, value)
+    val curatorAxioms = for { value <- getLiteralMetaValues(nexml, "creator", dcTermsNS) }
+      yield matrix Annotation (dcCreator, value)
     val (otusAxioms, taxonOTUToOWLMap) = translateOTUs(nexml, matrix)
     val (charactersAxioms, characterToOWLMap) = translateCharacters(nexml, matrix, labelRenderer)
     val matrixAxioms = translateMatrixRows(nexml, matrix, taxonOTUToOWLMap, characterToOWLMap)
