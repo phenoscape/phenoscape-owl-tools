@@ -109,10 +109,9 @@ def compute_expect_scores(studentizedresiduals,numoftaxa):
 	for line in infile:
 		if "Score" not in line:
 			gene,genesize,genename,taxon,taxonsize,taxonname,score,uri=line.strip().split("\t")
+			score=float(score)
 			residual=studentizedresiduals[i]
-			a=-residual*math.pi
-			b=math.sqrt(6)-0.5772156649
-			pvalue=1-math.exp(-math.exp(a/b))
+			pvalue=1-math.exp(-math.exp(-residual*math.pi/math.sqrt(6)+ 0.5772156649))
 			expect=pvalue*numoftaxa
 			ranks.write(uri+"\t"+str(studentizedresiduals[i])+"\t"+str(round(pvalue,2))+"\t"+str(expect)+"\n")
 			outfile.write(gene+"\t"+genename+"\t"+taxon+"\t"+taxonname+"\t"+str(round(score,2))+"\t"+str(expect)+"\n")
