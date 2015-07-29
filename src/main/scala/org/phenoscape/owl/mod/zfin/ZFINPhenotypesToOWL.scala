@@ -62,8 +62,8 @@ object ZFINPhenotypesToOWL extends OWLTask {
         logger.warn("Related entity with no quality.")
         (Present and (inheres_in some entity))
       }
-      case (entity: OWLClass, Absent, null)                                 => (LacksAllPartsOfType and (inheres_in some MultiCellularOrganism) and (towards value Individual(entity.getIRI)))
-      case (entity: OWLClass, LacksAllPartsOfType, relatedEntity: OWLClass) => (LacksAllPartsOfType and (inheres_in some entity) and (towards value Individual(relatedEntity.getIRI)))
+      case (entity: OWLClass, Absent, null)                                 => (LacksAllPartsOfType and (inheres_in some MultiCellularOrganism) and (towards some entity))
+      case (entity: OWLClass, LacksAllPartsOfType, relatedEntity: OWLClass) => (LacksAllPartsOfType and (inheres_in some entity) and (towards some relatedEntity))
       case (null, quality: OWLClass, null)                                  => quality
       case (null, quality: OWLClass, relatedEntity: OWLClass)               => (quality and (towards some relatedEntity))
       case (entity: OWLClass, quality: OWLClass, null)                      => (quality and (inheres_in some entity))
