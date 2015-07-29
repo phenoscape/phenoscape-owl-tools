@@ -34,9 +34,12 @@ object XenbaseExpressionToOWL extends OWLTask {
   def indexGenepageMappings(mappings: Source): Map[String, String] = {
     val index = mutable.Map[String, String]()
     for (mapping <- mappings.getLines()) {
-      val items = mapping.split("\t")
+      val items = mapping.split("\t", -1)
       val genepageID = StringUtils.stripToNull(items(0))
-      for (geneID <- items(1).split(",")) {
+      for {
+        geneIDs <- Option(StringUtils.stripToNull(items(1)))
+        geneID <- geneIDs.split(",")
+      } {
         index(StringUtils.stripToNull(geneID)) = genepageID
       }
     }
