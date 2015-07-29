@@ -286,7 +286,8 @@ object PhenexToOWL extends OWLTask {
       case named: OWLClass => (named, Set.empty)
       case expression => {
         val (named, axioms) = ExpressionUtil.nameForSubClassWithAxioms(expression)
-        (named, axioms)
+        val expressionLabel = labelRenderer(expression)
+        (named, axioms + (named Annotation (rdfsLabel, expressionLabel)))
       }
     }
   }
