@@ -43,7 +43,7 @@ class KnowledgeBaseBuilder extends App {
     }
   }
 
-  def combine(ontology: SourcedAxioms, ontologies: SourcedAxioms*): OWLOntology = OWLManager.createOWLOntologyManager().createOntology(ontologies.flatMap(_.axioms).toSet)
+  def combine(ontology: SourcedAxioms, ontologies: SourcedAxioms*): OWLOntology = OWLManager.createOWLOntologyManager().createOntology(ontology.axioms ++ ontologies.flatMap(_.axioms))
 
   def reasoner(ontologies: OWLOntology*): OWLReasoner = {
     val allAxioms = combine(ontologies: _*)
@@ -65,7 +65,7 @@ class KnowledgeBaseBuilder extends App {
     val importsAxioms = (ont.getImportsClosure - ont).flatMap(_.getAxioms)
     manager.addAxioms(ont, importsAxioms)
     val definedByAxioms = ont.getClassesInSignature.flatMap(OBOUtil.createDefinedByAnnotation)
-    globalManager.addAxioms(ont, definedByAxioms)
+    manager.addAxioms(ont, definedByAxioms)
     PropertyNormalizer.normalize(ont)
     SourcedAxioms(ont.getAxioms.toSet, iri, Option(ont.getOntologyID.getVersionIRI))
   }
