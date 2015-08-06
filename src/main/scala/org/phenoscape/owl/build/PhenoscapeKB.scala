@@ -101,7 +101,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     addTriples(attributes, bigdata, graphURI)
     val uberon = loadFromWebWithImports(IRI.create("http://purl.obolibrary.org/obo/uberon/ext.owl"))
     addTriples(uberon, bigdata, graphURI)
-    val homology = SourcedAxioms(loadNormalized(new File(cwd + "/staging/sources/homology.owl")))
+    val homology = loadFromWebWithImports(IRI.create("http://purl.obolibrary.org/obo/uberon/homology.owl"))
     addTriples(homology, bigdata, graphURI)
     val pato = loadFromWebWithImports(IRI.create("http://purl.obolibrary.org/obo/pato.owl"))
     addTriples(pato, bigdata, graphURI)
