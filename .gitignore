@@ -6,3 +6,4 @@ catalog-v001.xml
 .classpath
 .project
 .settings/org.scala-ide.sdt.core.prefs
+/bin/
