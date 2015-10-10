@@ -19,7 +19,7 @@ resolvers += "Phenoscape Maven repository" at "http://phenoscape.svn.sourceforge
 
 resolvers += "nxparser-repo" at "http://nxparser.googlecode.com/svn/repository/"
 
-resolvers += "Bigdata releases" at "http://systap.com/maven/releases/"
+resolvers += "Bigdata releases" at "http://www.systap.com/maven/releases/"
 
 resolvers += "Sonatype OSS Releases" at "https://oss.sonatype.org/content/repositories/releases"
 
