@@ -85,7 +85,7 @@ def query_parse_results(size):
 	taxonid=dict()
 	scorefile.write("Gene\tGene Profile Size\tGene Name\tTaxon\tTaxon Profile Size\tTaxon Name\tScore\tURI\n")
 	for line in infile:
-		if "gene_label" not in line:
+		if "genename" not in line:
 			uri, score, gene,genename,taxon,taxonname=line.strip().replace("\"","").replace("^^<http://www.w3.org/2001/XMLSchema#string>","").replace("^^<http://www.w3.org/2001/XMLSchema#double>","").replace("<","").replace(">","").replace("http://purl.obolibrary.org/obo/","").split("\t")
 			scorefile.write(gene+"\t"+str(size[gene])+"\t"+genename+"\t"+taxon+"\t"+str(size[taxon])+"\t"+taxonname+"\t"+str(score)+"\t"+uri+ "\n")
 			
