@@ -83,7 +83,7 @@ def query_parse_results(size):
 	geneset=set()
 	name=dict()
 	taxonid=dict()
-	scorefile.write("Gene\tGene Profile Size\tGene Name\tTaxon\tTaxon Profile Size\tTaxon Name\tScore\tURI\n")
+	scorefile.write("Gene\tGene Profile Size\tGene Name\tTaxon\tTaxon Profile Size\tTaxon Name\tOverall Similarity\tURI\n")
 	for line in infile:
 		if "genename" not in line:
 			uri, score, gene,genename,taxon,taxonname=line.strip().replace("\"","").replace("^^<http://www.w3.org/2001/XMLSchema#string>","").replace("^^<http://www.w3.org/2001/XMLSchema#double>","").replace("<","").replace(">","").replace("http://purl.obolibrary.org/obo/","").split("\t")
@@ -103,11 +103,13 @@ def compute_expect_scores(studentizedresiduals,numoftaxa):
 	outfile=open("../results/SemanticSimilarityResults.tsv",'w')
 	ranks=open("../results/RankStatistics.txt",'w')
 	ranks.write("URI\tStudentized Residuals\tp-value\tExpect Score\n")
-	outfile.write("Gene\tGene Name\tTaxon\tTaxon Name\tSimilarity Score\tExpect Value\n")
+	outfile.write("Gene ID\tGene Name\tTaxon ID\tTaxon Name\tOverall Similarity\tExpect Value\n")
 	i=0
+
+
 	infile=open("../results/Scores_Sizes.txt")
 	for line in infile:
-		if "Score" not in line:
+		if "Gene" not in line:
 			gene,genesize,genename,taxon,taxonsize,taxonname,score,uri=line.strip().split("\t")
 			score=float(score)
 			residual=studentizedresiduals[i]
