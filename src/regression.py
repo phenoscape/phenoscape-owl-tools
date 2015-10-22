@@ -103,7 +103,7 @@ def compute_expect_scores(studentizedresiduals,numoftaxa):
 	outfile=open("../results/SemanticSimilarityResults.tsv",'w')
 	ranks=open("../results/RankStatistics.txt",'w')
 	ranks.write("URI\tStudentized Residuals\tp-value\tExpect Score\n")
-	outfile.write("Gene\tGene Name\tTaxon\t+Taxon Name+\t+Similarity Score+\tExpect Value\n")
+	outfile.write("Gene\tGene Name\tTaxon\tTaxon Name\tSimilarity Score\tExpect Value\n")
 	i=0
 	infile=open("../results/Scores_Sizes.txt")
 	for line in infile:
