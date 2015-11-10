@@ -139,7 +139,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     addTriples(fmaToUberon, bigdata, graphURI)
     val mgiToEMAPA = SourcedAxioms(loadNormalized(new File(cwd + "/staging/sources/mgi_anatomy.owl")))
     addTriples(mgiToEMAPA, bigdata, graphURI)
-    val emapa = SourcedAxioms(loadNormalized(new File(cwd + "/staging/sources/emapa.owl")))
+    val emapa = loadFromWebWithImports(IRI.create("http://purl.obolibrary.org/obo/emapa.owl"))
     addTriples(emapa, bigdata, graphURI)
     val emapaToUberon = loadFromWebWithImports(IRI.create("http://purl.obolibrary.org/obo/uberon/bridge/uberon-bridge-to-emapa.owl"))
     addTriples(emapaToUberon, bigdata, graphURI)
