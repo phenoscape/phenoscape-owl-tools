@@ -68,6 +68,12 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
     triple <- groupWiseSimilarity(inputProfile, corpusProfile).toTriples
   } yield triple).toSet.seq
 
+  def computeAllSimilarityToCorpusJ(inputs: Set[OWLNamedIndividual]): Map[OWLNamedIndividual, Double] = (for {
+    inputProfile <- inputs.toParArray
+    corpusProfile <- individualsInCorpus.toParArray
+    score = groupWiseSimilarityJaccard(inputProfile, corpusProfile)
+  } yield corpusProfile -> score).toMap.seq
+
   def nonRedundantHierarchy(reasoner: OWLReasoner): (SuperClassOfIndex, SubClassOfIndex) = {
     val parentToChildren = mutable.Map[Node, Set[Node]]()
     val childToParents = mutable.Map[Node, Set[Node]]()
