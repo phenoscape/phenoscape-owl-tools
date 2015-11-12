@@ -169,6 +169,12 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
     GroupWiseSimilarity(queryIndividual, corpusIndividual, medianScore, pairScores)
   }
 
+  def groupWiseSimilarityJaccard(queryIndividual: OWLNamedIndividual, corpusIndividual: OWLNamedIndividual): Double = {
+    val queryTypes = directAndIndirectAssociationsByIndividual(queryIndividual)
+    val corpusTypes = directAndIndirectAssociationsByIndividual(corpusIndividual)
+    queryTypes.intersect(corpusTypes).size.toDouble / queryTypes.union(corpusTypes).size
+  }
+
   private def median(values: Seq[Double]): Double = {
     val (lower, upper) = values.sorted.splitAt(values.size / 2)
     if (values.size % 2 == 0) ((lower.last + upper.head) / 2.0) else upper.head
@@ -186,7 +192,7 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
     }
 
   def classICScoresAsTriples: Set[Statement] = {
-    val has_ic = new URIImpl("http://purl.org/phenoscape/vocab.owl#has_ic")
+    val has_ic = new URIImpl(Vocab.has_ic.getIRI.toString)
     (for {
       (node, ic) <- nodeIC
       term <- node.classes
