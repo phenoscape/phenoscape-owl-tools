@@ -181,6 +181,14 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
     queryTypes.intersect(corpusTypes).size.toDouble / queryTypes.union(corpusTypes).size
   }
 
+  def similarityProfileJaccard(queryIndividual: OWLNamedIndividual, corpusIndividual: OWLNamedIndividual): Set[Node] = {
+    val queryTypes = directAndIndirectAssociationsByIndividual(queryIndividual)
+    val corpusTypes = directAndIndirectAssociationsByIndividual(corpusIndividual)
+    val common = queryTypes.intersect(corpusTypes)
+    val superClassesOfIntersection = common.flatMap(subClassOfIndex)
+    common -- superClassesOfIntersection
+  }
+
   private def median(values: Seq[Double]): Double = {
     val (lower, upper) = values.sorted.splitAt(values.size / 2)
     if (values.size % 2 == 0) ((lower.last + upper.head) / 2.0) else upper.head
