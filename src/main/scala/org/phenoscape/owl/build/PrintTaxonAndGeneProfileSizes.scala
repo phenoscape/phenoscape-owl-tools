@@ -1,17 +1,18 @@
 package org.phenoscape.owl.build
 
 import java.io.File
-
 import scala.collection.JavaConverters._
-
 import org.phenoscape.owl.sim.OWLsim
 import org.phenoscape.owl.util.OntologyUtil
 import org.semanticweb.owlapi.apibinding.OWLManager
+import java.io.FileWriter
+import java.io.BufferedWriter
 
 object PrintTaxonAndGeneProfileSizes extends App {
 
   val ontfile = new File(args(0))
   val profilesFile = new File(args(1))
+  val outFile = new File(args(2))
 
   val manager = OWLManager.createOWLOntologyManager()
   val ontology = manager.loadOntologyFromOntologyDocument(ontfile)
@@ -20,7 +21,9 @@ object PrintTaxonAndGeneProfileSizes extends App {
   val owlSim = new OWLsim(combined, ind => ind.getIRI.toString.contains("VTO_"))
   owlSim.directAssociationsByIndividual.foreach {
     case (profile, annotations) =>
-      println(s"${profile.getIRI.toString}\t${annotations.size}")
+      val bw = new BufferedWriter(new FileWriter(outFile))
+      bw.write(s"${profile.getIRI.toString}\t${annotations.size}\n")
+      bw.close()
   }
 
 }
