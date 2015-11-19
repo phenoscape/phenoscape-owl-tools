@@ -13,6 +13,19 @@ object Command extends App {
     //case "compute-expects"      => //run just run python directly
     case "expects-to-triples"   =>
     case "sparql-select"        => RunSPARQLQuery.main(commandArgs)
+    case _ => println("""
+Valid commands are:
+
+build-kb
+pairwise-sim
+load-triples
+output-ics
+output-profile-sizes
+expects-to-triples
+sparql-select
+
+Consult the source code for required parameters.
+      """)
   }
 
 }
