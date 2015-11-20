@@ -13,7 +13,7 @@ object Command extends App {
     //case "output-match-scores"  => //requires sparql query to DB and output tab-delimited; just run sparql query
     case "output-profile-sizes" => PrintTaxonAndGeneProfileSizes.main(commandArgs)
     //case "compute-expects"      => //run just run python directly
-    case "expects-to-triples"   =>
+    case "expects-to-triples"   => ConvertScoresToTriples.main(commandArgs)
     case "sparql-select"        => RunSPARQLQuery.main(commandArgs)
     case _ => println("""
 Valid commands are:
