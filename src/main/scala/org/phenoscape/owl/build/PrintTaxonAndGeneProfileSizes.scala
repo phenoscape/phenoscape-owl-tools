@@ -19,11 +19,11 @@ object PrintTaxonAndGeneProfileSizes extends App {
   val profiles = manager.loadOntologyFromOntologyDocument(profilesFile)
   val combined = manager.createOntology((ontology.getAxioms.asScala ++ profiles.getAxioms.asScala).asJava, OntologyUtil.nextIRI)
   val owlSim = new OWLsim(combined, ind => ind.getIRI.toString.contains("VTO_"))
+  val bw = new BufferedWriter(new FileWriter(outFile))
   owlSim.directAssociationsByIndividual.foreach {
     case (profile, annotations) =>
-      val bw = new BufferedWriter(new FileWriter(outFile))
       bw.write(s"${profile.getIRI.toString}\t${annotations.size}\n")
-      bw.close()
   }
+  bw.close()
 
 }
