@@ -9,7 +9,7 @@ version       := "1.3"
 
 packageArchetype.java_application
 
-mainClass in Compile := Some("org.phenoscape.owl.build.PhenoscapeKB")
+mainClass in Compile := Some("org.phenoscape.owl.build.Command")
 
 scalaVersion  := "2.11.6"
 

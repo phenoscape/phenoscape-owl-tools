@@ -13,7 +13,7 @@ import org.phenoscape.owl.sim.OWLsim
 import org.phenoscape.owl.util.OntologyUtil
 import org.semanticweb.owlapi.apibinding.OWLManager
 
-object TestNewOWLSim extends App {
+object RunPairwiseOWLSim extends App {
 
   val taskCount = args(0).toInt
   val taskNum = args(1).toInt
