@@ -234,17 +234,17 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
       entity <- anatomicalEntities
       (term, entityAxioms) = SimilarityTemplates.entity(entity)
       (partsTerm, entityPartsAxioms) = SimilarityTemplates.entityAndParts(entity)
-      axiom <- (entityAxioms ++ entityPartsAxioms)
-      axiom <- entityPartsAxioms
+      (developsFromTerm, entityDevelopsFromAxioms) = SimilarityTemplates.developsFromEntity(entity)
+      axiom <- (entityAxioms ++ entityPartsAxioms ++ entityDevelopsFromAxioms)
     } yield axiom
-    val entityQualitySubsumerAxioms = for {
-      entity <- anatomicalEntities
-      attribute <- attributeQualities
-      (term, entityAxioms) = SimilarityTemplates.entityWithQuality(entity, attribute)
-      (partsTerm, entityPartsAxioms) = SimilarityTemplates.entityAndPartsWithQuality(entity, attribute)
-      axiom <- (entityAxioms ++ entityPartsAxioms)
-    } yield axiom
-    val subsumers = entitySubsumerAxioms ++ entityQualitySubsumerAxioms
+//    val entityQualitySubsumerAxioms = for {
+//      entity <- anatomicalEntities
+//      attribute <- attributeQualities
+//      (term, entityAxioms) = SimilarityTemplates.entityWithQuality(entity, attribute)
+//      (partsTerm, entityPartsAxioms) = SimilarityTemplates.entityAndPartsWithQuality(entity, attribute)
+//      axiom <- (entityAxioms ++ entityPartsAxioms)
+//    } yield axiom
+    val subsumers = entitySubsumerAxioms //++ entityQualitySubsumerAxioms
     addTriples(subsumers, bigdata, graphURI)
 
     val allTBox = uberon.axioms ++ homology.axioms ++ pato.axioms ++ bspo.axioms ++ go.axioms ++ vto.axioms ++ zfa.axioms ++ xao.axioms ++ hp.axioms ++

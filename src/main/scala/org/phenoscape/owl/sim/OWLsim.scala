@@ -53,6 +53,22 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
     case (individual, nodes) => individual -> (nodes ++ nodes.flatMap(childToReflexiveAncestorIndex))
   }
 
+  private val rdfType = new URIImpl(Vocab.rdfType.toString)
+  private val rdfsSubClassOf = new URIImpl(Vocab.rdfsSubClassOf.toString)
+
+  def directAndIndirectAssociationsByIndividualToTriples: Set[Statement] = for {
+    (individual, nodes) <- directAndIndirectAssociationsByIndividual.toSet
+    node <- nodes
+    term <- node.classes
+  } yield new StatementImpl(new URIImpl(individual.getIRI.toString), rdfType, new URIImpl(term.getIRI.toString))
+
+  def childToReflexiveAncestorIndexToTriples: Set[Statement] = for {
+    (node, nodes) <- childToReflexiveAncestorIndex.toSet
+    term <- node.classes
+    ancestorNode <- nodes
+    ancestor <- ancestorNode.classes
+  } yield new StatementImpl(new URIImpl(term.getIRI.toString), rdfsSubClassOf, new URIImpl(ancestor.getIRI.toString))
+
   val corpusSize: Int = individualsInCorpus.size
   private def uncorrectedIC(numInstances: Int): Double = -Math.log((numInstances.toDouble / corpusSize)) / Math.log(2)
   val MaximumIC: Double = uncorrectedIC(1)
