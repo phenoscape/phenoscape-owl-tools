@@ -7,3 +7,5 @@ catalog-v001.xml
 .project
 .settings/org.scala-ide.sdt.core.prefs
 /bin/
+.cache-main
+.cache-tests
