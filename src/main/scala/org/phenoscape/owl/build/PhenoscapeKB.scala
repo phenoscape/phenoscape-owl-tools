@@ -235,7 +235,6 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
       (term, entityAxioms) = SimilarityTemplates.entity(entity)
       (partsTerm, entityPartsAxioms) = SimilarityTemplates.entityAndParts(entity)
       axiom <- (entityAxioms ++ entityPartsAxioms)
-      axiom <- entityPartsAxioms
     } yield axiom
     val entityQualitySubsumerAxioms = for {
       entity <- anatomicalEntities
