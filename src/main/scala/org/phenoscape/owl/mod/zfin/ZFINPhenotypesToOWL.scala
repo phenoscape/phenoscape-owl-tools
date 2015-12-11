@@ -81,7 +81,7 @@ object ZFINPhenotypesToOWL extends OWLTask {
       axioms.add(phenotype Fact (associated_with_gene, gene))
       axioms.add(phenotype Fact (associated_with_taxon, Zebrafish))
     }
-    val figureID = StringUtils.stripToNull(items(25))
+    val figureID = StringUtils.stripToNull(items(24))
     val figure = Individual(OBOUtil.zfinIRI(figureID))
     axioms.add(phenotype Fact (dcSource, figure))
     return axioms.toSet

@@ -12,8 +12,8 @@ gunzip mgi_phenotypes.txt.gz
 curl -L 'ftp://ftp.informatics.jax.org/pub/reports/MRK_List2.rpt' >mgi_genes.txt
 curl -L 'http://zfin.org/downloads/genetic_markers.txt' >zfin_genetic_markers.txt
 curl -L 'http://zfin.org/downloads/aliases.txt' >zfin_aliases.txt
-curl -L 'http://zfin.org/downloads/wildtype-expression.txt' >zfin_wildtype_expression.txt
-curl -L 'http://zfin.org/downloads/phenoGeneCleanData.txt' >zfin_phenotypes.txt
+curl -L 'http://zfin.org/downloads/wildtype-expression_fish.txt' >zfin_wildtype_expression.txt
+curl -L 'http://zfin.org/downloads/phenoGeneCleanData_fish.txt' >zfin_phenotypes.txt
 curl -L 'ftp://ftp.xenbase.org/pub/GenePageReports/GenePageGeneralInfo_ManuallyCurated.txt' >xenbase_genes.txt
 curl -L 'ftp://ftp.xenbase.org/pub/GenePageReports/XenbaseGenepageToGeneIdMapping.txt' >xenbase_genepage_mappings.txt
 curl -L -O 'ftp://ftp.xenbase.org/pub/GenePageReports/GeneExpression_laevis.txt'
