@@ -5,7 +5,7 @@ organization  := "org.phenoscape"
 
 name          := "kb-owl-tools"
 
-version       := "1.3"
+version       := "1.4.1"
 
 packageArchetype.java_application
 
@@ -40,7 +40,7 @@ libraryDependencies ++= {
       "org.semanticweb.elk"    %   "elk-owlapi"                    % "0.4.2",
       "com.bigdata"            %   "bigdata"                       % "1.3.4",
       "org.openrdf.sesame"     %   "sesame-rio"                    % "2.6.10",
-      "org.phenoscape"         %   "scowl"                         % "0.9",
+      "org.phenoscape"         %   "scowl"                         % "0.9.2",
       "org.phenoscape"         %   "owlet"                         % "1.3"
   )
 }
