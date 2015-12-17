@@ -19,4 +19,6 @@ object SimilarityTemplates {
 
   def entityAndPartsWithQuality(entity: OWLClass, quality: OWLClass): (OWLClass, Set[OWLAxiom]) = ExpressionUtil.nameForExpressionWithAxioms(has_part some (quality and (phenotype_of some (part_of some entity))))
 
+  def quality(quality: OWLClass): (OWLClass, Set[OWLAxiom]) = ExpressionUtil.nameForExpressionWithAxioms(has_part some quality)
+
 }
