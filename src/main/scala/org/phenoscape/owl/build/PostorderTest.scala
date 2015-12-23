@@ -86,7 +86,7 @@ object PostorderTest extends KnowledgeBaseBuilder {
   val repository = new BigdataSailRepository(sail)
   repository.initialize()
   val connection = repository.getUnisolatedConnection()
-  connection.setAutoCommit(false);
+  connection.begin()
 
   step("Testing postorder part of ancestral states reconstruction")
   println("Triples: " + connection.getTripleStore.getStatementCount)

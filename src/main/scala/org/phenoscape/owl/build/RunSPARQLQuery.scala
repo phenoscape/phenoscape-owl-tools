@@ -26,7 +26,6 @@ object RunSPARQLQuery extends App {
   val repository = new BigdataSailRepository(sail)
   repository.initialize()
   val blazegraph = repository.getUnisolatedConnection()
-  blazegraph.setAutoCommit(false)
 
   val query = blazegraph.prepareTupleQuery(QueryLanguage.SPARQL, Source.fromFile(queryFile, "utf-8").mkString)
   val queryOutput = new BufferedOutputStream(new FileOutputStream(outFile))

@@ -88,12 +88,12 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
   val repository = new BigdataSailRepository(sail)
   repository.initialize()
   val bigdata = repository.getUnisolatedConnection()
-  bigdata.setAutoCommit(false)
 
   val baseURI = ""
   val graphURI = new URIImpl("http://kb.phenoscape.org/")
 
   def loadOntologiesAndCreateReasoner(): OWLReasoner = {
+    bigdata.begin()
     step("Loading ontologies")
     val phenoscapeVocab = loadFromWebWithImports(IRI.create("http://purl.org/phenoscape/vocab.owl"))
     addTriples(phenoscapeVocab, bigdata, graphURI)
@@ -284,12 +284,13 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     val reducedTbox = OntologyUtil.reduceOntologyToHierarchy(tboxOut)
     write(reducedTbox, cwd + "/staging/kb/tbox-hierarchy-only.owl")
 
+    bigdata.commit()
+    
     negationReasoner
 
   }
 
   implicit val fullReasoner = loadOntologiesAndCreateReasoner()
-  bigdata.commit()
 
   val presencesQuery = construct(t('taxon, Vocab.has_presence_of, 'entity)) from "http://kb.phenoscape.org/" where (
     bgp(
@@ -306,10 +307,12 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
       subClassOf('entity, Class(Vocab.ANATOMICAL_ENTITY)))
 
   step("Building evolutionary profiles using ancestral states reconstruction")
+  bigdata.begin()
   bigdata.add(EvolutionaryProfiles.computePhenotypeProfiles(TaxonNode(CHORDATA), fullReasoner, bigdata), graphURI)
   bigdata.commit()
 
   step("Building gene profiles")
+  bigdata.begin()
   bigdata.add(GeneProfiles.generateGeneProfiles(bigdata), graphURI)
   bigdata.commit()
 
@@ -329,6 +332,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
   absencesOutput.close()
 
   step("Load presence/absence data")
+  bigdata.begin()
   bigdata.add(presencesFile, baseURI, RDFFormat.TURTLE, graphURI)
   bigdata.add(absencesFile, baseURI, RDFFormat.TURTLE, graphURI)
   bigdata.commit()
@@ -343,7 +347,6 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
    ?s ?p ?o .
   }
   """)
-  //bigdata.begin()
   val triplesOutput = new BufferedOutputStream(new FileOutputStream(new File(cwd + "/staging/kb/kb.ttl")))
   triplesQuery.evaluate(new TurtleWriter(triplesOutput))
   triplesOutput.close()

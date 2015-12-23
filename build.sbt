@@ -38,8 +38,8 @@ libraryDependencies ++= {
       "com.github.scala-blitz" %%  "scala-blitz"                   % "1.2",
       "net.sourceforge.owlapi" %   "owlapi-distribution"           % "3.5.0",
       "org.semanticweb.elk"    %   "elk-owlapi"                    % "0.4.2",
-      "com.bigdata"            %   "bigdata"                       % "1.3.4",
-      "org.openrdf.sesame"     %   "sesame-rio"                    % "2.6.10",
+      "com.bigdata"            %   "bigdata"                       % "1.5.3",
+      "org.openrdf.sesame"     %   "sesame-rio"                    % "2.7.13",
       "org.phenoscape"         %   "scowl"                         % "0.9.2",
       "org.phenoscape"         %   "owlet"                         % "1.3"
   )
