@@ -37,16 +37,20 @@ object ZFINExpressionToOWL extends OWLTask {
       val structure = OntologyUtil.nextIndividual()
       axioms.add(factory.getOWLDeclarationAxiom(structure))
       axioms.add(expression Fact (occurs_in, structure))
-      val superStructureID = StringUtils.stripToNull(items(3))
-      val subStructureID = StringUtils.stripToNull(items(5))
-      if (subStructureID == null) {
-        val structureType = Class(OBOUtil.iriForTermID(superStructureID))
-        axioms.add(structure Type structureType)
-      } else {
-        val superStructure = Class(OBOUtil.iriForTermID(superStructureID))
-        val subStructure = Class(OBOUtil.iriForTermID(subStructureID))
-        val (structureType, structureAxioms) = ExpressionUtil.nameForExpressionWithAxioms(subStructure and (part_of some superStructure))
-        axioms.add(structure Type structureType)
+      val superStructureID = Option(StringUtils.stripToNull(items(3))).filter(_ != "\\").get
+      val subStructureIDOpt = Option(StringUtils.stripToNull(items(5))).filter(_ != "\\")
+      subStructureIDOpt match {
+        case Some(subStructureID) => {
+          val superStructure = Class(OBOUtil.iriForTermID(superStructureID))
+          val subStructure = Class(OBOUtil.iriForTermID(subStructureID))
+          val (structureType, structureAxioms) = ExpressionUtil.nameForExpressionWithAxioms(subStructure and (part_of some superStructure))
+          axioms.add(structure Type structureType)
+          axioms ++= structureAxioms
+        }
+        case None => {
+          val structureType = Class(OBOUtil.iriForTermID(superStructureID))
+          axioms.add(structure Type structureType)
+        }
       }
       val geneIRI = OBOUtil.zfinIRI(StringUtils.stripToNull(items(0)))
       val gene = Individual(geneIRI)
