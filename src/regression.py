@@ -1,126 +1,112 @@
 from __future__ import division
 
 def main():
-	numoftaxa=int(sys.argv[1])
-
+	size_of_corpus=int(sys.argv[1])
 
 	get_scores()
-	
-	# Load taxon, gene profile sizes and similarity scores
-	taxonprofilesizes,geneprofilesizes,scores=load_profiles()
-	sizes = [taxonprofilesizes,geneprofilesizes]
+
+	# Load corpus, query profile sizes and similarity scores
+	corpus_profile_sizes, query_profile_sizes, scores = load_profiles()
+	sizes = [corpus_profile_sizes, query_profile_sizes]
 	
 	
 	# Run regression
-	results=reg_m(scores,sizes)
-	genecoeff=results.params[0]
-	taxoncoeff=results.params[1]
-	constant=results.params[2]
+	results = reg_m(scores, sizes)
+	query_coeff = results.params[0]
+	corpus_coeff = results.params[1]
+	constant = results.params[2]
 	
 	# Plot residual plot - uncomment if profile sizes or similarity scores have changed due to updated data.
 	
-	#plot_residuals(taxonprofilesizes, geneprofilesizes,scores,taxoncoeff,genecoeff,constant)
+	#plot_residuals(corpus_profile_sizes, query_profile_sizes,scores,corpus_coeff,query_coeff,constant)
 	
 
 	# Compute studentized residuals
-	studentizedresiduals= studentize(results)
+	studentizedresiduals = studentize(results)
 
 	# Compute p-values and Expect scores
-	compute_expect_scores(studentizedresiduals,numoftaxa)
+	compute_expect_scores(studentizedresiduals, size_of_corpus)
+
 
 def get_scores():
-	resultdir="../results/"
-	if not os.path.exists(resultdir):
-		os.makedirs(resultdir)		
-
 	# Uncomment if similarity scores have changed due to updated data
 
-	#query="curl -X POST --data-binary @getscores-URI.rq --header \"Content-Type:application/sparql-query\" --header \"Accept: text/tab-separated-values\" http://kb-dev.phenoscape.org/bigsparql > ../results/Scores_Gene_Taxon.tsv"
+	#query="curl -X POST --data-binary @getscores-URI.rq --header \"Content-Type:application/sparql-query\" --header \"Accept: text/tab-separated-values\" http://kb-dev.phenoscape.org/bigsparql > ../results/Scores.tsv"
 	#os.system(query)
-	size=loadprofilesizes()
+	size = loadprofilesizes()
 	query_parse_results(size)
 
-	
 
 def loadprofilesizes():
-	profilesize=dict()
-	infile=open("../results/ProfileSizes.txt")
+	profilesize = dict()
+	infile = open("ProfileSizes.txt")
 	for line in infile:
-		entity,size=line.strip().split("\t")
-		entity=entity.replace("#profile","")
-		entity=entity.replace("http://purl.obolibrary.org/obo/","")
-		profilesize[entity]=int(size)
+		entity, size = line.strip().split("\t")
+		entity = entity.replace("#profile", "")
+		profilesize[entity] = int(size)
 	infile.close()
 	return profilesize
 
+
 def load_profiles():
-	
-	infile=open("../results/Scores_Sizes.txt")
-	scores=[]
-	geneprofilesizes=[]
-	taxonprofilesizes=[]
-	rawscores=[]
+	infile = open("Scores_Sizes.txt")
+	scores = []
+	query_profile_sizes = []
+	corpus_profile_sizes = []
+	rawscores = []
 	for line in infile:
 		if "Score" not in line:
-			data=line.strip().split("\t")
-			score=float(data[6])
+			data = line.strip().split("\t")
+			score = float(data[6])
 			scores.append(score)
-			geneprofilesizes.append(math.log(int(data[1])))
-			taxonprofilesizes.append(math.log(int(data[4])))
-			gene=data[2]
-			taxon=data[5]
+			queryprofilesizes.append(math.log(int(data[1])))
+			corpusprofilesizes.append(math.log(int(data[4])))
+			query_profile = data[2]
+			corpus_profile = data[5]
 	infile.close()
-	return taxonprofilesizes,geneprofilesizes,scores
+	return query_profile_sizes, corpus_profile_sizes, scores
 
 
-	
 def query_parse_results(size):
-	scorefile=open("../results/Scores_Sizes.txt",'w')
-	infile=open("../results/Scores_Gene_Taxon.tsv")
-	topscores=dict()
-	maxscore=dict()
-	maxtaxon=dict()
-	geneset=set()
-	name=dict()
-	taxonid=dict()
-	scorefile.write("Gene\tGene Profile Size\tGene Name\tTaxon\tTaxon Profile Size\tTaxon Name\tOverall Similarity\tURI\n")
+	scorefile = open("Scores_Sizes.txt", 'w')
+	infile = open("Scores.tsv")
+	scorefile.write("Query Profile\tQuery Profile Size\tQuery Name\tCorpus Profile\tCorpus Profile Size\tCorpus Profile Name\tOverall Similarity\tURI\n")
 	for line in infile:
-		if "genename" not in line:
-			uri, score, gene,genename,taxon,taxonname=line.strip().replace("\"","").replace("^^<http://www.w3.org/2001/XMLSchema#string>","").replace("^^<http://www.w3.org/2001/XMLSchema#double>","").replace("<","").replace(">","").replace("http://purl.obolibrary.org/obo/","").split("\t")
-			scorefile.write(gene+"\t"+str(size[gene])+"\t"+genename+"\t"+taxon+"\t"+str(size[taxon])+"\t"+taxonname+"\t"+str(score)+"\t"+uri+ "\n")
-			
+		if "corpusprofile_label" not in line:
+			uri, score, query_profile, query_profile_label, corpus_profile, corpus_profile_label = line.strip().replace("\"","").replace("^^<http://www.w3.org/2001/XMLSchema#string>","").replace("^^<http://www.w3.org/2001/XMLSchema#double>","").replace("<","").replace(">","").split("\t")
+			scorefile.write(query_profile + "\t" + str(size[query_profile]) + "\t" + query_profile_label + "\t" + corpus_profile + "\t" + str(size[corpus_profile]) + "\t" + corpus_profile_label + "\t" + str(score) + "\t" + uri + "\n")
 	scorefile.close()
 
 	
 def studentize(results):
 	print ("Doing studentization")
 	influence = results.get_influence()
-	studentizedresiduals=influence.get_resid_studentized_external()
+	studentizedresiduals = influence.get_resid_studentized_external()
 	return studentizedresiduals
 
-def compute_expect_scores(studentizedresiduals,numoftaxa):
+
+def compute_expect_scores(studentizedresiduals,size_of_corpus):
 	print "Computing p-values"
-	outfile=open("../results/SemanticSimilarityResults.tsv",'w')
-	ranks=open("../results/RankStatistics.txt",'w')
+	outfile = open("SemanticSimilarityResults.tsv",'w')
+	ranks = open("RankStatistics.txt",'w')
 	ranks.write("URI\tStudentized Residuals\tp-value\tExpect Score\n")
-	outfile.write("Gene ID\tGene Name\tTaxon ID\tTaxon Name\tOverall Similarity\tExpect Value\n")
+	outfile.write("Query Profile ID\tQuery Profile Name\tCorpus Profile ID\tCorpus Profile Name\tOverall Similarity\tExpect Value\n")
 	i=0
-
-
-	infile=open("../results/Scores_Sizes.txt")
+	infile=open("Scores_Sizes.txt")
 	for line in infile:
-		if "Gene" not in line:
-			gene,genesize,genename,taxon,taxonsize,taxonname,score,uri=line.strip().split("\t")
-			score=float(score)
-			residual=studentizedresiduals[i]
-			pvalue=1-math.exp(-math.exp(-residual*math.pi/math.sqrt(6)+ 0.5772156649))
-			expect=pvalue*numoftaxa
-			ranks.write(uri+"\t"+str(studentizedresiduals[i])+"\t"+str(round(pvalue,2))+"\t"+str(expect)+"\n")
-			outfile.write(gene+"\t"+genename+"\t"+taxon+"\t"+taxonname+"\t"+str(round(score,2))+"\t"+str(expect)+"\n")
-			i+=1
+		if "Query Profile" not in line:
+			query_profile, query_profile_size, query_profile_label, corpus_profile, corpus_profile_size, corpus_profile_label, score, uri = line.strip().split("\t")
+			score = float(score)
+			residual = studentizedresiduals[i]
+			pvalue = 1-math.exp(-math.exp(-residual*math.pi/math.sqrt(6)+0.5772156649))
+			expect = pvalue * size_of_corpus
+			ranks.write(uri + "\t" + str(studentizedresiduals[i]) + "\t" + str(round(pvalue,2)) + "\t" + str(expect) + "\n")
+			outfile.write(query_profile + "\t" + query_profile_label + "\t" + corpus_profile + "\t" + corpus_profile_label + "\t" + str(round(score, 2)) + "\t" + str(expect) + "\n")
+			i += 1
 	ranks.close()	
 	infile.close()	
 	outfile.close()
+
 
 def reg_m(scores, sizes):
 	print "Doing regression"
@@ -132,35 +118,33 @@ def reg_m(scores, sizes):
 	return results
 
 
+def plot_residuals(corpus_profile_sizes, query_profile_sizes, scores, corpus_coeff, query_coeff, constant):
+	query_axis = []
+	corpus_axis = []
+	residuals = []
+	count = 0
+	mean = np.mean(scores)
 
-def plot_residuals(taxonprofilesizes, geneprofilesizes,scores,taxoncoeff,genecoeff,constant):
-	geneaxis=[]
-	taxonaxis=[]
-	residuals=[]
-	count=0
-	mean=np.mean(scores)
-	
-	for i in range(0,len(scores)):
-		genesize=geneprofilesizes[i]
-		taxonsize=taxonprofilesizes[i]
-		actualscore=scores[i]
-		taxonaxis.append(taxonsize)
-		geneaxis.append(genesize)
-		predictedscore=constant+(taxoncoeff*taxonsize)+(genecoeff*genesize)	
-		residual=actualscore-predictedscore
+	for i in range(0, len(scores)):
+		query_size = query_profile_sizes[i]
+		corpus_size = corpus_profile_sizes[i]
+		actualscore = scores[i]
+		corpus_axis.append(corpus_size)
+		query_axis.append(query_size)
+		predictedscore = constant + (corpus_coeff * corpus_size) + (query_coeff * query_size)	
+		residual = actualscore - predictedscore
 		residuals.append(residual)
 		
-	plt.scatter(np.array(geneaxis), np.array(residuals))
-	plt.xlabel('Log(Gene Profile Size)')
+	plt.scatter(np.array(query_axis), np.array(residuals))
+	plt.xlabel('Log(Query Profile Size)')
 	plt.ylabel('Residual')
-	plt.savefig('../results/ResidualPlot_GeneSizes.png')
+	plt.savefig('ResidualPlot_QuerySizes.png')
 
-	plt.scatter(np.array(taxonaxis), np.array(residuals))
-	plt.xlabel('Log(Taxon Profile Size)')
+	plt.scatter(np.array(corpus_axis), np.array(residuals))
+	plt.xlabel('Log(Corpus Profile Size)')
 	plt.ylabel('Residual')
-	plt.savefig('../results/ResidualPlot_TaxonSizes.png')
+	plt.savefig('ResidualPlot_CorpusSizes.png')
 	
-
 
 if __name__=='__main__':
 	import sys
