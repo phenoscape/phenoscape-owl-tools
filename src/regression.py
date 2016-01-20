@@ -55,7 +55,7 @@ def load_profiles():
 	corpus_profile_sizes = []
 	rawscores = []
 	for line in infile:
-		if "Score" not in line:
+		if "Overall Similarity" not in line:
 			data = line.strip().split("\t")
 			score = float(data[6])
 			scores.append(score)
