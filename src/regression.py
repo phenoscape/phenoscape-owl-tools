@@ -59,8 +59,8 @@ def load_profiles():
 			data = line.strip().split("\t")
 			score = float(data[6])
 			scores.append(score)
-			queryprofilesizes.append(math.log(int(data[1])))
-			corpusprofilesizes.append(math.log(int(data[4])))
+			query_profile_sizes.append(math.log(int(data[1])))
+			corpus_profile_sizes.append(math.log(int(data[4])))
 			query_profile = data[2]
 			corpus_profile = data[5]
 	infile.close()
