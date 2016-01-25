@@ -99,7 +99,13 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     addTriples(phenoscapeVocab, bigdata, graphURI)
     val attributes = loadFromWebWithImports(IRI.create("http://svn.code.sf.net/p/phenoscape/code/trunk/vocab/character_slims.obo"))
     addTriples(attributes, bigdata, graphURI)
-    val uberon = loadFromWebWithImports(IRI.create("http://purl.obolibrary.org/obo/uberon/ext.owl"))
+    //FIXME this is a workaround for a temporary Uberon release delay
+    val uberonOfficial = loadFromWebWithImports(IRI.create("http://purl.obolibrary.org/obo/uberon/ext.owl"))
+    val MedianFin = Class("http://purl.obolibrary.org/obo/UBERON_4000162")
+    val MedianFinSkeleton = Class("http://purl.obolibrary.org/obo/UBERON_4000170")
+    val SubdivisionOfSkeleton = Class("http://purl.obolibrary.org/obo/UBERON_0010912")
+    val skeleton_of = ObjectProperty("http://purl.obolibrary.org/obo/RO_0002576")
+    val uberon = uberonOfficial.copy(axioms = uberonOfficial.axioms + (MedianFinSkeleton EquivalentTo (SubdivisionOfSkeleton and (skeleton_of some MedianFin))))
     addTriples(uberon, bigdata, graphURI)
     val homology = loadFromWebWithImports(IRI.create("http://purl.obolibrary.org/obo/uberon/homology.owl"))
     addTriples(homology, bigdata, graphURI)
@@ -285,7 +291,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     write(reducedTbox, cwd + "/staging/kb/tbox-hierarchy-only.owl")
 
     bigdata.commit()
-    
+
     negationReasoner
 
   }
