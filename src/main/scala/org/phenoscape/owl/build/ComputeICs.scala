@@ -16,27 +16,27 @@ object ComputeICs extends App {
 
   val ontfile = new File(args(0))
   val profilesFile = new File(args(1))
+  val corpus = args(2)
 
-  def inCorpus(ind: OWLNamedIndividual): Boolean = ind.getIRI.toString.contains("VTO_")
-  def inQueries(ind: OWLNamedIndividual): Boolean = !ind.getIRI.toString.contains("VTO_")
+  val inCorpusFunc = if (corpus == "taxa") {
+    ind: OWLNamedIndividual => ind.getIRI.toString.contains("VTO_")
+  } else if (corpus == "genes") {
+    ind: OWLNamedIndividual => !ind.getIRI.toString.contains("VTO_")
+  } else throw new RuntimeException("Invalid corpus name.")
+  def inQueriesFunc(ind: OWLNamedIndividual): Boolean = !(inCorpusFunc(ind))
 
   val manager = OWLManager.createOWLOntologyManager()
   val ontology = manager.loadOntologyFromOntologyDocument(ontfile)
   val profiles = manager.loadOntologyFromOntologyDocument(profilesFile)
   val combined = manager.createOntology((ontology.getAxioms.asScala ++ profiles.getAxioms.asScala).asJava, OntologyUtil.nextIRI)
 
-  def outputICs(corpusFunction: OWLNamedIndividual => Boolean, filename: String): Unit = {
-    val owlSim = new OWLsim(combined, corpusFunction)
-    val triples = owlSim.classICScoresAsTriples
-    val triplesOutput = new BufferedOutputStream(new FileOutputStream(new File(filename)))
-    val writer = Rio.createWriter(RDFFormat.TURTLE, triplesOutput)
-    writer.startRDF()
-    triples.foreach(writer.handleStatement)
-    writer.endRDF()
-    triplesOutput.close()
-  }
-
-  outputICs(inCorpus, "corpus_ics.ttl")
-  outputICs(inQueries, "query_ics.ttl")
+  val owlSim = new OWLsim(combined, inCorpusFunc)
+  val triples = owlSim.classICScoresAsTriples
+  val triplesOutput = new BufferedOutputStream(new FileOutputStream(new File(s"corpus_ics-$corpus.ttl")))
+  val writer = Rio.createWriter(RDFFormat.TURTLE, triplesOutput)
+  writer.startRDF()
+  triples.foreach(writer.handleStatement)
+  writer.endRDF()
+  triplesOutput.close()
 
 }
