@@ -5,13 +5,13 @@ organization  := "org.phenoscape"
 
 name          := "kb-owl-tools"
 
-version       := "1.4.1"
+version       := "1.4.2"
 
 packageArchetype.java_application
 
 mainClass in Compile := Some("org.phenoscape.owl.build.Command")
 
-scalaVersion  := "2.11.6"
+scalaVersion  := "2.11.7"
 
 scalacOptions := Seq("-unchecked", "-deprecation", "-feature", "-encoding", "utf8")
 
@@ -40,7 +40,7 @@ libraryDependencies ++= {
       "org.semanticweb.elk"    %   "elk-owlapi"                    % "0.4.2",
       "com.bigdata"            %   "bigdata"                       % "1.5.3",
       "org.openrdf.sesame"     %   "sesame-rio"                    % "2.7.13",
-      "org.phenoscape"         %   "scowl"                         % "0.9.2",
+      "org.phenoscape"         %%  "scowl"                         % "0.9.3",
       "org.phenoscape"         %   "owlet"                         % "1.3"
   )
 }

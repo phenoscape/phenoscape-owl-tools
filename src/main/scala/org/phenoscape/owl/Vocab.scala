@@ -7,6 +7,8 @@ import org.semanticweb.owlapi.vocab.DublinCoreVocabulary
 import org.semanticweb.owlapi.vocab.OWLRDFVocabulary
 
 object Vocab {
+  
+  private val factory = OWLManager.getOWLDataFactory
 
   val rdfType = OWLRDFVocabulary.RDF_TYPE.getIRI
   val rdfsSubClassOf = OWLRDFVocabulary.RDFS_SUBCLASS_OF.getIRI
