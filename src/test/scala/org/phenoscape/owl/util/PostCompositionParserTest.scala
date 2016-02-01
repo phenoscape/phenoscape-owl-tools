@@ -11,6 +11,8 @@ import junit.framework.Assert
 
 class PostCompositionParserTest {
 
+  val factory = OWLManager.getOWLDataFactory
+
   @Test
   def testParser() {
     Assert.assertEquals(factory.getOWLObjectIntersectionOf(Class(id("XAO:0004060")),

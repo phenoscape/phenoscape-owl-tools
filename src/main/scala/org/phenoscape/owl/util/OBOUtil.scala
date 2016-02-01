@@ -1,7 +1,7 @@
 package org.phenoscape.owl.util
 
 import org.semanticweb.owlapi.model.IRI
-import org.phenoscape.owl.mod.mgi.MGIAnatomyBridgeToEMAPA
+import org.phenoscape.kb.ingest.mgi.MGIAnatomyBridgeToEMAPA
 import org.semanticweb.owlapi.model.OWLAnnotationAssertionAxiom
 import org.semanticweb.owlapi.model.OWLEntity
 import org.semanticweb.owlapi.apibinding.OWLManager
