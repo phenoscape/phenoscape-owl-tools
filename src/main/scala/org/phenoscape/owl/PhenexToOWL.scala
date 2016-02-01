@@ -57,7 +57,7 @@ object PhenexToOWL extends OWLTask {
     val (charactersAxioms, characterToOWLMap) = translateCharacters(nexml, matrix, labelRenderer)
     val matrixAxioms = translateMatrixRows(nexml, matrix, taxonOTUToOWLMap, characterToOWLMap)
     val allAxioms = axioms ++ descriptionAxiom ++ otusAxioms ++ charactersAxioms ++ matrixAxioms
-    manager.createOntology(allAxioms, IRI.create("http://example.org/" + UUID.randomUUID().toString()))
+    manager.createOntology(allAxioms, OntologyUtil.nextIRI())
   }
 
   def translateMatrix(nexml: Element, fileName: String): (OWLNamedIndividual, Set[OWLAxiom]) = {
@@ -200,27 +200,30 @@ object PhenexToOWL extends OWLTask {
     val stateID = state.getAttributeValue("id")
     val stateLabel = optString(state.getAttributeValue("label")).getOrElse("")
     val stateSymbol = optString(state.getAttributeValue("symbol")).getOrElse("<?>")
+    val stateDescription = s"$characterLabel: $stateLabel"
     val stateAxioms = Set(
       owlState Type StandardState,
       owlCharacter Fact (may_have_state_value, owlState),
       owlState Annotation (rdfsLabel, stateLabel),
       owlState Annotation (state_symbol, stateSymbol),
-      owlState Annotation (dcDescription, s"$characterLabel: $stateLabel"))
+      owlState Annotation (dcDescription, stateDescription))
     val stateComments = for { comment <- getLiteralMetaValues(state, "comment", rdfsNS) }
       yield owlState Annotation (rdfsComment, comment)
-    val phenotypeAxioms = translatePhenotypes(state, owlState, labelRenderer)
+    val phenotypeAxioms = translatePhenotypes(state, owlState, stateDescription, labelRenderer)
     (stateAxioms ++ stateComments ++ phenotypeAxioms, stateID -> owlState)
   }
 
-  def translatePhenotypes(state: Element, owlState: OWLNamedIndividual, labelRenderer: LabelRenderer): Set[OWLAxiom] = {
+  def translatePhenotypes(state: Element, owlState: OWLNamedIndividual, phenotypeGroupLabel: String, labelRenderer: LabelRenderer): Set[OWLAxiom] = {
     val phenotypeElements = state.getDescendants(new ElementFilter("phenotype_character", phenoNS)).iterator
-    phenotypeElements.flatMap(translatePhenotype(_, owlState, labelRenderer)).toSet
+    val phenotypeGroupClass = Class(owlState.getIRI.toString + "#phenotype")
+    val linkToPhenotype = if (phenotypeElements.nonEmpty) Set(owlState Annotation (describes_phenotype, phenotypeGroupClass.getIRI)) else Set.empty
+    phenotypeElements.flatMap(translatePhenotype(_, owlState, phenotypeGroupClass, labelRenderer)).toSet ++ linkToPhenotype
   }
 
-  def translatePhenotype(phenotypeElement: Element, owlState: OWLNamedIndividual, labelRenderer: LabelRenderer): Set[OWLAxiom] = {
+  def translatePhenotype(phenotypeElement: Element, owlState: OWLNamedIndividual, phenotypeGroupClass: OWLClass, labelRenderer: LabelRenderer): Set[OWLAxiom] = {
     val (phenotypeOption, phenotypeAxioms) = translatePhenotypeSemantics(phenotypeElement, labelRenderer)
-    val link = phenotypeOption.map(term => owlState Annotation (describes_phenotype, term.getIRI)).toSet
-    phenotypeAxioms ++ link
+    val semantics = phenotypeOption.map(phen => phenotypeGroupClass SubClassOf phen).toSet
+    phenotypeAxioms ++ semantics
   }
 
   def translatePhenotypeSemantics(phenotypeElement: Element, labelRenderer: LabelRenderer): (Option[OWLClass], Set[OWLAxiom]) = {
@@ -255,17 +258,17 @@ object PhenexToOWL extends OWLTask {
     })
     val eqPhenotypeOption = (entityOption, qualityOption, relatedEntityOption) match {
       case (None, None, _)            => None
-      case (Some(entity), None, None) => Option(Present and (inheres_in some entity))
+      case (Some(entity), None, None) => Option(has_part some (Present and (inheres_in some entity)))
       case (Some(entity), None, Some(relatedEntity)) => {
         logger.warn("Related entity with no quality. Shouldn't be possible.")
-        Option(Present and (inheres_in some entity))
+        Option(has_part some (Present and (inheres_in some entity)))
       }
-      case (Some(entity), Some(Absent), None)                             => Option(LacksAllPartsOfType and (inheres_in some MultiCellularOrganism) and (towards value Individual(entity.getIRI)))
-      case (Some(entity), Some(LacksAllPartsOfType), Some(relatedEntity)) => Option(LacksAllPartsOfType and (inheres_in some entity) and (towards value Individual(relatedEntity.getIRI)))
-      case (None, Some(quality), None)                                    => Option(quality)
-      case (None, Some(quality), Some(relatedEntity))                     => Option(quality and (towards some relatedEntity))
-      case (Some(entity), Some(quality), None)                            => Option(quality and (inheres_in some entity))
-      case (Some(entity), Some(quality), Some(relatedEntity))             => Option(quality and (inheres_in some entity) and (towards some relatedEntity))
+      case (Some(entity), Some(Absent), None)                             => Option(has_part some (LacksAllPartsOfType and (inheres_in some MultiCellularOrganism) and (towards value Individual(entity.getIRI))))
+      case (Some(entity), Some(LacksAllPartsOfType), Some(relatedEntity)) => Option(has_part some (LacksAllPartsOfType and (inheres_in some entity) and (towards value Individual(relatedEntity.getIRI))))
+      case (None, Some(quality), None)                                    => Option(has_part some (quality))
+      case (None, Some(quality), Some(relatedEntity))                     => Option(has_part some (quality and (towards some relatedEntity)))
+      case (Some(entity), Some(quality), None)                            => Option(has_part some (quality and (inheres_in some entity)))
+      case (Some(entity), Some(quality), Some(relatedEntity))             => Option(has_part some (quality and (inheres_in some entity) and (towards some relatedEntity)))
       //TODO comparisons, etc.
     }
     val (phenotypeClass, phenotypeAxioms) = optionWithSet(eqPhenotypeOption.map(ExpressionUtil.uniqueNameForExpressionWithAxioms))

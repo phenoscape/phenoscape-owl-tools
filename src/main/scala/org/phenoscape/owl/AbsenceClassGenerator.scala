@@ -35,10 +35,9 @@ object AbsenceClassGenerator extends OWLTask {
     val notHasPartClass = Class(NegationClassGenerator.getNegationIRI(NamedRestrictionGenerator.getRestrictionIRI(has_part.getIRI, classIRI)))
     Set(
       factory.getOWLDeclarationAxiom(absenceClass),
-      absenceClass EquivalentTo (LacksAllPartsOfType and (towards value Individual(classIRI))),
-      absenceClass EquivalentTo notHasPartClass,
+      absenceClass EquivalentTo (has_part some (LacksAllPartsOfType and (towards value Individual(classIRI)))),
+      absenceClass EquivalentTo (has_part some (inheres_in some notHasPartClass)),
       absenceClass Annotation (absenceOf, ontClass.getIRI))
-    //absenceClass SubClassOf (involves some ontClass) //this is dangerous
   }
 
   def getAbsenceIRI(classIRI: IRI): IRI = {
