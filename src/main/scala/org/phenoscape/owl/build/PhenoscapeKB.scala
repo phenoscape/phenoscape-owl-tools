@@ -99,13 +99,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     addTriples(phenoscapeVocab, bigdata, graphURI)
     val attributes = loadFromWebWithImports(IRI.create("http://svn.code.sf.net/p/phenoscape/code/trunk/vocab/character_slims.obo"))
     addTriples(attributes, bigdata, graphURI)
-    //FIXME this is a workaround for a temporary Uberon release delay
-    val uberonOfficial = loadFromWebWithImports(IRI.create("http://purl.obolibrary.org/obo/uberon/ext.owl"))
-    val MedianFin = Class("http://purl.obolibrary.org/obo/UBERON_4000162")
-    val MedianFinSkeleton = Class("http://purl.obolibrary.org/obo/UBERON_4000170")
-    val SubdivisionOfSkeleton = Class("http://purl.obolibrary.org/obo/UBERON_0010912")
-    val skeleton_of = ObjectProperty("http://purl.obolibrary.org/obo/RO_0002576")
-    val uberon = uberonOfficial.copy(axioms = uberonOfficial.axioms + (MedianFinSkeleton EquivalentTo (SubdivisionOfSkeleton and (skeleton_of some MedianFin))))
+    val uberon = loadFromWebWithImports(IRI.create("http://purl.obolibrary.org/obo/uberon/ext.owl"))
     addTriples(uberon, bigdata, graphURI)
     val homology = loadFromWebWithImports(IRI.create("http://purl.obolibrary.org/obo/uberon/homology.owl"))
     addTriples(homology, bigdata, graphURI)
@@ -153,6 +147,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     step("Querying entities and qualities")
     val coreReasoner = reasoner(Set(uberon, pato, bspo, go, phenoscapeVocab).flatMap(_.axioms))
     val anatomicalEntities = coreReasoner.getSubClasses(Class(Vocab.ANATOMICAL_ENTITY), false).getFlattened.filterNot(_.isOWLNothing)
+    val qualities = coreReasoner.getSubClasses(Class(Vocab.QUALITY), false).getFlattened.filterNot(_.isOWLNothing)
     coreReasoner.dispose()
 
     step("Converting NeXML to OWL")
@@ -220,7 +215,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
         nexmlTBoxAxioms
 
     //val parts = manager.createOntology(anatomicalEntities.map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.PART_OF), _)).flatten)
-    val hasParts = anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(has_part, _))
+    val hasParts = (anatomicalEntities ++ qualities).flatMap(NamedRestrictionGenerator.createRestriction(has_part, _))
     addTriples(hasParts, bigdata, graphURI)
     val presences = anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(Vocab.IMPLIES_PRESENCE_OF, _))
     addTriples(presences, bigdata, graphURI)
