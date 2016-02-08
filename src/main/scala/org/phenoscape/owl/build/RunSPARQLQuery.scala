@@ -31,5 +31,6 @@ object RunSPARQLQuery extends App {
   val queryOutput = new BufferedOutputStream(new FileOutputStream(outFile))
   query.evaluate(new SPARQLResultsTSVWriter(queryOutput))
   queryOutput.close()
+  blazegraph.close()
 
 }
