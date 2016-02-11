@@ -51,7 +51,7 @@ object GenerateTboxesForSimilarityAnalysis extends App {
   uberonPATOReasoner.dispose()
 
   val (entityPhenotypes, entityPhenotypeAxioms) = flattenAxioms(anatomicalEntities.map(SimilarityTemplates.entity).unzip[OWLClass, Set[OWLAxiom]])
-  val (entityPartsPhenotypes, entityPartsPhenotypeAxioms) = flattenAxioms(anatomicalEntities.map(SimilarityTemplates.entityAndParts).unzip[OWLClass, Set[OWLAxiom]])
+  val (entityPartsPhenotypes, entityPartsPhenotypeAxioms) = flattenAxioms(anatomicalEntities.map(SimilarityTemplates.partsOfEntity).unzip[OWLClass, Set[OWLAxiom]])
   val (qualityPhenotypes, qualityPhenotypeAxioms) = flattenAxioms(qualities.map(SimilarityTemplates.quality).unzip[OWLClass, Set[OWLAxiom]])
 
   val mainTbox = OntologyUtil.filterDisjointAxioms(
