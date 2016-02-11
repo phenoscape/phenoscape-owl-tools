@@ -221,6 +221,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     addTriples(presences, bigdata, graphURI)
     val hasPartsInheringIns = anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(has_part_inhering_in, _))
     addTriples(hasPartsInheringIns, bigdata, graphURI)
+    val phenotypeOfs = anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(phenotype_of, _))
     val absences = anatomicalEntities.flatMap(AbsenceClassGenerator.createAbsenceClass)
     addTriples(absences, bigdata, graphURI)
     val namedHasPartClasses = anatomicalEntities.map(_.getIRI).map(NamedRestrictionGenerator.getRestrictionIRI(has_part.getIRI, _)).map(Class(_))
@@ -229,27 +230,20 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     val developsFromRulesForAbsence = anatomicalEntities.flatMap(ReverseDevelopsFromRuleGenerator.createRules).toSet[OWLAxiom]
     addTriples(developsFromRulesForAbsence, bigdata, graphURI)
 
-    step("Generating semantic similarity subsumers")
+    step("Generating additional semantic similarity subsumers")
     val attributeQualities = attributes.axioms.flatMap(_.getClassesInSignature) + HasNumberOf
-    val entitySubsumerAxioms = for {
+    val subsumers = for {
       entity <- anatomicalEntities
       (term, entityAxioms) = SimilarityTemplates.entity(entity)
-      (partsTerm, entityPartsAxioms) = SimilarityTemplates.entityAndParts(entity)
-      axiom <- (entityAxioms ++ entityPartsAxioms)
+      (partsTerm, entityPartsAxioms) = SimilarityTemplates.partsOfEntity(entity)
+      (developsFromTerm, developsFromAxioms) = SimilarityTemplates.developsFromEntity(entity)
+      axiom <- (entityAxioms ++ entityPartsAxioms ++ developsFromAxioms)
     } yield axiom
-    val entityQualitySubsumerAxioms = for {
-      entity <- anatomicalEntities
-      attribute <- attributeQualities
-      (term, entityAxioms) = SimilarityTemplates.entityWithQuality(entity, attribute)
-      (partsTerm, entityPartsAxioms) = SimilarityTemplates.entityAndPartsWithQuality(entity, attribute)
-      axiom <- (entityAxioms ++ entityPartsAxioms)
-    } yield axiom
-    val subsumers = entitySubsumerAxioms ++ entityQualitySubsumerAxioms
     addTriples(subsumers, bigdata, graphURI)
 
     val allTBox = uberon.axioms ++ homology.axioms ++ pato.axioms ++ bspo.axioms ++ go.axioms ++ vto.axioms ++ zfa.axioms ++ xao.axioms ++ hp.axioms ++
       hpEQ.axioms ++ mpEQ.axioms ++ caroToUberon.axioms ++ zfaToUberon.axioms ++ xaoToUberon.axioms ++ fmaToUberon.axioms ++ mgiToEMAPA.axioms ++ emapa.axioms ++ emapaToUberon.axioms ++
-      hasParts ++ hasPartsInheringIns ++ presences ++ absences ++ absenceNegationEquivalences ++ developsFromRulesForAbsence ++ subsumers ++ tboxFromData ++ phenoscapeVocab.axioms // , eqCharacters //mp,
+      hasParts ++ hasPartsInheringIns ++ phenotypeOfs ++ presences ++ absences ++ absenceNegationEquivalences ++ developsFromRulesForAbsence ++ subsumers ++ tboxFromData ++ phenoscapeVocab.axioms // , eqCharacters //mp,
     println("tbox class count: " + allTBox.flatMap(_.getClassesInSignature).size)
     println("tbox logical axiom count: " + allTBox.filter(_.isLogicalAxiom).size)
     val tBoxWithoutDisjoints = OntologyUtil.filterDisjointAxioms(allTBox)
