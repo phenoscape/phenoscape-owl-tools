@@ -124,11 +124,6 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     val mp = loadFromWebWithImports(IRI.create("http://purl.obolibrary.org/obo/mp.owl"))
     addTriples(mp, bigdata, graphURI)
 
-    val hpEQ = loadFromWebWithImports(IRI.create("https://phenotype-ontologies.googlecode.com/svn/trunk/src/ontology/hp/hp-equivalence-axioms-subq-ubr.owl"))
-    addTriples(hpEQ, bigdata, graphURI)
-    val mpEQ = loadFromWebWithImports(IRI.create("https://phenotype-ontologies.googlecode.com/svn/trunk/src/ontology/mp/mp-equivalence-axioms-subq-ubr.owl"))
-    addTriples(mpEQ, bigdata, graphURI)
-
     val caroToUberon = loadFromWebWithImports(IRI.create("http://purl.obolibrary.org/obo/uberon/bridge/uberon-bridge-to-caro.owl"))
     addTriples(caroToUberon, bigdata, graphURI)
     val zfaToUberon = loadFromWebWithImports(IRI.create("http://purl.obolibrary.org/obo/uberon/bridge/uberon-ext-bridge-to-zfa.owl"))
@@ -234,25 +229,34 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     val attributeQualities = attributes.axioms.flatMap(_.getClassesInSignature) + HasNumberOf
     val subsumers = for {
       entity <- anatomicalEntities
-      (term, entityAxioms) = SimilarityTemplates.entity(entity)
       (partsTerm, entityPartsAxioms) = SimilarityTemplates.partsOfEntity(entity)
       (developsFromTerm, developsFromAxioms) = SimilarityTemplates.developsFromEntity(entity)
-      axiom <- (entityAxioms ++ entityPartsAxioms ++ developsFromAxioms)
+      axiom <- (entityPartsAxioms ++ developsFromAxioms)
     } yield axiom
     addTriples(subsumers, bigdata, graphURI)
 
-    val allTBox = uberon.axioms ++ homology.axioms ++ pato.axioms ++ bspo.axioms ++ go.axioms ++ vto.axioms ++ zfa.axioms ++ xao.axioms ++ hp.axioms ++
-      hpEQ.axioms ++ mpEQ.axioms ++ caroToUberon.axioms ++ zfaToUberon.axioms ++ xaoToUberon.axioms ++ fmaToUberon.axioms ++ mgiToEMAPA.axioms ++ emapa.axioms ++ emapaToUberon.axioms ++
-      hasParts ++ hasPartsInheringIns ++ phenotypeOfs ++ presences ++ absences ++ absenceNegationEquivalences ++ developsFromRulesForAbsence ++ subsumers ++ tboxFromData ++ phenoscapeVocab.axioms // , eqCharacters //mp,
+    val allTBox = uberon.axioms ++ homology.axioms ++ pato.axioms ++ bspo.axioms ++ go.axioms ++ vto.axioms ++ zfa.axioms ++ xao.axioms ++ hp.axioms ++ mp.axioms ++
+      caroToUberon.axioms ++ zfaToUberon.axioms ++ xaoToUberon.axioms ++ fmaToUberon.axioms ++ mgiToEMAPA.axioms ++ emapa.axioms ++ emapaToUberon.axioms ++
+      hasParts ++ hasPartsInheringIns ++ phenotypeOfs ++ presences ++ absences ++ absenceNegationEquivalences ++ developsFromRulesForAbsence ++ subsumers ++ tboxFromData ++ phenoscapeVocab.axioms
+
+    val coreTBox = uberon.axioms ++ homology.axioms ++ pato.axioms ++ bspo.axioms ++ go.axioms ++ vto.axioms ++ zfa.axioms ++ xao.axioms ++ hp.axioms ++ mp.axioms ++
+      caroToUberon.axioms ++ zfaToUberon.axioms ++ xaoToUberon.axioms ++ fmaToUberon.axioms ++ mgiToEMAPA.axioms ++ emapa.axioms ++ emapaToUberon.axioms ++
+      developsFromRulesForAbsence ++ tboxFromData ++ phenoscapeVocab.axioms
     println("tbox class count: " + allTBox.flatMap(_.getClassesInSignature).size)
     println("tbox logical axiom count: " + allTBox.filter(_.isLogicalAxiom).size)
     val tBoxWithoutDisjoints = OntologyUtil.filterDisjointAxioms(allTBox)
+    val coreTBoxWithoutDisjoints = OntologyUtil.filterDisjointAxioms(coreTBox)
 
     step("Materializing tbox classification")
     val tboxReasoner = reasoner(tBoxWithoutDisjoints)
     val inferredAxioms = manager.createOntology()
     MaterializeInferences.materializeInferences(inferredAxioms, tboxReasoner)
     tboxReasoner.dispose()
+
+    val coreTboxOntology = manager.createOntology(coreTBoxWithoutDisjoints)
+    val coreTboxReasoner = reasoner(coreTboxOntology)
+    MaterializeInferences.materializeInferences(coreTboxOntology, coreTboxReasoner)
+    coreTboxReasoner.dispose()
 
     step("Asserting reverse negation hierarchy")
     val hierarchyAxioms = NegationHierarchyAsserter.assertNegationHierarchy(tBoxWithoutDisjoints ++ inferredAxioms.getAxioms)
@@ -274,6 +278,8 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     val tboxOut = OWLManager.createOWLOntologyManager().createOntology((tBoxWithoutDisjoints ++ inferredAxioms.getAxioms))
     write(tboxOut, cwd + "/staging/kb/tbox.owl")
     bigdata.add(new File(cwd + "/staging/kb/tbox.owl"), "", RDFFormat.RDFXML, graphURI)
+
+    write(coreTboxOntology, cwd + "/staging/kb/core-tbox.owl")
 
     step("Reducing tbox for OWLsim")
     val reducedTbox = OntologyUtil.reduceOntologyToHierarchy(tboxOut)
