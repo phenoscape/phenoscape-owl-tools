@@ -9,14 +9,14 @@ import java.util.Properties
 import scala.io.Source
 
 import org.openrdf.query.QueryLanguage
-import org.openrdf.query.resultio.text.tsv.SPARQLResultsTSVWriter
+import org.openrdf.rio.turtle.TurtleWriter
 
 import com.bigdata.journal.Options
 
 import com.bigdata.rdf.sail.BigdataSail
 import com.bigdata.rdf.sail.BigdataSailRepository
 
-object RunSPARQLQuery extends App {
+object RunSPARQLConstruct extends App {
 
   val BlazegraphProperties = new File(args(0))
   val BlazegraphJournal = new File(args(1))
@@ -31,9 +31,9 @@ object RunSPARQLQuery extends App {
   repository.initialize()
   val blazegraph = repository.getUnisolatedConnection()
 
-  val query = blazegraph.prepareTupleQuery(QueryLanguage.SPARQL, Source.fromFile(queryFile, "utf-8").mkString)
+  val query = blazegraph.prepareGraphQuery(QueryLanguage.SPARQL, Source.fromFile(queryFile, "utf-8").mkString)
   val queryOutput = new BufferedOutputStream(new FileOutputStream(outFile))
-  query.evaluate(new SPARQLResultsTSVWriter(queryOutput))
+  query.evaluate(new TurtleWriter(queryOutput))
   queryOutput.close()
   blazegraph.close()
 

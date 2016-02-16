@@ -15,6 +15,7 @@ object Command extends App {
     //case "compute-expects"      => //run just run python directly
     case "expects-to-triples"   => ConvertScoresToTriples.main(commandArgs)
     case "sparql-select"        => RunSPARQLQuery.main(commandArgs)
+    case "sparql-construct"     => RunSPARQLConstruct.main(commandArgs)
     case "sparql-update"        => RunSPARQLUpdate.main(commandArgs)
     case _ => println("""
 Valid commands are:
