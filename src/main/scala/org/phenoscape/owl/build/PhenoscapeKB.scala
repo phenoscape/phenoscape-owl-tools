@@ -371,60 +371,6 @@ WHERE {
   profilesQuery.evaluate(new TurtleWriter(profilesOutput))
   profilesOutput.close()
 
-  step("Export closure files")
-  val subclassesQuery = bigdata.prepareGraphQuery(QueryLanguage.SPARQL, """
-PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-PREFIX owl:  <http://www.w3.org/2002/07/owl#>
-CONSTRUCT { 
-?s rdfs:subClassOf ?o .
-}
-FROM <http://kb.phenoscape.org/>
-WHERE { 
-    ?s rdfs:subClassOf+ ?o .
-    ?s a owl:Class .
-    ?o a owl:Class .
-}
-""")
-  val subclassesOutput = new BufferedOutputStream(new FileOutputStream(new File(cwd + "/staging/kb/subclass_closure.ttl")))
-  subclassesQuery.evaluate(new TurtleWriter(subclassesOutput))
-  subclassesOutput.close()
-
-  val reflexiveSubclassesQuery = bigdata.prepareGraphQuery(QueryLanguage.SPARQL, """
-PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-PREFIX owl:  <http://www.w3.org/2002/07/owl#>
-CONSTRUCT { 
-?s rdfs:subClassOf ?s .
-}
-FROM <http://kb.phenoscape.org/>
-WHERE { 
-    ?s a owl:Class .
-}
-""")
-  val reflexiveOutput = new BufferedOutputStream(new FileOutputStream(new File(cwd + "/staging/kb/subclass_reflexive.ttl")))
-  reflexiveSubclassesQuery.evaluate(new TurtleWriter(reflexiveOutput))
-  reflexiveOutput.close()
-
-  val instancesQuery = bigdata.prepareGraphQuery(QueryLanguage.SPARQL, """
-PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-PREFIX owl:  <http://www.w3.org/2002/07/owl#>
-CONSTRUCT { 
-?s rdf:type ?o .
-}
-FROM <http://kb.phenoscape.org/>
-WHERE { 
-    ?s rdf:type/rdfs:subClassOf* ?o .
-    ?o a owl:Class .
-}       
-""")
-  val instancesOutput = new BufferedOutputStream(new FileOutputStream(new File(cwd + "/staging/kb/instance_closure.ttl")))
-  instancesQuery.evaluate(new TurtleWriter(instancesOutput))
-  instancesOutput.close()
-
   bigdata.close()
 
   step("Done")
