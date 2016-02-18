@@ -216,7 +216,10 @@ object PhenexToOWL extends OWLTask {
   def translatePhenotypes(state: Element, owlState: OWLNamedIndividual, phenotypeGroupLabel: String, labelRenderer: LabelRenderer): Set[OWLAxiom] = {
     val phenotypeElements = state.getDescendants(new ElementFilter("phenotype_character", phenoNS)).iterator
     val phenotypeGroupClass = Class(owlState.getIRI.toString + "#phenotype")
-    val linkToPhenotype = if (phenotypeElements.nonEmpty) Set(owlState Annotation (describes_phenotype, phenotypeGroupClass.getIRI)) else Set.empty
+    val linkToPhenotype = if (phenotypeElements.nonEmpty) Set(
+      owlState Annotation (describes_phenotype, phenotypeGroupClass.getIRI),
+      phenotypeGroupClass Annotation (rdfsLabel, phenotypeGroupLabel))
+    else Set.empty
     phenotypeElements.flatMap(translatePhenotype(_, owlState, phenotypeGroupClass, labelRenderer)).toSet ++ linkToPhenotype
   }
 
