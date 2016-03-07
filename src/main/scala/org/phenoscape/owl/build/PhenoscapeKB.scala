@@ -141,8 +141,8 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
 
     step("Querying entities and qualities")
     val coreReasoner = reasoner(Set(uberon, pato, bspo, go, phenoscapeVocab).flatMap(_.axioms))
-    val anatomicalEntities = coreReasoner.getSubClasses(Class(Vocab.ANATOMICAL_ENTITY), false).getFlattened.filterNot(_.isOWLNothing)
-    val qualities = coreReasoner.getSubClasses(Class(Vocab.QUALITY), false).getFlattened.filterNot(_.isOWLNothing)
+    val anatomicalEntities = coreReasoner.getSubClasses(Class(Vocab.ANATOMICAL_ENTITY), false).getFlattened.filterNot(_.isOWLNothing) + Class(Vocab.ANATOMICAL_ENTITY) 
+    val qualities = coreReasoner.getSubClasses(Class(Vocab.QUALITY), false).getFlattened.filterNot(_.isOWLNothing) + Class(Vocab.QUALITY)
     coreReasoner.dispose()
 
     step("Converting NeXML to OWL")
