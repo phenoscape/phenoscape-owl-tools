@@ -40,7 +40,7 @@ libraryDependencies ++= {
       "org.semanticweb.elk"    %   "elk-owlapi"                    % "0.4.2",
       "com.bigdata"            %   "bigdata"                       % "1.5.3",
       "org.openrdf.sesame"     %   "sesame-rio"                    % "2.7.13",
-      "org.phenoscape"         %%  "scowl"                         % "0.9.3",
+      "org.phenoscape"         %%  "scowl"                         % "1.0-SNAPSHOT",
       "org.phenoscape"         %   "owlet"                         % "1.3",
       "org.phenoscape"         %%  "phenoscape-kb-ingest"          % "1.4.3"
   )

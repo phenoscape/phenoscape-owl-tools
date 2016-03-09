@@ -20,7 +20,7 @@ import org.semanticweb.owlapi.model.OWLClass
 import org.semanticweb.owlapi.reasoner.OWLReasoner
 import com.hp.hpl.jena.query.Query
 import org.semanticweb.owlapi.model.OWLClassExpression
-import org.phenoscape.scowl.OWL._
+import org.phenoscape.scowl._
 
 object EvolutionaryProfiles {
 

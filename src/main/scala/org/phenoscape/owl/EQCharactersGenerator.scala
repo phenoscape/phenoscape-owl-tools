@@ -6,7 +6,7 @@ import scala.collection.JavaConversions._
 import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model.IRI
 import org.semanticweb.owlapi.model.OWLAnnotationAssertionAxiom
-import org.phenoscape.scowl.OWL._
+import org.phenoscape.scowl._
 import org.semanticweb.owlapi.vocab.DublinCoreVocabulary
 import org.semanticweb.owlapi.model.OWLEquivalentClassesAxiom
 import Vocab._
@@ -41,8 +41,8 @@ object EQCharactersGenerator {
   def annotateComposedEntityAndQuality(entity: OWLClass, quality: OWLClass): Set[OWLAnnotationAssertionAxiom] = {
     val subject = compositionIRI(entity, quality)
     Set(
-      subject Annotation (entityTerm, entity.getIRI),
-      subject Annotation (qualityTerm, quality.getIRI))
+      subject Annotation (entityTerm, entity),
+      subject Annotation (qualityTerm, quality))
   }
 
   def compositionIRI(entity: OWLClass, quality: OWLClass): IRI = {

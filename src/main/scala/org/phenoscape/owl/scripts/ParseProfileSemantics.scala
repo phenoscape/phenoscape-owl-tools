@@ -8,7 +8,7 @@ import scala.collection.JavaConversions._
 import org.semanticweb.owlapi.model.OWLClass
 import org.semanticweb.owlapi.model.OWLClassExpression
 import org.phenoscape.owl.util.ExpressionUtil
-import org.phenoscape.scowl.OWL._
+import org.phenoscape.scowl._
 import scalaz.Success
 import scalaz.Failure
 import org.semanticweb.owlapi.model.OWLClassAssertionAxiom

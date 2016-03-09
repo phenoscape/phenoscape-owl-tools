@@ -2,7 +2,7 @@ package org.phenoscape.owl
 
 import java.io.File
 import scala.collection.JavaConversions._
-import org.phenoscape.scowl.OWL._
+import org.phenoscape.scowl._
 import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model.AddImport
 import org.semanticweb.owlapi.model.IRI

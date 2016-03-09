@@ -5,7 +5,7 @@ import scala.collection.JavaConversions._
 import org.junit.Test
 import org.semanticweb.owlapi.apibinding.OWLManager
 
-import org.phenoscape.scowl.OWL._
+import org.phenoscape.scowl._
 
 import junit.framework.Assert
 

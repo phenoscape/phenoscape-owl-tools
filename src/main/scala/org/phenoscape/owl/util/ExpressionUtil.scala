@@ -4,7 +4,7 @@ import java.io.StringWriter
 import java.util.ArrayList
 import scala.collection.JavaConversions._
 import scala.collection.mutable
-import org.phenoscape.scowl.OWL._
+import org.phenoscape.scowl._
 import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model.OWLAnnotationProperty
 import org.semanticweb.owlapi.model.OWLAxiom

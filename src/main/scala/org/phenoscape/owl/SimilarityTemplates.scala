@@ -1,6 +1,6 @@
 package org.phenoscape.owl
 
-import org.phenoscape.scowl.OWL._
+import org.phenoscape.scowl._
 import org.semanticweb.owlapi.model.OWLClass
 import org.phenoscape.owl.Vocab._
 import org.phenoscape.owl.util.OntologyUtil

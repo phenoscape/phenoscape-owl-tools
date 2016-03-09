@@ -46,7 +46,7 @@ import org.phenoscape.kb.ingest.zfin.ZFINPhenotypesToOWL
 import org.phenoscape.kb.ingest.zfin.ZFINPreviousGeneNamesToOWL
 import org.phenoscape.owl.util.OntologyUtil
 import org.phenoscape.owlet.SPARQLComposer._
-import org.phenoscape.scowl.OWL._
+import org.phenoscape.scowl._
 import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model.IRI
 import org.semanticweb.owlapi.model.OWLAxiom

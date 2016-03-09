@@ -8,7 +8,7 @@ import org.phenoscape.owl.PropertyNormalizer
 import org.phenoscape.owl.SimilarityTemplates
 import org.phenoscape.owl.Vocab._
 import org.phenoscape.owl.util.OntologyUtil
-import org.phenoscape.scowl.OWL._
+import org.phenoscape.scowl._
 import org.semanticweb.elk.owlapi.ElkReasonerFactory
 import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model.IRI
