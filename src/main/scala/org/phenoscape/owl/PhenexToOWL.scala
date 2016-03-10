@@ -9,7 +9,7 @@ import org.jdom2.Element
 import org.jdom2.Namespace
 import org.jdom2.filter.ElementFilter
 import org.jdom2.input.SAXBuilder
-import org.phenoscape.owl.util.OntologyUtil
+import org.phenoscape.kb.ingest.util.OntUtil
 import org.phenoscape.scowl._
 import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model.IRI
@@ -20,9 +20,10 @@ import org.semanticweb.owlapi.model.OWLOntology
 import org.semanticweb.owlapi.vocab.DublinCoreVocabulary
 import Vocab._
 import org.semanticweb.owlapi.model.OWLClassExpression
-import org.phenoscape.owl.util.OBOUtil
+import org.phenoscape.kb.ingest.util.OBOUtil
 import org.semanticweb.owlapi.model.OWLEquivalentClassesAxiom
-import org.phenoscape.owl.util.ExpressionUtil
+import org.phenoscape.kb.ingest.util.ExpressionUtil
+import org.phenoscape.owl.util.ExpressionsUtil
 import org.semanticweb.owlapi.model.OWLObject
 import org.phenoscape.owl.util.OntologyUtil.optionWithSet
 import org.semanticweb.owlapi.model.OWLAnnotation
@@ -45,7 +46,7 @@ object PhenexToOWL extends OWLTask {
   type LabelRenderer = OWLObject => String
 
   def convert(file: File, vocabulary: OWLOntology = manager.createOntology()): OWLOntology = {
-    val labelRenderer = ExpressionUtil.createEntityRenderer(factory.getRDFSLabel, vocabulary)
+    val labelRenderer = ExpressionsUtil.createEntityRenderer(factory.getRDFSLabel, vocabulary)
     val doc = new SAXBuilder().build(file)
     val nexml = doc.getRootElement
     val (matrix, axioms) = translateMatrix(nexml, file.getName)
@@ -57,7 +58,7 @@ object PhenexToOWL extends OWLTask {
     val (charactersAxioms, characterToOWLMap) = translateCharacters(nexml, matrix, labelRenderer)
     val matrixAxioms = translateMatrixRows(nexml, matrix, taxonOTUToOWLMap, characterToOWLMap)
     val allAxioms = axioms ++ descriptionAxiom ++ otusAxioms ++ charactersAxioms ++ matrixAxioms
-    manager.createOntology(allAxioms, OntologyUtil.nextIRI())
+    manager.createOntology(allAxioms, OntUtil.nextIRI())
   }
 
   def translateMatrix(nexml: Element, fileName: String): (OWLNamedIndividual, Set[OWLAxiom]) = {
@@ -74,7 +75,7 @@ object PhenexToOWL extends OWLTask {
           matrix Annotation (rdfsLabel, label)))
     }
     sourceAxioms.headOption.getOrElse {
-      val matrix = OntologyUtil.nextIndividual()
+      val matrix = OntUtil.nextIndividual()
       (matrix,
         Set[OWLAxiom](
           matrix Type CharacterStateDataMatrix,
@@ -96,7 +97,7 @@ object PhenexToOWL extends OWLTask {
   }
 
   def translateMatrixCell(cell: Element, otuID: String, owlOTU: OWLNamedIndividual, characterToOWLMap: Map[String, OWLNamedIndividual]): Set[OWLAxiom] = {
-    val owlCell = OntologyUtil.nextIndividual()
+    val owlCell = OntUtil.nextIndividual()
     val characterID = cell.getAttributeValue("char")
     val owlCharacter = characterToOWLMap(characterID)
     val stateID = cell.getAttributeValue("state")
@@ -124,7 +125,7 @@ object PhenexToOWL extends OWLTask {
   }
 
   def translateOTU(otu: Element, matrix: OWLNamedIndividual): (Set[OWLAxiom], (String, OWLNamedIndividual)) = {
-    val owlOTU = OntologyUtil.nextIndividual
+    val owlOTU = OntUtil.nextIndividual
     val otuID = otu.getAttributeValue("id")
     val otuLabel = optString(otu.getAttributeValue("label")).getOrElse("")
     val axioms = Set(
@@ -172,7 +173,7 @@ object PhenexToOWL extends OWLTask {
   }
 
   def translateCharacter(character: Element, index: Int, matrix: OWLNamedIndividual, labelRenderer: LabelRenderer): (Set[OWLAxiom], Map[String, OWLNamedIndividual]) = {
-    val owlCharacter = OntologyUtil.nextIndividual
+    val owlCharacter = OntUtil.nextIndividual
     val characterID = character.getAttributeValue("id")
     val characterLabel = optString(character.getAttributeValue("label")).getOrElse("")
     val axioms = Set(
@@ -196,7 +197,7 @@ object PhenexToOWL extends OWLTask {
   }
 
   def translateState(state: Element, owlCharacter: OWLNamedIndividual, characterLabel: String, labelRenderer: LabelRenderer): (Set[OWLAxiom], (String, OWLNamedIndividual)) = {
-    val owlState = OntologyUtil.nextIndividual
+    val owlState = OntUtil.nextIndividual
     val stateID = state.getAttributeValue("id")
     val stateLabel = optString(state.getAttributeValue("label")).getOrElse("")
     val stateSymbol = optString(state.getAttributeValue("symbol")).getOrElse("<?>")

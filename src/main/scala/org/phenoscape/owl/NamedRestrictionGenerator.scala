@@ -10,7 +10,7 @@ import org.semanticweb.owlapi.model.OWLObjectProperty
 import org.semanticweb.owlapi.model.OWLOntology
 import org.semanticweb.owlapi.model.OWLAxiom
 import org.phenoscape.scowl._
-import org.phenoscape.owl.util.ExpressionUtil
+import org.phenoscape.kb.ingest.util.ExpressionUtil
 
 object NamedRestrictionGenerator extends OWLTask {
 

@@ -6,7 +6,7 @@ import org.phenoscape.owl.Vocab._
 import org.phenoscape.owl.util.OntologyUtil
 import org.semanticweb.owlapi.model.OWLClassExpression
 import org.semanticweb.owlapi.model.OWLEquivalentClassesAxiom
-import org.phenoscape.owl.util.ExpressionUtil
+import org.phenoscape.kb.ingest.util.ExpressionUtil
 import org.semanticweb.owlapi.model.OWLAxiom
 
 object SimilarityTemplates {

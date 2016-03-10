@@ -6,7 +6,7 @@ import scala.collection.JavaConversions._
 import scala.collection.TraversableOnce.flattenTraversableOnce
 import scala.io.Source
 import org.phenoscape.scowl._
-import org.phenoscape.owl.util.OBOUtil
+import org.phenoscape.kb.ingest.util.OBOUtil
 import org.semanticweb.owlapi.model.AddImport
 import org.semanticweb.owlapi.model.AddOntologyAnnotation
 import org.semanticweb.owlapi.model.IRI

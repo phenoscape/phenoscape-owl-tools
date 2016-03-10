@@ -7,7 +7,8 @@ import org.semanticweb.owlapi.model.AxiomType
 import scala.collection.JavaConversions._
 import org.semanticweb.owlapi.model.OWLClass
 import org.semanticweb.owlapi.model.OWLClassExpression
-import org.phenoscape.owl.util.ExpressionUtil
+import org.phenoscape.kb.ingest.util.ExpressionUtil
+import org.phenoscape.owl.util.ExpressionsUtil
 import org.phenoscape.scowl._
 import scalaz.Success
 import scalaz.Failure
@@ -31,11 +32,11 @@ object ParseProfileSemantics {
     val iriString = owlClass.getIRI.toString
     val expanded = if (iriString.startsWith(ExpressionUtil.namedExpressionPrefix)) {
       for {
-        expression <- ExpressionUtil.expressionForName(owlClass)
+        expression <- ExpressionsUtil.expressionForName(owlClass)
       } yield axiomsFor(expression) + (owlClass EquivalentTo expression)
     } else if (iriString.startsWith(ExpressionUtil.namedSubClassPrefix)) {
       for {
-        expression <- ExpressionUtil.expressionForName(owlClass)
+        expression <- ExpressionsUtil.expressionForName(owlClass)
       } yield axiomsFor(expression) + (owlClass SubClassOf expression)
     } else {
       Success(Set.empty[OWLAxiom])

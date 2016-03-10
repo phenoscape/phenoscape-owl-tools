@@ -30,16 +30,6 @@ object OntologyUtil {
       case _                                => false
     }
 
-  def nextIndividual(): OWLNamedIndividual = factory.getOWLNamedIndividual(this.nextIRI)
-
-  //def nextClass(): OWLClass = factory.getOWLClass(this.nextIRI)
-
-  def nextIRI(): IRI = {
-    val uuid = UUID.randomUUID.toString
-    val id = "http://purl.org/phenoscape/uuid/" + uuid
-    IRI.create(id)
-  }
-
   def optionWithSet[T, S](in: Option[(T, Set[S])]): (Option[T], Set[S]) = in match {
     case Some((thing, set)) => (Option(thing), set)
     case None               => (None, Set.empty)

@@ -13,7 +13,7 @@ import org.semanticweb.owlapi.model.OWLOntology
 import org.semanticweb.owlapi.reasoner.{ Node => ReasonerNode }
 import org.semanticweb.owlapi.reasoner.OWLReasoner
 import org.openrdf.model.Statement
-import org.phenoscape.owl.util.OntologyUtil
+import org.phenoscape.kb.ingest.util.OntUtil
 import org.openrdf.model.impl.URIImpl
 import org.openrdf.model.impl.StatementImpl
 import org.phenoscape.owl.Vocab
@@ -217,7 +217,7 @@ case class GroupWiseSimilarity(queryIndividual: OWLNamedIndividual, corpusIndivi
   private val FoundAsMICA = new URIImpl(Vocab.FoundAsMICA.getIRI.toString)
 
   def toTriples: Set[Statement] = {
-    val self = new URIImpl(OntologyUtil.nextIRI.toString)
+    val self = new URIImpl(OntUtil.nextIRI.toString)
     val micasTriples = for {
       pair <- pairs
       subsumer <- pair.maxSubsumer.classes

@@ -12,7 +12,7 @@ import org.openrdf.model.URI
 import org.openrdf.repository.sail.SailRepositoryConnection
 import org.openrdf.rio.RDFFormat
 import org.phenoscape.owl.util.NullIRIMapper
-import org.phenoscape.owl.util.OBOUtil
+import org.phenoscape.kb.ingest.util.OBOUtil
 import org.semanticweb.elk.owlapi.ElkReasonerFactory
 import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.io.FileDocumentTarget

@@ -10,7 +10,7 @@ import org.semanticweb.owlapi.model.OWLAxiom
 import org.phenoscape.scowl._
 import org.semanticweb.owlapi.vocab.OWLRDFVocabulary
 import org.semanticweb.owlapi.vocab.DublinCoreVocabulary
-import org.phenoscape.owl.util.OBOUtil
+import org.phenoscape.kb.ingest.util.OBOUtil
 import org.semanticweb.owlapi.model.AddOntologyAnnotation
 import org.semanticweb.owlapi.model.AddImport
 import java.util.UUID

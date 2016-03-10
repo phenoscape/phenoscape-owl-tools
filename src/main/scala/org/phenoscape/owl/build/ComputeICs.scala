@@ -8,7 +8,7 @@ import scala.collection.JavaConverters._
 import org.openrdf.rio.RDFFormat
 import org.openrdf.rio.Rio
 import org.phenoscape.owl.sim.OWLsim
-import org.phenoscape.owl.util.OntologyUtil
+import org.phenoscape.kb.ingest.util.OntUtil
 import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model.OWLNamedIndividual
 
@@ -28,7 +28,7 @@ object ComputeICs extends App {
   val manager = OWLManager.createOWLOntologyManager()
   val ontology = manager.loadOntologyFromOntologyDocument(ontfile)
   val profiles = manager.loadOntologyFromOntologyDocument(profilesFile)
-  val combined = manager.createOntology((ontology.getAxioms.asScala ++ profiles.getAxioms.asScala).asJava, OntologyUtil.nextIRI)
+  val combined = manager.createOntology((ontology.getAxioms.asScala ++ profiles.getAxioms.asScala).asJava, OntUtil.nextIRI)
 
   val owlSim = new OWLsim(combined, inCorpusFunc)
   val triples = owlSim.classICScoresAsTriples
