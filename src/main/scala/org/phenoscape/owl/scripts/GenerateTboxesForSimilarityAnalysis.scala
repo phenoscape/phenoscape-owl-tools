@@ -22,7 +22,7 @@ import java.io.OutputStreamWriter
 object GenerateTboxesForSimilarityAnalysis extends App {
 
   import GenerateTboxesForSimilarityAnalysisUtil._
-  
+
   val AnatomicalEntity = Class(ANATOMICAL_ENTITY)
   val Quality = Class("http://purl.obolibrary.org/obo/PATO_0000001")
   val manager = OWLManager.createOWLOntologyManager()
@@ -54,6 +54,21 @@ object GenerateTboxesForSimilarityAnalysis extends App {
   val (entityPartsPhenotypes, entityPartsPhenotypeAxioms) = flattenAxioms(anatomicalEntities.map(SimilarityTemplates.partsOfEntity).unzip[OWLClass, Set[OWLAxiom]])
   val (qualityPhenotypes, qualityPhenotypeAxioms) = flattenAxioms(qualities.map(SimilarityTemplates.quality).unzip[OWLClass, Set[OWLAxiom]])
 
+  val attributes = loadFromWebWithImports("http://svn.code.sf.net/p/phenoscape/code/trunk/vocab/character_slims.obo")
+  val attributeQualities = attributes.flatMap(_.getClassesInSignature) + HasNumberOf
+  val (entityAttributePhenotypes, entityAttributePhenotypeAxioms) = flattenAxioms((for {
+    attribute <- attributeQualities
+    entity <- anatomicalEntities
+  } yield {
+    SimilarityTemplates.entityWithQuality(entity, attribute)
+  }).unzip[OWLClass, Set[OWLAxiom]])
+  val (entityPartAttributePhenotypes, entityPartAttributePhenotypeAxioms) = flattenAxioms((for {
+    attribute <- attributeQualities
+    entity <- anatomicalEntities
+  } yield {
+    SimilarityTemplates.partsOfEntityWithQuality(entity, attribute)
+  }).unzip[OWLClass, Set[OWLAxiom]])
+
   val mainTbox = OntologyUtil.filterDisjointAxioms(
     profilesTbox ++ phenoscapeVocab ++ uberon ++
       pato ++ bspo ++ go ++ zfa ++ xao ++ emapa ++ hpo ++ hpEQ ++
@@ -61,6 +76,7 @@ object GenerateTboxesForSimilarityAnalysis extends App {
 
   val entitiesOnt = manager.createOntology(mainTbox ++ entityPhenotypeAxioms ++ entityPartsPhenotypeAxioms)
   val entitiesAndQualitiesOnt = manager.createOntology(mainTbox ++ entityPhenotypeAxioms ++ entityPartsPhenotypeAxioms ++ qualityPhenotypeAxioms)
+  val entitiesAttributesOnt = manager.createOntology(mainTbox ++ entityAttributePhenotypeAxioms ++ entityPartAttributePhenotypeAxioms)
 
   val entitiesReasoner = new ElkReasonerFactory().createReasoner(entitiesOnt)
   MaterializeInferences.materializeInferences(entitiesOnt, entitiesReasoner)
@@ -70,11 +86,17 @@ object GenerateTboxesForSimilarityAnalysis extends App {
   MaterializeInferences.materializeInferences(entitiesAndQualitiesOnt, entitiesAndQualitiesReasoner)
   entitiesAndQualitiesReasoner.dispose()
 
+  val entitiesAttributesReasoner = new ElkReasonerFactory().createReasoner(entitiesAttributesOnt)
+  MaterializeInferences.materializeInferences(entitiesAttributesOnt, entitiesAttributesReasoner)
+  entitiesAttributesReasoner.dispose()
+
   val reducedEntitiesOnt = OntologyUtil.reduceOntologyToHierarchy(entitiesOnt)
   val reducedEntitiesAndQualitiesOnt = OntologyUtil.reduceOntologyToHierarchy(entitiesAndQualitiesOnt)
+  val reducedEntitiesAttributesOnt = OntologyUtil.reduceOntologyToHierarchy(entitiesAttributesOnt)
 
   manager.saveOntology(reducedEntitiesOnt, IRI.create(new File("entities.owl")))
   manager.saveOntology(reducedEntitiesAndQualitiesOnt, IRI.create(new File("entitiesAndQualities.owl")))
+  manager.saveOntology(reducedEntitiesAttributesOnt, IRI.create(new File("entitiesAndAttributes.owl")))
 
   val entityWriter = new OutputStreamWriter(new FileOutputStream("entity_phenotypes.txt"), "UTF-8")
   entityPhenotypes.foreach(p => entityWriter.write(s"${p.getIRI.toString}\n"))
@@ -87,6 +109,14 @@ object GenerateTboxesForSimilarityAnalysis extends App {
   val qualityWriter = new OutputStreamWriter(new FileOutputStream("quality_phenotypes.txt"), "UTF-8")
   qualityPhenotypes.foreach(p => qualityWriter.write(s"${p.getIRI.toString}\n"))
   qualityWriter.close()
+
+  val entitiesAttributesWriter = new OutputStreamWriter(new FileOutputStream("entity_attribute_phenotypes.txt"), "UTF-8")
+  entityAttributePhenotypes.foreach(p => entitiesAttributesWriter.write(s"${p.getIRI.toString}\n"))
+  entitiesAttributesWriter.close()
+
+  val entityPartsAttributesWriter = new OutputStreamWriter(new FileOutputStream("entity_part_attribute_phenotypes.txt"), "UTF-8")
+  entityPartAttributePhenotypes.foreach(p => entityPartsAttributesWriter.write(s"${p.getIRI.toString}\n"))
+  entityPartsAttributesWriter.close()
 
 }
 
