@@ -35,15 +35,11 @@ object GenerateTboxesForSimilarityAnalysis extends App {
   val go = loadFromWebWithImports("http://purl.obolibrary.org/obo/go.owl")
   val zfa = loadFromWebWithImports("http://purl.obolibrary.org/obo/zfa.owl")
   val xao = loadFromWebWithImports("http://purl.obolibrary.org/obo/xao.owl")
-  val emapa = loadFromWebWithImports("http://purl.obolibrary.org/obo/emapa.owl")
-  val hpo = loadFromWebWithImports("http://purl.obolibrary.org/obo/hp.owl")
-  val hpEQ = loadFromWebWithImports("https://phenotype-ontologies.googlecode.com/svn/trunk/src/ontology/hp/hp-equivalence-axioms-subq-ubr.owl")
-  val mpEQ = loadFromWebWithImports("https://phenotype-ontologies.googlecode.com/svn/trunk/src/ontology/mp/mp-equivalence-axioms-subq-ubr.owl")
+  val hp = loadFromWebWithImports("http://purl.obolibrary.org/obo/hp.owl")
+  val mp = loadFromWebWithImports("http://purl.obolibrary.org/obo/mp.owl")
   val caroToUberon = loadFromWebWithImports("http://purl.obolibrary.org/obo/uberon/bridge/uberon-bridge-to-caro.owl")
   val zfaToUberon = loadFromWebWithImports("http://purl.obolibrary.org/obo/uberon/bridge/uberon-ext-bridge-to-zfa.owl")
   val xaoToUberon = loadFromWebWithImports("http://purl.obolibrary.org/obo/uberon/bridge/uberon-bridge-to-xao.owl")
-  val fmaToUberon = loadFromWebWithImports("http://purl.obolibrary.org/obo/uberon/bridge/uberon-bridge-to-fma.owl")
-  val emapaToUberon = loadFromWebWithImports("http://purl.obolibrary.org/obo/uberon/bridge/uberon-bridge-to-emapa.owl")
 
   val uberonPATOReasoner = reasoner(uberon ++ pato)
   val anatomicalEntities = uberonPATOReasoner.getSubClasses(AnatomicalEntity, false).getFlattened.filterNot(_.isOWLNothing).toSet
@@ -71,8 +67,8 @@ object GenerateTboxesForSimilarityAnalysis extends App {
 
   val mainTbox = OntologyUtil.filterDisjointAxioms(
     profilesTbox ++ phenoscapeVocab ++ uberon ++
-      pato ++ bspo ++ go ++ zfa ++ xao ++ emapa ++ hpo ++ hpEQ ++
-      mpEQ ++ caroToUberon ++ zfaToUberon ++ xaoToUberon ++ fmaToUberon ++ emapaToUberon)
+      pato ++ bspo ++ go ++ zfa ++ xao ++ hp ++ mp ++
+      caroToUberon ++ zfaToUberon ++ xaoToUberon)
 
   val entitiesOnt = manager.createOntology(mainTbox ++ entityPhenotypeAxioms ++ entityPartsPhenotypeAxioms)
   val entitiesAndQualitiesOnt = manager.createOntology(mainTbox ++ entityPhenotypeAxioms ++ entityPartsPhenotypeAxioms ++ qualityPhenotypeAxioms)
