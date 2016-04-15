@@ -141,7 +141,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
 
     step("Querying entities and qualities")
     val coreReasoner = reasoner(Set(uberon, pato, bspo, go, phenoscapeVocab).flatMap(_.axioms))
-    val anatomicalEntities = coreReasoner.getSubClasses(Class(Vocab.ANATOMICAL_ENTITY), false).getFlattened.filterNot(_.isOWLNothing) + Class(Vocab.ANATOMICAL_ENTITY) 
+    val anatomicalEntities = coreReasoner.getSubClasses(Class(Vocab.ANATOMICAL_ENTITY), false).getFlattened.filterNot(_.isOWLNothing) + Class(Vocab.ANATOMICAL_ENTITY)
     val qualities = coreReasoner.getSubClasses(Class(Vocab.QUALITY), false).getFlattened.filterNot(_.isOWLNothing) + Class(Vocab.QUALITY)
     coreReasoner.dispose()
 
@@ -209,7 +209,8 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
         humanPhenotypeData.filter(isTboxAxiom) ++
         nexmlTBoxAxioms
 
-    //val parts = manager.createOntology(anatomicalEntities.map(NamedRestrictionGenerator.createRestriction(ObjectProperty(Vocab.PART_OF), _)).flatten)
+    val parts = anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(part_of, _))
+    addTriples(parts, bigdata, graphURI)
     val hasParts = (anatomicalEntities ++ qualities).flatMap(NamedRestrictionGenerator.createRestriction(has_part, _))
     addTriples(hasParts, bigdata, graphURI)
     val presences = anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(Vocab.IMPLIES_PRESENCE_OF, _))
@@ -237,7 +238,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
 
     val allTBox = uberon.axioms ++ homology.axioms ++ pato.axioms ++ bspo.axioms ++ go.axioms ++ vto.axioms ++ zfa.axioms ++ xao.axioms ++ hp.axioms ++ mp.axioms ++
       caroToUberon.axioms ++ zfaToUberon.axioms ++ xaoToUberon.axioms ++ fmaToUberon.axioms ++ mgiToEMAPA.axioms ++ emapa.axioms ++ emapaToUberon.axioms ++
-      hasParts ++ hasPartsInheringIns ++ phenotypeOfs ++ presences ++ absences ++ absenceNegationEquivalences ++ developsFromRulesForAbsence ++ subsumers ++ tboxFromData ++ phenoscapeVocab.axioms
+      parts ++ hasParts ++ hasPartsInheringIns ++ phenotypeOfs ++ presences ++ absences ++ absenceNegationEquivalences ++ developsFromRulesForAbsence ++ subsumers ++ tboxFromData ++ phenoscapeVocab.axioms
 
     val coreTBox = uberon.axioms ++ homology.axioms ++ pato.axioms ++ bspo.axioms ++ go.axioms ++ vto.axioms ++ zfa.axioms ++ xao.axioms ++ hp.axioms ++ mp.axioms ++
       caroToUberon.axioms ++ zfaToUberon.axioms ++ xaoToUberon.axioms ++ fmaToUberon.axioms ++ mgiToEMAPA.axioms ++ emapa.axioms ++ emapaToUberon.axioms ++
