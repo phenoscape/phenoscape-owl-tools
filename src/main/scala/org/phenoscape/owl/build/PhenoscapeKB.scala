@@ -123,6 +123,8 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     addTriples(hp, bigdata, graphURI)
     val mp = loadFromWebWithImports(IRI.create("http://purl.obolibrary.org/obo/mp.owl"))
     addTriples(mp, bigdata, graphURI)
+    val roAnnotations = loadFromWebWithImports(IRI.create("http://purl.obolibrary.org/obo/ro.owl")).axioms.filter(_.isAnnotationAxiom)
+    addTriples(roAnnotations, bigdata, graphURI)
 
     val caroToUberon = loadFromWebWithImports(IRI.create("http://purl.obolibrary.org/obo/uberon/bridge/uberon-bridge-to-caro.owl"))
     addTriples(caroToUberon, bigdata, graphURI)
