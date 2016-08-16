@@ -19,6 +19,8 @@ import org.openrdf.model.impl.StatementImpl
 import org.phenoscape.owl.Vocab
 import org.openrdf.model.impl.NumericLiteralImpl
 import org.openrdf.model.vocabulary.RDF
+import java.io.File
+import java.io.PrintWriter
 
 class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
 
@@ -89,6 +91,17 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
     corpusProfile <- individualsInCorpus.toParArray
     score = groupWiseSimilarityJaccard(inputProfile, corpusProfile)
   } yield (inputProfile, corpusProfile) -> score).toMap.seq
+
+  def computeAllSimilarityToCorpusJDirectOutput(inputs: Set[OWLNamedIndividual], output: File): Unit = {
+    val pw = new PrintWriter(output)
+    val scores = (for {
+      inputProfile <- inputs.toParArray
+      corpusProfile <- individualsInCorpus.toParArray
+      score = groupWiseSimilarityJaccard(inputProfile, corpusProfile)
+    } yield (inputProfile, corpusProfile) -> score).seq
+    scores.foreach { case ((a, b), score) => pw.println(s"${a.getIRI.toString}\t${b.getIRI.toString}\t$score") }
+    pw.close()
+  }
 
   def nonRedundantHierarchy(reasoner: OWLReasoner): (SuperClassOfIndex, SubClassOfIndex) = {
     val parentToChildren = mutable.Map[Node, Set[Node]]()
