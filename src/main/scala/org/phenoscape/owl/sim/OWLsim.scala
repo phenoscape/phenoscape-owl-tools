@@ -94,12 +94,15 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
 
   def computeAllSimilarityToCorpusJDirectOutput(inputs: Set[OWLNamedIndividual], output: File): Unit = {
     val pw = new PrintWriter(output)
-    val scores = (for {
+    for {
       inputProfile <- inputs.toParArray
       corpusProfile <- individualsInCorpus.toParArray
       score = groupWiseSimilarityJaccard(inputProfile, corpusProfile)
-    } yield (inputProfile, corpusProfile) -> score).seq
-    scores.foreach { case ((a, b), score) => pw.println(s"${a.getIRI.toString}\t${b.getIRI.toString}\t$score") }
+    } {
+      this.synchronized {
+        pw.println(s"${inputProfile.getIRI.toString}\t${corpusProfile.getIRI.toString}\t$score")
+      }
+    }
     pw.close()
   }
 
