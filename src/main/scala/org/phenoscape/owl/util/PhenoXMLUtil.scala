@@ -8,6 +8,7 @@ import org.semanticweb.owlapi.model.OWLObjectSomeValuesFrom
 import scala.collection.mutable
 import scala.collection.JavaConversions._
 import org.phenoscape.owl.Vocab
+import org.phenoscape.kb.ingest.util.OBOUtil
 
 object PhenoXMLUtil {
 

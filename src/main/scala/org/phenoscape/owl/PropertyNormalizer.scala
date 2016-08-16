@@ -27,6 +27,7 @@ object PropertyNormalizer extends OWLTask {
     IRI.create("http://purl.obolibrary.org/obo/TODO_has_part") -> Vocab.has_part.getIRI,
     IRI.create("http://purl.obolibrary.org/obo/has_part") -> Vocab.has_part.getIRI,
     IRI.create("http://purl.obolibrary.org/obo/mp/mp-equivalent-axioms-subq#has_part") -> Vocab.has_part.getIRI,
+    IRI.create("http://purl.obolibrary.org/obo/emapa#has_part") -> Vocab.has_part.getIRI,
     IRI.create("http://purl.obolibrary.org/obo/TODO_develops_from") -> Vocab.DEVELOPS_FROM.getIRI,
     IRI.create("http://purl.obolibrary.org/obo/tao#develops_from") -> Vocab.DEVELOPS_FROM.getIRI,
     IRI.create("http://purl.obolibrary.org/obo/xao#develops_from") -> Vocab.DEVELOPS_FROM.getIRI,

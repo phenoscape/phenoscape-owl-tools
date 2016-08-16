@@ -28,20 +28,20 @@ import org.phenoscape.owl.ReverseDevelopsFromRuleGenerator
 import org.phenoscape.owl.TaxonomyConverter
 import org.phenoscape.owl.Vocab
 import org.phenoscape.owl.Vocab._
-import org.phenoscape.owl.mod.human.HumanPhenotypesToOWL
-import org.phenoscape.owl.mod.mgi.MGIExpressionToOWL
-import org.phenoscape.owl.mod.mgi.MGIGeneticMarkersToOWL
-import org.phenoscape.owl.mod.mgi.MGIPhenotypesToOWL
-import org.phenoscape.owl.mod.xenbase.XenbaseExpressionToOWL
-import org.phenoscape.owl.mod.xenbase.XenbaseGenesToOWL
-import org.phenoscape.owl.mod.xenbase.XenbasePhenotypesToOWL
-import org.phenoscape.owl.mod.zfin.ZFINExpressionToOWL
-import org.phenoscape.owl.mod.zfin.ZFINGeneticMarkersToOWL
-import org.phenoscape.owl.mod.zfin.ZFINPhenotypesToOWL
-import org.phenoscape.owl.mod.zfin.ZFINPreviousGeneNamesToOWL
+import org.phenoscape.kb.ingest.human.HumanPhenotypesToOWL
+import org.phenoscape.kb.ingest.mgi.MGIExpressionToOWL
+import org.phenoscape.kb.ingest.mgi.MGIGeneticMarkersToOWL
+import org.phenoscape.kb.ingest.mgi.MGIPhenotypesToOWL
+import org.phenoscape.kb.ingest.xenbase.XenbaseExpressionToOWL
+import org.phenoscape.kb.ingest.xenbase.XenbaseGenesToOWL
+import org.phenoscape.kb.ingest.xenbase.XenbasePhenotypesToOWL
+import org.phenoscape.kb.ingest.zfin.ZFINExpressionToOWL
+import org.phenoscape.kb.ingest.zfin.ZFINGeneticMarkersToOWL
+import org.phenoscape.kb.ingest.zfin.ZFINPhenotypesToOWL
+import org.phenoscape.kb.ingest.zfin.ZFINPreviousGeneNamesToOWL
 import org.phenoscape.owl.util.OntologyUtil
 import org.phenoscape.owlet.SPARQLComposer._
-import org.phenoscape.scowl.OWL._
+import org.phenoscape.scowl._
 import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model.IRI
 import org.semanticweb.owlapi.model.OWLAxiom
@@ -86,7 +86,7 @@ object PostorderTest extends KnowledgeBaseBuilder {
   val repository = new BigdataSailRepository(sail)
   repository.initialize()
   val connection = repository.getUnisolatedConnection()
-  connection.setAutoCommit(false);
+  connection.begin()
 
   step("Testing postorder part of ancestral states reconstruction")
   println("Triples: " + connection.getTripleStore.getStatementCount)

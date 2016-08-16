@@ -1,7 +1,7 @@
 package org.phenoscape.owl
 
 import scala.io.Source
-import org.phenoscape.owl.util.OBOUtil
+import org.phenoscape.kb.ingest.util.OBOUtil
 import org.semanticweb.owlapi.model.IRI
 import org.apache.commons.lang3.StringUtils
 import org.semanticweb.owlapi.vocab.DublinCoreVocabulary

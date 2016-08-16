@@ -3,11 +3,7 @@ package org.phenoscape.owl
 import scala.collection.JavaConversions._
 
 import org.phenoscape.owl.Vocab._
-import org.phenoscape.scowl.OWL.Class
-import org.phenoscape.scowl.OWL.Individual
-import org.phenoscape.scowl.OWL.ScowlClassExpression
-import org.phenoscape.scowl.OWL.ScowlNamedObject
-import org.phenoscape.scowl.OWL.ScowlObjectProperty
+import org.phenoscape.scowl._
 import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model.IRI
 import org.semanticweb.owlapi.model.OWLAxiom
@@ -35,10 +31,9 @@ object AbsenceClassGenerator extends OWLTask {
     val notHasPartClass = Class(NegationClassGenerator.getNegationIRI(NamedRestrictionGenerator.getRestrictionIRI(has_part.getIRI, classIRI)))
     Set(
       factory.getOWLDeclarationAxiom(absenceClass),
-      absenceClass EquivalentTo (LacksAllPartsOfType and (towards value Individual(classIRI))),
-      absenceClass EquivalentTo notHasPartClass,
-      absenceClass Annotation (absenceOf, ontClass.getIRI))
-    //absenceClass SubClassOf (involves some ontClass) //this is dangerous
+      absenceClass EquivalentTo (has_part some (LacksAllPartsOfType and (towards value Individual(classIRI)))),
+      absenceClass EquivalentTo (has_part some (inheres_in some notHasPartClass)),
+      absenceClass Annotation (absenceOf, ontClass))
   }
 
   def getAbsenceIRI(classIRI: IRI): IRI = {

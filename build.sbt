@@ -5,13 +5,13 @@ organization  := "org.phenoscape"
 
 name          := "kb-owl-tools"
 
-version       := "1.3"
+version       := "1.4.5"
 
 packageArchetype.java_application
 
 mainClass in Compile := Some("org.phenoscape.owl.build.Command")
 
-scalaVersion  := "2.11.6"
+scalaVersion  := "2.11.7"
 
 scalacOptions := Seq("-unchecked", "-deprecation", "-feature", "-encoding", "utf8")
 
@@ -38,9 +38,11 @@ libraryDependencies ++= {
       "com.github.scala-blitz" %%  "scala-blitz"                   % "1.2",
       "net.sourceforge.owlapi" %   "owlapi-distribution"           % "3.5.0",
       "org.semanticweb.elk"    %   "elk-owlapi"                    % "0.4.2",
-      "com.bigdata"            %   "bigdata"                       % "1.3.4",
-      "org.openrdf.sesame"     %   "sesame-rio"                    % "2.6.10",
-      "org.phenoscape"         %   "scowl"                         % "0.9",
-      "org.phenoscape"         %   "owlet"                         % "1.3"
+      "com.bigdata"            %   "bigdata"                       % "1.5.3",
+      "org.openrdf.sesame"     %   "sesame-rio"                    % "2.7.13",
+      "org.phenoscape"         %%  "scowl"                         % "1.0.2",
+      "org.phenoscape"         %   "owlet"                         % "1.3",
+      "org.phenoscape"         %%  "phenoscape-kb-ingest"          % "1.4.7",
+      "log4j"                  %   "log4j"                         % "1.2.17"
   )
 }

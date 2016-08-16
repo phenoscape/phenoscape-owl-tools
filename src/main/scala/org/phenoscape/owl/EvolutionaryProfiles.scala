@@ -11,7 +11,7 @@ import org.openrdf.query.BindingSet
 import org.openrdf.query.QueryLanguage
 import org.openrdf.repository.sail.SailRepositoryConnection
 import org.phenoscape.owl.Vocab._
-import org.phenoscape.owl.util.ExpressionUtil
+import org.phenoscape.owl.util.ExpressionsUtil
 import org.phenoscape.owl.util.SesameIterationIterator.iterationToIterator
 import org.phenoscape.owlet.SPARQLComposer._
 import org.semanticweb.owlapi.apibinding.OWLManager
@@ -20,7 +20,7 @@ import org.semanticweb.owlapi.model.OWLClass
 import org.semanticweb.owlapi.reasoner.OWLReasoner
 import com.hp.hpl.jena.query.Query
 import org.semanticweb.owlapi.model.OWLClassExpression
-import org.phenoscape.scowl.OWL._
+import org.phenoscape.scowl._
 
 object EvolutionaryProfiles {
 
@@ -41,7 +41,7 @@ object EvolutionaryProfiles {
       (taxon, profile) <- profiles
       if profile.nonEmpty
     } {
-      val taxonLabel = ExpressionUtil.labelFor(taxon, reasoner.getRootOntology.getImportsClosure).getOrElse("unlabeled")
+      val taxonLabel = ExpressionsUtil.labelFor(taxon, reasoner.getRootOntology.getImportsClosure).getOrElse("unlabeled")
       println(s"$taxonLabel")
       for { (character, states) <- profile } {
         println(s"\t${character.label}: ${states.map(_.label).mkString("\t")}")

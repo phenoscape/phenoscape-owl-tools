@@ -5,9 +5,7 @@ import scala.collection.JavaConverters.asScalaSetConverter
 import scala.collection.JavaConverters.setAsJavaSetConverter
 
 import org.phenoscape.owl.Vocab.inheres_in
-import org.phenoscape.scowl.OWL.Class
-import org.phenoscape.scowl.OWL.ScowlClassExpression
-import org.phenoscape.scowl.OWL.ScowlObjectProperty
+import org.phenoscape.scowl._
 import org.semanticweb.owlapi.model.OWLAxiom
 import org.semanticweb.owlapi.model.OWLClass
 import org.semanticweb.owlapi.model.OWLEquivalentClassesAxiom

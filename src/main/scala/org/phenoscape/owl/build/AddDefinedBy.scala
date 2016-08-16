@@ -3,7 +3,7 @@ package org.phenoscape.owl.build
 import org.semanticweb.owlapi.apibinding.OWLManager
 import java.io.File
 import scala.collection.JavaConversions._
-import org.phenoscape.owl.util.OBOUtil
+import org.phenoscape.kb.ingest.util.OBOUtil
 
 object AddDefinedBy extends App {
 

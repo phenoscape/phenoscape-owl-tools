@@ -5,7 +5,7 @@ import java.io.File
 import scala.collection.JavaConversions._
 import scala.collection.Set
 
-import org.phenoscape.scowl.OWL._
+import org.phenoscape.scowl._
 import org.semanticweb.elk.owlapi.ElkReasonerFactory
 import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model.AddImport
