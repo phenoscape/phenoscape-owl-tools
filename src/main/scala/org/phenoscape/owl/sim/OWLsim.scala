@@ -106,6 +106,21 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
     pw.close()
   }
 
+  def computePairwiseSimilarityInCorpusJDirectOutput(output: File): Unit = {
+    val pw = new PrintWriter(output)
+    for {
+      inputProfile <- individualsInCorpus.toParArray
+      corpusProfile <- individualsInCorpus.toParArray
+      if inputProfile.getIRI.toString < corpusProfile.getIRI.toString
+      score = groupWiseSimilarityJaccard(inputProfile, corpusProfile)
+    } {
+      this.synchronized {
+        pw.println(s"${inputProfile.getIRI.toString}\t${corpusProfile.getIRI.toString}\t$score")
+      }
+    }
+    pw.close()
+  }
+
   def nonRedundantHierarchy(reasoner: OWLReasoner): (SuperClassOfIndex, SubClassOfIndex) = {
     val parentToChildren = mutable.Map[Node, Set[Node]]()
     val childToParents = mutable.Map[Node, Set[Node]]()
