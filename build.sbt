@@ -17,10 +17,6 @@ scalacOptions := Seq("-unchecked", "-deprecation", "-feature", "-encoding", "utf
 
 resolvers += "Phenoscape Maven repository" at "http://phenoscape.svn.sourceforge.net/svnroot/phenoscape/trunk/maven/repository"
 
-resolvers += "nxparser-repo" at "http://nxparser.googlecode.com/svn/repository/"
-
-resolvers += "Bigdata releases" at "http://www.systap.com/maven/releases/"
-
 resolvers += "Sonatype OSS Releases" at "https://oss.sonatype.org/content/repositories/releases"
 
 resolvers += "apache-repo-releases" at "http://repository.apache.org/content/repositories/releases/"
@@ -38,8 +34,8 @@ libraryDependencies ++= {
       "com.github.scala-blitz" %%  "scala-blitz"                   % "1.2",
       "net.sourceforge.owlapi" %   "owlapi-distribution"           % "3.5.0",
       "org.semanticweb.elk"    %   "elk-owlapi"                    % "0.4.2",
-      "com.bigdata"            %   "bigdata"                       % "1.5.3",
-      "org.openrdf.sesame"     %   "sesame-rio"                    % "2.7.13",
+      "com.blazegraph"         %   "bigdata-core"                  % "2.1.2",
+      "org.openrdf.sesame"     %   "sesame-rio"                    % "2.7.12",
       "org.phenoscape"         %%  "scowl"                         % "1.0.2",
       "org.phenoscape"         %   "owlet"                         % "1.3",
       "org.phenoscape"         %%  "phenoscape-kb-ingest"          % "1.4.7",
