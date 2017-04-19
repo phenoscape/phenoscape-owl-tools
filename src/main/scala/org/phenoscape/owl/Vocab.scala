@@ -8,7 +8,7 @@ import org.semanticweb.owlapi.vocab.DublinCoreVocabulary
 import org.semanticweb.owlapi.vocab.OWLRDFVocabulary
 
 object Vocab {
-  
+
   private val factory = OWLManager.getOWLDataFactory
 
   val rdfType = OWLRDFVocabulary.RDF_TYPE.getIRI
@@ -72,7 +72,8 @@ object Vocab {
   val HOMOLOGOUS_TO = ObjectProperty("http://purl.obolibrary.org/obo/RO_0002158")
   val DERIVED_BY_DESCENT_FROM = ObjectProperty("http://purl.obolibrary.org/obo/RO_0002156")
   val HAS_DERIVED_BY_DESCENDANT = ObjectProperty("http://purl.obolibrary.org/obo/RO_0002157")
-  val EVIDENCE = IRI.create("http://www.geneontology.org/formats/oboInOwl#evidence")
+  val has_evidence = ObjectProperty("http://purl.obolibrary.org/obo/RO_0002558")
+  val axiom_has_evidence = AnnotationProperty("http://purl.obolibrary.org/obo/RO_0002612")
   val ANATOMICAL_ENTITY = IRI.create("http://purl.obolibrary.org/obo/UBERON_0001062")
   val QUALITY = IRI.create("http://purl.obolibrary.org/obo/PATO_0000001")
   val PHP = ObjectProperty("http://example.org/php") // part_of some homologous_to some part_of... experimental
@@ -92,6 +93,7 @@ object Vocab {
   val has_phenotypic_profile = IRI.create("http://purl.org/phenoscape/vocab.owl#has_phenotypic_profile")
   val phenotype_of = ObjectProperty("http://purl.org/phenoscape/vocab.owl#phenotype_of")
   val has_part_inhering_in = ObjectProperty("http://purl.org/phenoscape/vocab.owl#has_part_inhering_in")
+  val in_taxon = ObjectProperty("http://purl.obolibrary.org/obo/RO_0002162")
 
   val combined_score = ObjectProperty("http://purl.org/phenoscape/vocab.owl#combined_score")
   val has_ic = ObjectProperty("http://purl.org/phenoscape/vocab.owl#has_ic")
@@ -102,5 +104,5 @@ object Vocab {
   val for_query_annotation = ObjectProperty("http://purl.org/phenoscape/vocab.owl#for_query_annotation")
   val for_corpus_annotation = ObjectProperty("http://purl.org/phenoscape/vocab.owl#for_corpus_annotation")
   val FoundAsMICA = Class("http://purl.org/phenoscape/vocab.owl#FoundAsMICA")
-  
+
 }

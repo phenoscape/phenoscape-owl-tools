@@ -19,7 +19,6 @@ import Vocab._
 object HomologyTableToOWL extends OWLTask {
 
   val manager = OWLManager.createOWLOntologyManager
-  val hasEvidence = factory.getOWLAnnotationProperty(Vocab.EVIDENCE)
   val source = factory.getOWLAnnotationProperty(DublinCoreVocabulary.SOURCE.getIRI)
   val description = factory.getOWLAnnotationProperty(DublinCoreVocabulary.DESCRIPTION.getIRI)
 
@@ -47,8 +46,8 @@ object HomologyTableToOWL extends OWLTask {
       val evidence = Individual("http://example.org/" + UUID.randomUUID().toString)
       val pub = factory.getOWLLiteral(items(11).trim)
       Set(
-        (structure1 SubClassOf (HOMOLOGOUS_TO some structure2)) Annotation (hasEvidence, evidence),
-        (structure2 SubClassOf (HOMOLOGOUS_TO some structure1)) Annotation (hasEvidence, evidence),
+        (structure1 SubClassOf (HOMOLOGOUS_TO some structure2)) Annotation (axiom_has_evidence, evidence),
+        (structure2 SubClassOf (HOMOLOGOUS_TO some structure1)) Annotation (axiom_has_evidence, evidence),
         evidence Type evidenceCode,
         evidence Annotation (source, pub))
     } else {

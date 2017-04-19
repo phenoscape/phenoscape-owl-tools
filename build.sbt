@@ -11,7 +11,7 @@ packageArchetype.java_application
 
 mainClass in Compile := Some("org.phenoscape.owl.build.Command")
 
-scalaVersion  := "2.11.7"
+scalaVersion  := "2.11.11"
 
 scalacOptions := Seq("-unchecked", "-deprecation", "-feature", "-encoding", "utf8")
 
@@ -39,6 +39,7 @@ libraryDependencies ++= {
       "org.phenoscape"         %%  "scowl"                         % "1.0.2",
       "org.phenoscape"         %   "owlet"                         % "1.3",
       "org.phenoscape"         %%  "phenoscape-kb-ingest"          % "1.4.7",
-      "log4j"                  %   "log4j"                         % "1.2.17"
+      "log4j"                  %   "log4j"                         % "1.2.17",
+      "org.apache.directory.studio" % "org.apache.commons.codec" % "1.8"
   )
 }

@@ -1,16 +1,19 @@
 package org.phenoscape.owl.util
 
-import java.io.StringWriter
+import java.net.URI
 import java.util.ArrayList
+
 import scala.collection.JavaConversions._
-import scala.collection.mutable
+
+import org.apache.http.client.utils.URLEncodedUtils
+import org.phenoscape.kb.ingest.util.OntUtil
+import org.phenoscape.owlet.ManchesterSyntaxClassExpressionParser
 import org.phenoscape.scowl._
 import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model.OWLAnnotationProperty
 import org.semanticweb.owlapi.model.OWLAxiom
 import org.semanticweb.owlapi.model.OWLClass
 import org.semanticweb.owlapi.model.OWLClassExpression
-import org.semanticweb.owlapi.model.OWLClassExpressionVisitor
 import org.semanticweb.owlapi.model.OWLEntity
 import org.semanticweb.owlapi.model.OWLIndividual
 import org.semanticweb.owlapi.model.OWLLiteral
@@ -19,22 +22,11 @@ import org.semanticweb.owlapi.model.OWLObjectIntersectionOf
 import org.semanticweb.owlapi.model.OWLObjectSomeValuesFrom
 import org.semanticweb.owlapi.model.OWLOntology
 import org.semanticweb.owlapi.model.OWLOntologySetProvider
-import org.semanticweb.owlapi.model.OWLQuantifiedObjectRestriction
 import org.semanticweb.owlapi.reasoner.OWLReasoner
 import org.semanticweb.owlapi.util.AnnotationValueShortFormProvider
-import org.semanticweb.owlapi.util.ShortFormProvider
+
+import scalaz._
 import uk.ac.manchester.cs.owl.owlapi.mansyntaxrenderer.ManchesterOWLSyntaxOWLObjectRendererImpl
-import uk.ac.manchester.cs.owl.owlapi.mansyntaxrenderer.ManchesterOWLSyntaxObjectRenderer
-import java.net.URLEncoder
-import java.net.URLDecoder
-import java.util.regex.Pattern
-import org.phenoscape.owlet.ManchesterSyntaxClassExpressionParser
-import scalaz.Validation
-import java.net.URL
-import java.net.URI
-import org.apache.http.client.utils.URLEncodedUtils
-import java.util.UUID
-import org.phenoscape.kb.ingest.util.OntUtil
 
 object ExpressionsUtil {
 
@@ -47,24 +39,25 @@ object ExpressionsUtil {
     }).map(ManchesterSyntaxClassExpressionParser.parse).getOrElse(Validation.failure("Invalid expression URI"))
   }
 
-  def instantiateClassAssertion(individual: OWLIndividual, aClass: OWLClassExpression): scala.collection.Set[OWLAxiom] = {
-    val axioms = mutable.Set[OWLAxiom]()
-    if (aClass.isInstanceOf[OWLQuantifiedObjectRestriction]) { // either someValuesFrom or allValuesFrom
-      val restriction = aClass.asInstanceOf[OWLQuantifiedObjectRestriction]
-      val filler = restriction.getFiller
-      val property = restriction.getProperty
-      // need IRIs for individuals for type materialization
-      val value = OntUtil.nextIndividual()
-      axioms.add(factory.getOWLObjectPropertyAssertionAxiom(property, individual, value))
-      axioms.addAll(instantiateClassAssertion(value, filler))
-    } else if (aClass.isInstanceOf[OWLObjectIntersectionOf]) {
-      for (operand <- (aClass.asInstanceOf[OWLObjectIntersectionOf]).getOperands) {
-        axioms.addAll(instantiateClassAssertion(individual, operand))
+  def instantiateClassAssertion(individual: OWLIndividual, aClass: OWLClassExpression): Set[OWLAxiom] = {
+    var axioms = Set.empty[OWLAxiom]
+    aClass match {
+      case ObjectSomeValuesFrom(property, filler) => {
+        val value = OntUtil.nextIndividual()
+        axioms += factory.getOWLObjectPropertyAssertionAxiom(property, individual, value)
+        axioms ++= instantiateClassAssertion(value, filler)
       }
-    } else {
-      axioms.add(factory.getOWLClassAssertionAxiom(aClass, individual))
+      case ObjectAllValuesFrom(property, filler) => {
+        val value = OntUtil.nextIndividual()
+        axioms += factory.getOWLObjectPropertyAssertionAxiom(property, individual, value)
+        axioms ++= instantiateClassAssertion(value, filler)
+      }
+      case ObjectIntersectionOf(operands) => {
+        operands.foreach(o => axioms ++= instantiateClassAssertion(individual, o))
+      }
+      case _ => axioms += factory.getOWLClassAssertionAxiom(aClass, individual)
     }
-    return axioms
+    axioms
   }
 
   def annotationsFor(obj: OWLEntity, property: OWLAnnotationProperty, ont: OWLOntology): Iterable[String] =

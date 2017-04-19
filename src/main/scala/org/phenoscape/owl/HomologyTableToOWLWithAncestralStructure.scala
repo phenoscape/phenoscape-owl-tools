@@ -19,7 +19,6 @@ import Vocab._
 object HomologyTableToOWLWithAncestralStructure extends OWLTask {
 
   val manager = OWLManager.createOWLOntologyManager
-  val hasEvidence = ObjectProperty(Vocab.EVIDENCE)
   val source = factory.getOWLAnnotationProperty(DublinCoreVocabulary.SOURCE.getIRI)
   val description = factory.getOWLAnnotationProperty(DublinCoreVocabulary.DESCRIPTION.getIRI)
   val aboutStructure = ObjectProperty("http://example.org/about_structure")
@@ -49,7 +48,7 @@ object HomologyTableToOWLWithAncestralStructure extends OWLTask {
       val pub = factory.getOWLLiteral(items(11).trim)
       val ancestralStructure = Individual("http://example.org/" + UUID.randomUUID().toString)
       Set(
-        ancestralStructure Fact (hasEvidence, evidence),
+        ancestralStructure Fact (has_evidence, evidence),
         structure1 SubClassOf (DERIVED_BY_DESCENT_FROM value ancestralStructure),
         structure2 SubClassOf (DERIVED_BY_DESCENT_FROM value ancestralStructure),
         ancestralStructure Type (HAS_DERIVED_BY_DESCENDANT some structure1),

@@ -19,7 +19,6 @@ import Vocab._
 object HomologyTableToOWLAsAnnotations extends OWLTask {
 
   val manager = OWLManager.createOWLOntologyManager
-  val hasEvidence = ObjectProperty(Vocab.EVIDENCE)
   val source = factory.getOWLAnnotationProperty(DublinCoreVocabulary.SOURCE.getIRI)
   val description = factory.getOWLAnnotationProperty(DublinCoreVocabulary.DESCRIPTION.getIRI)
   val aboutStructure = ObjectProperty("http://example.org/about_structure")
@@ -57,7 +56,7 @@ object HomologyTableToOWLAsAnnotations extends OWLTask {
       },
       annotation Fact (aboutStructure, structure1),
       annotation Fact (aboutStructure, structure2),
-      annotation Fact (hasEvidence, evidence),
+      annotation Fact (has_evidence, evidence),
       evidence Type evidenceCode,
       evidence Annotation (source, pub))
   }
