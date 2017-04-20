@@ -19,7 +19,7 @@ object OntologyUtil {
 
   def ontologyWithoutDisjointAxioms(ontology: OWLOntology): OWLOntology = {
     val manager = OWLManager.createOWLOntologyManager
-    val axioms = filterDisjointAxioms(ontology.getAxioms.toSet)
+    val axioms = filterDisjointAxioms(ontology.getAxioms().toSet)
     manager.createOntology(axioms)
   }
 
@@ -38,7 +38,7 @@ object OntologyUtil {
   def reduceOntologyToHierarchy(ontology: OWLOntology): OWLOntology = {
     val manager = OWLManager.createOWLOntologyManager
     val factory = OWLManager.getOWLDataFactory
-    val axioms = ontology.getAxioms.collect {
+    val axioms = ontology.getAxioms().collect {
       case subClassOf: OWLSubClassOfAxiom if !subClassOf.getSubClass.isAnonymous && !subClassOf.getSuperClass.isAnonymous => subClassOf
       case equiv: OWLEquivalentClassesAxiom if equiv.getNamedClasses.size > 1 => factory.getOWLEquivalentClassesAxiom(equiv.getNamedClasses)
     }

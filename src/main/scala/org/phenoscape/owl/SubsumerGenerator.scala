@@ -1,8 +1,7 @@
 package org.phenoscape.owl
 
 import scala.annotation.tailrec
-import scala.collection.JavaConverters.asScalaSetConverter
-import scala.collection.JavaConverters.setAsJavaSetConverter
+import scala.collection.JavaConverters._
 
 import org.phenoscape.owl.Vocab.inheres_in
 import org.phenoscape.scowl._
@@ -11,6 +10,7 @@ import org.semanticweb.owlapi.model.OWLClass
 import org.semanticweb.owlapi.model.OWLEquivalentClassesAxiom
 import org.semanticweb.owlapi.model.OWLOntology
 import org.semanticweb.owlapi.reasoner.OWLReasonerFactory
+import org.semanticweb.owlapi.search.EntitySearcher
 
 class SubsumerGenerator(ont: OWLOntology, reasonerFactory: OWLReasonerFactory) {
 
@@ -29,9 +29,9 @@ class SubsumerGenerator(ont: OWLOntology, reasonerFactory: OWLReasonerFactory) {
     def next: scala.collection.Set[EQMaker] = for {
       //FIXME not combining roots with subclasses
       //entity <- reasoner.getSubClasses(rootEntity, true).getFlattened.asScala
-      entity <- rootEntity.getSubClasses(ont).asScala + rootEntity
+      entity <- EntitySearcher.getSubClasses(rootEntity, ont).asScala.toSet + rootEntity
       if !entity.isAnonymous
-      quality <- rootQuality.getSubClasses(ont).asScala + rootQuality
+      quality <- EntitySearcher.getSubClasses(rootQuality, ont).asScala.toSet + rootQuality
       if !quality.isAnonymous
       //quality <- reasoner.getSubClasses(rootQuality, true).getFlattened.asScala
       if !(entity == rootEntity && quality == rootQuality)

@@ -38,8 +38,8 @@ object EQCreator {
     manager.addAxiom(eqs, factory.getOWLInverseObjectPropertiesAxiom(has_part, part_of));
     val uberon = manager.loadOntologyFromOntologyDocument(new File("uberon.owl"));
     val pato = manager.loadOntologyFromOntologyDocument(new File("pato.owl"));
-    manager.applyChange(new AddImport(eqs, factory.getOWLImportsDeclaration(uberon.getOntologyID().getOntologyIRI())));
-    manager.applyChange(new AddImport(eqs, factory.getOWLImportsDeclaration(pato.getOntologyID().getOntologyIRI())));
+    manager.applyChange(new AddImport(eqs, factory.getOWLImportsDeclaration(uberon.getOntologyID.getOntologyIRI.get)));
+    manager.applyChange(new AddImport(eqs, factory.getOWLImportsDeclaration(pato.getOntologyID.getOntologyIRI.get)));
     val anatomicalEntity = Class(IRI.create("http://purl.obolibrary.org/obo/UBERON_0001062"));
     val qualityRoot = Class(IRI.create("http://purl.obolibrary.org/obo/PATO_0000001"));
     val uberonReasoner = new ElkReasonerFactory().createReasoner(uberon);

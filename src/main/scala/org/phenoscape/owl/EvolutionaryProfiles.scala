@@ -18,9 +18,9 @@ import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model.IRI
 import org.semanticweb.owlapi.model.OWLClass
 import org.semanticweb.owlapi.reasoner.OWLReasoner
-import com.hp.hpl.jena.query.Query
 import org.semanticweb.owlapi.model.OWLClassExpression
 import org.phenoscape.scowl._
+import org.apache.jena.query.Query
 
 object EvolutionaryProfiles {
 

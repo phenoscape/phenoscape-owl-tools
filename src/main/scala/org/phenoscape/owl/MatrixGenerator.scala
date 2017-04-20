@@ -35,9 +35,9 @@ object MatrixGenerator extends OWLTask {
     manager.loadOntologyFromOntologyDocument(new File("references.owl"));
     manager.loadOntologyFromOntologyDocument(new File("merged.owl"));
     val uberon = manager.loadOntologyFromOntologyDocument(new File("ext.owl"));
-    manager.applyChange(new AddImport(dataOntology, factory.getOWLImportsDeclaration(ro.getOntologyID().getOntologyIRI())));
-    manager.applyChange(new AddImport(dataOntology, factory.getOWLImportsDeclaration(pato.getOntologyID().getOntologyIRI())));
-    manager.applyChange(new AddImport(dataOntology, factory.getOWLImportsDeclaration(uberon.getOntologyID().getOntologyIRI())));
+    manager.applyChange(new AddImport(dataOntology, factory.getOWLImportsDeclaration(ro.getOntologyID.getOntologyIRI.get)));
+    manager.applyChange(new AddImport(dataOntology, factory.getOWLImportsDeclaration(pato.getOntologyID.getOntologyIRI.get)));
+    manager.applyChange(new AddImport(dataOntology, factory.getOWLImportsDeclaration(uberon.getOntologyID.getOntologyIRI.get)));
     //val partOfLimbFin = Class(IRI.create("http://example.org/partOfLimbFin"));
     val anatomicalEntity = Class(Vocab.ANATOMICAL_ENTITY);
     //manager.addAxiom(uberon, (partOfLimbFin EquivalentTo (partOf some limbFin)));

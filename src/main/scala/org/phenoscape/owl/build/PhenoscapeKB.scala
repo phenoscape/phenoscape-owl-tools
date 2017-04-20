@@ -5,10 +5,12 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.FileReader
 import java.util.Properties
+
 import scala.collection.JavaConversions._
 import scala.collection.mutable
 import scala.io.Source
 import scala.language.postfixOps
+
 import org.apache.commons.io.FileUtils
 import org.apache.log4j.BasicConfigurator
 import org.apache.log4j.Level
@@ -17,6 +19,17 @@ import org.openrdf.model.impl.URIImpl
 import org.openrdf.query.QueryLanguage
 import org.openrdf.rio.RDFFormat
 import org.openrdf.rio.turtle.TurtleWriter
+import org.phenoscape.kb.ingest.human.HumanPhenotypesToOWL
+import org.phenoscape.kb.ingest.mgi.MGIExpressionToOWL
+import org.phenoscape.kb.ingest.mgi.MGIGeneticMarkersToOWL
+import org.phenoscape.kb.ingest.mgi.MGIPhenotypesToOWL
+import org.phenoscape.kb.ingest.xenbase.XenbaseExpressionToOWL
+import org.phenoscape.kb.ingest.xenbase.XenbaseGenesToOWL
+import org.phenoscape.kb.ingest.xenbase.XenbasePhenotypesToOWL
+import org.phenoscape.kb.ingest.zfin.ZFINExpressionToOWL
+import org.phenoscape.kb.ingest.zfin.ZFINGeneticMarkersToOWL
+import org.phenoscape.kb.ingest.zfin.ZFINPhenotypesToOWL
+import org.phenoscape.kb.ingest.zfin.ZFINPreviousGeneNamesToOWL
 import org.phenoscape.owl.AbsenceClassGenerator
 import org.phenoscape.owl.EvolutionaryProfiles
 import org.phenoscape.owl.GeneProfiles
@@ -29,37 +42,23 @@ import org.phenoscape.owl.PhenexToOWL
 import org.phenoscape.owl.PropertyNormalizer
 import org.phenoscape.owl.ReverseDevelopsFromRuleGenerator
 import org.phenoscape.owl.SimilarityTemplates
+import org.phenoscape.owl.SourcedAxioms
 import org.phenoscape.owl.TaxonNode
-import org.phenoscape.owl.TaxonomyConverter
 import org.phenoscape.owl.Vocab
 import org.phenoscape.owl.Vocab._
-import org.phenoscape.kb.ingest.human.HumanPhenotypesToOWL
-import org.phenoscape.kb.ingest.mgi.MGIExpressionToOWL
-import org.phenoscape.kb.ingest.mgi.MGIGeneticMarkersToOWL
-import org.phenoscape.kb.ingest.mgi.MGIPhenotypesToOWL
-import org.phenoscape.kb.ingest.xenbase.XenbaseExpressionToOWL
-import org.phenoscape.kb.ingest.xenbase.XenbaseGenesToOWL
-import org.phenoscape.kb.ingest.xenbase.XenbasePhenotypesToOWL
-import org.phenoscape.kb.ingest.zfin.ZFINExpressionToOWL
-import org.phenoscape.kb.ingest.zfin.ZFINGeneticMarkersToOWL
-import org.phenoscape.kb.ingest.zfin.ZFINPhenotypesToOWL
-import org.phenoscape.kb.ingest.zfin.ZFINPreviousGeneNamesToOWL
 import org.phenoscape.owl.util.OntologyUtil
 import org.phenoscape.owlet.SPARQLComposer._
 import org.phenoscape.scowl._
 import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model.IRI
 import org.semanticweb.owlapi.model.OWLAxiom
+import org.semanticweb.owlapi.model.parameters.Imports
 import org.semanticweb.owlapi.reasoner.OWLReasoner
 import org.semanticweb.owlapi.vocab.OWLRDFVocabulary
+
 import com.bigdata.journal.Options
 import com.bigdata.rdf.sail.BigdataSail
 import com.bigdata.rdf.sail.BigdataSailRepository
-import org.semanticweb.owlapi.model.AxiomType
-import org.phenoscape.owl.SourcedAxioms
-import org.semanticweb.owlapi.io.RDFXMLOntologyFormat
-import java.io.ByteArrayOutputStream
-import java.io.ByteArrayInputStream
 
 object PhenoscapeKB extends KnowledgeBaseBuilder {
 
@@ -160,7 +159,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     val nexmlTBoxAxioms: mutable.Set[OWLAxiom] = mutable.Set()
     for (file <- filesToConvert) {
       val nexOntology = PropertyNormalizer.normalize(PhenexToOWL.convert(file, vocabForNeXML))
-      nexmlTBoxAxioms.addAll(nexOntology.getTBoxAxioms(false))
+      nexmlTBoxAxioms.addAll(nexOntology.getTBoxAxioms(Imports.EXCLUDED))
       addTriples(nexOntology, bigdata, graphURI)
     }
 
@@ -264,9 +263,9 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     coreTboxReasoner.dispose()
 
     step("Asserting reverse negation hierarchy")
-    val hierarchyAxioms = NegationHierarchyAsserter.assertNegationHierarchy(tBoxWithoutDisjoints ++ inferredAxioms.getAxioms)
+    val hierarchyAxioms = NegationHierarchyAsserter.assertNegationHierarchy(tBoxWithoutDisjoints ++ inferredAxioms.getAxioms())
     manager.addAxioms(inferredAxioms, hierarchyAxioms)
-    implicit val negationReasoner = reasoner(tBoxWithoutDisjoints ++ inferredAxioms.getAxioms)
+    implicit val negationReasoner = reasoner(tBoxWithoutDisjoints ++ inferredAxioms.getAxioms())
     MaterializeInferences.materializeInferences(inferredAxioms, negationReasoner)
 
     if (negationReasoner.getUnsatisfiableClasses().getEntitiesMinusBottom().isEmpty()) {
@@ -280,7 +279,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     //addTriples(inferredAxioms, bigdata, graphURI)
 
     step("Writing tbox axioms for ELK")
-    val tboxOut = OWLManager.createOWLOntologyManager().createOntology((tBoxWithoutDisjoints ++ inferredAxioms.getAxioms))
+    val tboxOut = OWLManager.createOWLOntologyManager().createOntology((tBoxWithoutDisjoints ++ inferredAxioms.getAxioms()))
     write(tboxOut, cwd + "/staging/kb/tbox.owl")
     bigdata.add(new File(cwd + "/staging/kb/tbox.owl"), "", RDFFormat.RDFXML, graphURI)
 

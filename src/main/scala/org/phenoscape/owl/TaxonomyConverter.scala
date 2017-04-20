@@ -13,6 +13,7 @@ import org.semanticweb.owlapi.model.OWLObjectPropertyAssertionAxiom
 import org.semanticweb.owlapi.model.OWLClassExpression
 import org.semanticweb.owlapi.apibinding.OWLManager
 import org.phenoscape.owl.Vocab._
+import org.semanticweb.owlapi.search.EntitySearcher
 
 object TaxonomyConverter extends OWLTask {
 
@@ -37,7 +38,7 @@ object TaxonomyConverter extends OWLTask {
     val factory = manager.getOWLDataFactory();
     val axioms = mutable.Set[OWLAxiom]();
     axioms.add(factory.getOWLClassAssertionAxiom(Taxon, factory.getOWLNamedIndividual(taxonClass.getIRI())));
-    axioms.addAll(onlyClasses(taxonClass.getSuperClasses(classOntology)).map(createSubcladeRelationship(taxonClass, _)));
+    axioms.addAll(onlyClasses(EntitySearcher.getSuperClasses(taxonClass, classOntology)).map(createSubcladeRelationship(taxonClass, _)));
     return axioms;
   }
 

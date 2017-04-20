@@ -124,7 +124,7 @@ object GenerateTboxesForSimilarityAnalysisUtil {
     val importsAxioms = (ont.getImportsClosure - ont).flatMap(_.getAxioms)
     manager.addAxioms(ont, importsAxioms)
     PropertyNormalizer.normalize(ont)
-    ont.getAxioms.toSet
+    ont.getAxioms().toSet
   }
 
   def flattenAxioms[A, B](in: (A, Set[Set[B]])): (A, Set[B]) = (in._1, in._2.flatten)

@@ -1,5 +1,6 @@
 package org.phenoscape.owl.util
 
+import java.io.StringWriter
 import java.net.URI
 import java.util.ArrayList
 
@@ -10,6 +11,7 @@ import org.phenoscape.kb.ingest.util.OntUtil
 import org.phenoscape.owlet.ManchesterSyntaxClassExpressionParser
 import org.phenoscape.scowl._
 import org.semanticweb.owlapi.apibinding.OWLManager
+import org.semanticweb.owlapi.manchestersyntax.renderer.ManchesterOWLSyntaxObjectRenderer
 import org.semanticweb.owlapi.model.OWLAnnotationProperty
 import org.semanticweb.owlapi.model.OWLAxiom
 import org.semanticweb.owlapi.model.OWLClass
@@ -23,10 +25,10 @@ import org.semanticweb.owlapi.model.OWLObjectSomeValuesFrom
 import org.semanticweb.owlapi.model.OWLOntology
 import org.semanticweb.owlapi.model.OWLOntologySetProvider
 import org.semanticweb.owlapi.reasoner.OWLReasoner
+import org.semanticweb.owlapi.search.EntitySearcher
 import org.semanticweb.owlapi.util.AnnotationValueShortFormProvider
 
 import scalaz._
-import uk.ac.manchester.cs.owl.owlapi.mansyntaxrenderer.ManchesterOWLSyntaxOWLObjectRendererImpl
 
 object ExpressionsUtil {
 
@@ -61,7 +63,7 @@ object ExpressionsUtil {
   }
 
   def annotationsFor(obj: OWLEntity, property: OWLAnnotationProperty, ont: OWLOntology): Iterable[String] =
-    obj.getAnnotations(ont, property).map(_.getValue).collect(
+    EntitySearcher.getAnnotations(obj, ont, property).map(_.getValue).collect(
       { case literal: OWLLiteral => literal.getLiteral.toString })
 
   def labelFor(obj: OWLEntity, ont: OWLOntology): Option[String] = annotationsFor(obj, factory.getRDFSLabel, ont).headOption
@@ -75,9 +77,13 @@ object ExpressionsUtil {
 
   def createEntityRenderer(property: OWLAnnotationProperty, ont: OWLOntology): OWLObject => String = {
     val shortFormProvider = new AnnotationValueShortFormProvider(List(property), Map[OWLAnnotationProperty, ArrayList[String]](), new OntologyProvider(ont))
-    val renderer = new ManchesterOWLSyntaxOWLObjectRendererImpl()
-    renderer.setShortFormProvider(shortFormProvider)
-    entity => renderer.render(entity).replaceAll("\n", " ").replaceAll("\\s+", " ")
+    entity => {
+      val writer = new StringWriter()
+      val renderer = new ManchesterOWLSyntaxObjectRenderer(writer, shortFormProvider)
+      entity.accept(renderer)
+      writer.close()
+      writer.toString.replaceAll("\n", " ").replaceAll("\\s+", " ")
+    }
   }
 
   def permute(expression: OWLClassExpression)(implicit reasoner: OWLReasoner): Set[OWLClassExpression] = expression match {

@@ -25,7 +25,7 @@ class NegationHierarchyAsserterTest {
     Assert.assertFalse(ontology.containsAxiom(Class(s"$base#NotB") SubClassOf Class(s"$base#NotC")))
     Assert.assertTrue(ontology.containsAxiom(Class(s"$base#B") EquivalentTo Class(s"$base#D")))
     Assert.assertFalse(ontology.containsAxiom(Class(s"$base#NotB") EquivalentTo Class(s"$base#NotD")))
-    manager.addAxioms(ontology, NegationHierarchyAsserter.assertNegationHierarchy(ontology.getAxioms.toSet))
+    manager.addAxioms(ontology, NegationHierarchyAsserter.assertNegationHierarchy(ontology.getAxioms().toSet))
     Assert.assertTrue(ontology.containsAxiom(Class(s"$base#NotA") SubClassOf Class(s"$base#NotB")))
     Assert.assertTrue(ontology.containsAxiom(Class(s"$base#NotB") SubClassOf Class(s"$base#NotC")))
     Assert.assertTrue(ontology.containsAxiom(Class(s"$base#NotB") EquivalentTo Class(s"$base#NotD")))

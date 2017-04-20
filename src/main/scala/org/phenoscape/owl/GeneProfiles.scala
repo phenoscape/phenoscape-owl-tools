@@ -11,8 +11,7 @@ import org.phenoscape.owl.util.SesameIterationIterator.iterationToIterator
 import org.phenoscape.owlet.SPARQLComposer._
 import org.phenoscape.scowl._
 import org.semanticweb.owlapi.model.OWLClass
-
-import com.hp.hpl.jena.query.Query
+import org.apache.jena.query.Query
 
 object GeneProfiles {
 

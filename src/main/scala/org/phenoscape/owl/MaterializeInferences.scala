@@ -41,7 +41,7 @@ object MaterializeInferences extends OWLTask {
       val manager = ontology.getOWLOntologyManager()
       val classes = ontology.getClassesInSignature()
       val tempOntology = manager.createOntology(ontology.getImportsClosure().flatMap(_.getAxioms()))
-      val entityRemover = new OWLEntityRemover(manager, Set(tempOntology))
+      val entityRemover = new OWLEntityRemover(Set(tempOntology))
       tempOntology.getClassesInSignature().foreach(entityRemover.visit)
       manager.applyChanges(entityRemover.getChanges())
       createReasoner(tempOntology, getReasonerChoice())
@@ -62,7 +62,7 @@ object MaterializeInferences extends OWLTask {
       axiomGenerators.add(new InferredPropertyAssertionGenerator())
     }
     val generator = new InferredOntologyGenerator(reasoner, axiomGenerators)
-    generator.fillOntology(ontology.getOWLOntologyManager(), ontology)
+    generator.fillOntology(ontology.getOWLOntologyManager.getOWLDataFactory, ontology)
   }
 
   def getReasonerChoice(): String = {

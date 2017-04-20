@@ -16,13 +16,13 @@ import org.phenoscape.kb.ingest.util.OBOUtil
 import org.semanticweb.elk.owlapi.ElkReasonerFactory
 import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.io.FileDocumentTarget
-import org.semanticweb.owlapi.io.RDFXMLOntologyFormat
 import org.semanticweb.owlapi.model.AxiomType
 import org.semanticweb.owlapi.model.IRI
 import org.semanticweb.owlapi.model.OWLAxiom
 import org.semanticweb.owlapi.model.OWLOntology
 import org.semanticweb.owlapi.model.OWLOntologyManager
 import org.semanticweb.owlapi.reasoner.OWLReasoner
+import org.semanticweb.owlapi.formats.RDFXMLDocumentFormat
 
 class KnowledgeBaseBuilder extends App {
 
@@ -54,7 +54,7 @@ class KnowledgeBaseBuilder extends App {
 
   def loadNormalized(location: File): OWLOntology = {
     val ont = globalManager.loadOntologyFromOntologyDocument(location)
-    val definedByAxioms = ont.getClassesInSignature.flatMap(OBOUtil.createDefinedByAnnotation)
+    val definedByAxioms = ont.getClassesInSignature().flatMap(OBOUtil.createDefinedByAnnotation)
     globalManager.addAxioms(ont, definedByAxioms)
     PropertyNormalizer.normalize(ont)
   }
@@ -64,15 +64,15 @@ class KnowledgeBaseBuilder extends App {
     val ont = manager.loadOntology(iri)
     val importsAxioms = (ont.getImportsClosure - ont).flatMap(_.getAxioms)
     manager.addAxioms(ont, importsAxioms)
-    val definedByAxioms = ont.getClassesInSignature.flatMap(OBOUtil.createDefinedByAnnotation)
+    val definedByAxioms = ont.getClassesInSignature().flatMap(OBOUtil.createDefinedByAnnotation)
     manager.addAxioms(ont, definedByAxioms)
     PropertyNormalizer.normalize(ont)
-    SourcedAxioms(ont.getAxioms.toSet, iri, Option(ont.getOntologyID.getVersionIRI))
+    SourcedAxioms(ont.getAxioms().toSet, iri, Option(ont.getOntologyID.getVersionIRI.get))
   }
 
   def write(ontology: OWLOntology, filename: String): Unit = {
     val ontManager = ontology.getOWLOntologyManager()
-    ontManager.saveOntology(ontology, new RDFXMLOntologyFormat(), new FileDocumentTarget(new File(filename)))
+    ontManager.saveOntology(ontology, new RDFXMLDocumentFormat(), new FileDocumentTarget(new File(filename)))
   }
 
   def cd(dir: String): Unit = {
@@ -92,7 +92,7 @@ class KnowledgeBaseBuilder extends App {
   def addTriples(ontology: OWLOntology, db: SailRepositoryConnection, graph: URI): Unit = {
     val manager = ontology.getOWLOntologyManager
     val outStream = new ByteArrayOutputStream()
-    manager.saveOntology(ontology, new RDFXMLOntologyFormat(), outStream)
+    manager.saveOntology(ontology, new RDFXMLDocumentFormat, outStream)
     outStream.close()
     val inStream = new ByteArrayInputStream(outStream.toByteArray())
     db.add(inStream, "", RDFFormat.RDFXML, graph)
@@ -115,6 +115,6 @@ case class SourcedAxioms(axioms: Set[OWLAxiom], ont: IRI, ontVersion: Option[IRI
 
 object SourcedAxioms {
 
-  def apply(ont: OWLOntology): SourcedAxioms = SourcedAxioms(ont.getAxioms.toSet, ont.getOntologyID.getOntologyIRI, Option(ont.getOntologyID.getVersionIRI))
+  def apply(ont: OWLOntology): SourcedAxioms = SourcedAxioms(ont.getAxioms().toSet, ont.getOntologyID.getOntologyIRI.get, Option(ont.getOntologyID.getVersionIRI.get))
 
 }

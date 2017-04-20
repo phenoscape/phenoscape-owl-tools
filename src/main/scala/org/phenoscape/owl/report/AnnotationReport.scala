@@ -3,28 +3,35 @@ package org.phenoscape.owl.report
 import java.io.BufferedWriter
 import java.io.File
 import java.io.FileWriter
+import java.io.StringWriter
 import java.io.Writer
+
 import scala.collection.JavaConversions._
-import scala.collection.mutable.HashMap
-import scala.collection.mutable
 import scala.collection.Map
+import scala.collection.mutable
+
 import org.apache.commons.lang3.StringUtils
-import org.jdom2.filter.ElementFilter
-import org.jdom2.input.SAXBuilder
 import org.jdom2.Element
 import org.jdom2.Namespace
-import org.phenoscape.owl.util.PhenoXMLUtil.EQ
+import org.jdom2.filter.ElementFilter
+import org.jdom2.input.SAXBuilder
 import org.phenoscape.owl.util.PhenoXMLUtil
+import org.phenoscape.owl.util.PhenoXMLUtil.EQ
 import org.semanticweb.owlapi.apibinding.OWLManager
+import org.semanticweb.owlapi.manchestersyntax.renderer.ManchesterOWLSyntaxObjectRenderer
 import org.semanticweb.owlapi.model.OWLAnnotationProperty
 import org.semanticweb.owlapi.model.OWLClassExpression
+import org.semanticweb.owlapi.model.OWLObject
+import org.semanticweb.owlapi.model.OWLObjectProperty
 import org.semanticweb.owlapi.util.AnnotationValueShortFormProvider
 import org.semanticweb.owlapi.util.DefaultPrefixManager
-import org.semanticweb.owlapi.vocab.OWLRDFVocabulary
-import uk.ac.manchester.cs.owl.owlapi.mansyntaxrenderer.ManchesterOWLSyntaxOWLObjectRendererImpl
-import uk.ac.manchester.cs.owl.owlapi.mansyntaxrenderer.ManchesterOWLSyntaxPrefixNameShortFormProvider
 import org.semanticweb.owlapi.util.SimpleShortFormProvider
-import org.semanticweb.owlapi.model.OWLObjectProperty
+
+trait ObjectRenderer {
+
+  def render(obj: OWLObject): String
+
+}
 
 object AnnotationReport {
 
@@ -35,16 +42,33 @@ object AnnotationReport {
   val factory = OWLManager.getOWLDataFactory();
   val manager = OWLManager.createOWLOntologyManager();
   val header = "File\tCharacter Number\tCharacter Label\tState Symbol\tState Label\tEntity ID\tEntity Label\tQuality ID\tQuality Label\tRelated Entity ID\tRelated Entity Label";
-  val idRenderer = new ManchesterOWLSyntaxOWLObjectRendererImpl();
   val prefixManager = new DefaultPrefixManager();
   prefixManager.setPrefix("UBERON:", "http://purl.obolibrary.org/obo/UBERON_");
   prefixManager.setPrefix("BSPO:", "http://purl.obolibrary.org/obo/BSPO_");
   prefixManager.setPrefix("PATO:", "http://purl.obolibrary.org/obo/PATO_");
   prefixManager.setPrefix("GO:", "http://purl.obolibrary.org/obo/GO_");
-  idRenderer.setShortFormProvider(new SimpleShortFormProvider());
-  val labelRenderer = new ManchesterOWLSyntaxOWLObjectRendererImpl();
-  val label = factory.getOWLAnnotationProperty(OWLRDFVocabulary.RDFS_LABEL.getIRI());
-  labelRenderer.setShortFormProvider(new AnnotationValueShortFormProvider(List(label), HashMap[OWLAnnotationProperty, java.util.List[String]](), manager));
+  val idRenderer = new ObjectRenderer {
+
+    def render(obj: OWLObject): String = {
+      val writer = new StringWriter()
+      val renderer = new ManchesterOWLSyntaxObjectRenderer(writer, new SimpleShortFormProvider())
+      obj.accept(renderer)
+      writer.close()
+      writer.toString
+    }
+
+  }
+  val labelRenderer = new ObjectRenderer {
+
+    def render(obj: OWLObject): String = {
+      val writer = new StringWriter()
+      val renderer = new ManchesterOWLSyntaxObjectRenderer(writer, new AnnotationValueShortFormProvider(List(factory.getRDFSLabel), mutable.Map.empty[OWLAnnotationProperty, java.util.List[String]], manager))
+      obj.accept(renderer)
+      writer.close()
+      writer.toString
+    }
+
+  }
 
   def main(args: Array[String]): Unit = {
     manager.loadOntologyFromOntologyDocument(new File(System.getProperty(ONTOLOGY_PROPERTY)));
