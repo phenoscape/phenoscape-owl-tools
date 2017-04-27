@@ -5,7 +5,7 @@ organization  := "org.phenoscape"
 
 name          := "kb-owl-tools"
 
-version       := "1.5-SNAPSHOT"
+version       := "1.5"
 
 packageArchetype.java_application
 
