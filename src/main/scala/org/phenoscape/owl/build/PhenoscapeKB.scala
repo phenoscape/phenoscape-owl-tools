@@ -94,62 +94,62 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
   def loadOntologiesAndCreateReasoner(): OWLReasoner = {
     bigdata.begin()
     step("Loading ontologies")
-    val phenoscapeVocab = loadFromWebWithImports(IRI.create("http://purl.org/phenoscape/vocab.owl"))
+    val phenoscapeVocab = loadFromWeb(IRI.create("http://purl.org/phenoscape/vocab.owl"), false)
     addTriples(phenoscapeVocab, bigdata, graphURI)
-    val attributes = loadFromWebWithImports(IRI.create("http://svn.code.sf.net/p/phenoscape/code/trunk/vocab/character_slims.obo"))
+    val attributes = loadFromWeb(IRI.create("http://svn.code.sf.net/p/phenoscape/code/trunk/vocab/character_slims.obo"), false)
     addTriples(attributes, bigdata, graphURI)
-    val uberon = loadFromWebWithImports(IRI.create("http://purl.obolibrary.org/obo/uberon/ext.owl"))
+    val uberon = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/uberon/ext.owl"), true)
     addTriples(uberon, bigdata, graphURI)
-    val homology = loadFromWebWithImports(IRI.create("http://purl.org/phenoscape/demo/phenoscape_homology.owl"))
+    val homology = loadFromWeb(IRI.create("http://purl.org/phenoscape/demo/phenoscape_homology.owl"), true)
     addTriples(homology, bigdata, graphURI)
-    val vtoToNCBI = loadFromWebWithImports(IRI.create("http://purl.org/phenoscape/demo/vto_ncbi.owl"))
+    val vtoToNCBI = loadFromWeb(IRI.create("http://purl.org/phenoscape/demo/vto_ncbi.owl"), true)
     addTriples(vtoToNCBI, bigdata, graphURI)
-    val pato = loadFromWebWithImports(IRI.create("http://purl.obolibrary.org/obo/pato.owl"))
+    val pato = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/pato.owl"), true)
     addTriples(pato, bigdata, graphURI)
-    val bspo = loadFromWebWithImports(IRI.create("http://purl.obolibrary.org/obo/bspo.owl"))
+    val bspo = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/bspo.owl"), true)
     addTriples(bspo, bigdata, graphURI)
-    val go = loadFromWebWithImports(IRI.create("http://purl.obolibrary.org/obo/go.owl"))
-    addTriples(go, bigdata, graphURI)
-    val taxrank = loadFromWebWithImports(IRI.create("http://purl.obolibrary.org/obo/taxrank.owl"))
+    //val go = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/go.owl"))
+    //addTriples(go, bigdata, graphURI)
+    val taxrank = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/taxrank.owl"), true)
     addTriples(taxrank, bigdata, graphURI)
-    val vto = loadFromWebWithImports(IRI.create("http://purl.obolibrary.org/obo/vto.owl"))
+    val vto = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/vto.owl"), true)
     addTriples(vto, bigdata, graphURI)
-    val collections = loadFromWebWithImports(IRI.create("http://svn.code.sf.net/p/phenoscape/code/trunk/vocab/fish_collection_abbreviation.obo"))
+    val collections = loadFromWeb(IRI.create("http://svn.code.sf.net/p/phenoscape/code/trunk/vocab/fish_collection_abbreviation.obo"), true)
     addTriples(collections, bigdata, graphURI)
-    val zfa = loadFromWebWithImports(IRI.create("http://purl.obolibrary.org/obo/zfa.owl"))
+    val zfa = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/zfa.owl"), true)
     addTriples(zfa, bigdata, graphURI)
-    val xao = loadFromWebWithImports(IRI.create("http://purl.obolibrary.org/obo/xao.owl"))
+    val xao = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/xao.owl"), true)
     addTriples(xao, bigdata, graphURI)
-    val hp = loadFromWebWithImports(IRI.create("http://purl.obolibrary.org/obo/hp.owl"))
+    val hp = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/hp.owl"), true)
     addTriples(hp, bigdata, graphURI)
-    val mp = loadFromWebWithImports(IRI.create("http://purl.obolibrary.org/obo/mp.owl"))
+    val mp = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/mp.owl"), true)
     addTriples(mp, bigdata, graphURI)
-    val roAnnotations = loadFromWebWithImports(IRI.create("http://purl.obolibrary.org/obo/ro.owl")).axioms.filter(_.isAnnotationAxiom)
-    addTriples(roAnnotations, bigdata, graphURI)
+    val ro = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/ro.owl"), false) //.axioms.filter(_.isAnnotationAxiom)
+    addTriples(ro, bigdata, graphURI)
+    val eco = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/eco.owl"), false)
+    addTriples(eco, bigdata, graphURI)
 
-    val caroToUberon = loadFromWebWithImports(IRI.create("http://purl.obolibrary.org/obo/uberon/bridge/uberon-bridge-to-caro.owl"))
+    val caroToUberon = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/uberon/bridge/uberon-bridge-to-caro.owl"), true)
     addTriples(caroToUberon, bigdata, graphURI)
-    val zfaToUberon = loadFromWebWithImports(IRI.create("http://purl.obolibrary.org/obo/uberon/bridge/uberon-ext-bridge-to-zfa.owl"))
+    val zfaToUberon = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/uberon/bridge/uberon-ext-bridge-to-zfa.owl"), true)
     addTriples(zfaToUberon, bigdata, graphURI)
-    val xaoToUberon = loadFromWebWithImports(IRI.create("http://purl.obolibrary.org/obo/uberon/bridge/uberon-bridge-to-xao.owl"))
+    val xaoToUberon = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/uberon/bridge/uberon-bridge-to-xao.owl"), true)
     addTriples(xaoToUberon, bigdata, graphURI)
-    val fmaToUberon = loadFromWebWithImports(IRI.create("http://purl.obolibrary.org/obo/uberon/bridge/uberon-bridge-to-fma.owl"))
-    addTriples(fmaToUberon, bigdata, graphURI)
     val mgiToEMAPA = SourcedAxioms(loadNormalized(new File(cwd + "/staging/sources/mgi_anatomy.owl")))
     addTriples(mgiToEMAPA, bigdata, graphURI)
-    val emapa = loadFromWebWithImports(IRI.create("http://purl.obolibrary.org/obo/emapa.owl"))
-    addTriples(emapa, bigdata, graphURI)
-    val emapaToUberon = loadFromWebWithImports(IRI.create("http://purl.obolibrary.org/obo/uberon/bridge/uberon-bridge-to-emapa.owl"))
+    //val emapa = loadFromWebWithImports(IRI.create("http://purl.obolibrary.org/obo/emapa.owl"))
+    //addTriples(emapa, bigdata, graphURI)
+    val emapaToUberon = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/uberon/bridge/uberon-bridge-to-emapa.owl"), true)
     addTriples(emapaToUberon, bigdata, graphURI)
 
     step("Querying entities and qualities")
-    val coreReasoner = reasoner(Set(uberon, pato, bspo, go, phenoscapeVocab).flatMap(_.axioms))
+    val coreReasoner = reasoner(Set(uberon, pato, bspo, phenoscapeVocab).flatMap(_.axioms))
     val anatomicalEntities = coreReasoner.getSubClasses(Class(Vocab.ANATOMICAL_ENTITY), false).getFlattened.filterNot(_.isOWLNothing) + Class(Vocab.ANATOMICAL_ENTITY)
     val qualities = coreReasoner.getSubClasses(Class(Vocab.QUALITY), false).getFlattened.filterNot(_.isOWLNothing) + Class(Vocab.QUALITY)
     coreReasoner.dispose()
 
     step("Converting NeXML to OWL")
-    val vocabForNeXML = combine(uberon, pato, bspo, go, phenoscapeVocab)
+    val vocabForNeXML = combine(uberon, pato, bspo, phenoscapeVocab)
     cd(NEXML)
     val filesToConvert = (FileUtils.listFiles(new File(cwd + "/staging/nexml/completed-phenex-files"), Array("xml"), true) ++
       FileUtils.listFiles(new File(cwd + "/staging/nexml/fin_limb-incomplete-files"), Array("xml"), true) ++
@@ -239,17 +239,27 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     } yield axiom
     addTriples(subsumers, bigdata, graphURI)
 
-    val allTBox = uberon.axioms ++ homology.axioms ++ pato.axioms ++ bspo.axioms ++ go.axioms ++ vto.axioms ++ zfa.axioms ++ xao.axioms ++ hp.axioms ++ mp.axioms ++
-      caroToUberon.axioms ++ zfaToUberon.axioms ++ xaoToUberon.axioms ++ fmaToUberon.axioms ++ mgiToEMAPA.axioms ++ emapa.axioms ++ emapaToUberon.axioms ++
+    val allTBox = ro.axioms ++ uberon.axioms ++ homology.axioms ++ pato.axioms ++ bspo.axioms ++ vto.axioms ++ vtoToNCBI.axioms ++ zfa.axioms ++ xao.axioms ++ hp.axioms ++ mp.axioms ++
+      caroToUberon.axioms ++ zfaToUberon.axioms ++ xaoToUberon.axioms ++ mgiToEMAPA.axioms ++ emapaToUberon.axioms ++ eco.axioms ++
       parts ++ hasParts ++ hasPartsInheringIns ++ phenotypeOfs ++ presences ++ absences ++ absenceNegationEquivalences ++ developsFromRulesForAbsence ++ subsumers ++ tboxFromData ++ phenoscapeVocab.axioms
 
-    val coreTBox = uberon.axioms ++ homology.axioms ++ pato.axioms ++ bspo.axioms ++ go.axioms ++ vto.axioms ++ zfa.axioms ++ xao.axioms ++ hp.axioms ++ mp.axioms ++
-      caroToUberon.axioms ++ zfaToUberon.axioms ++ xaoToUberon.axioms ++ fmaToUberon.axioms ++ mgiToEMAPA.axioms ++ emapa.axioms ++ emapaToUberon.axioms ++
+    val coreTBox = ro.axioms ++ uberon.axioms ++ homology.axioms ++ pato.axioms ++ bspo.axioms ++ vto.axioms ++ vtoToNCBI.axioms ++ zfa.axioms ++ xao.axioms ++ hp.axioms ++ mp.axioms ++
+      caroToUberon.axioms ++ zfaToUberon.axioms ++ xaoToUberon.axioms ++ mgiToEMAPA.axioms ++ emapaToUberon.axioms ++ eco.axioms ++
       developsFromRulesForAbsence ++ tboxFromData ++ phenoscapeVocab.axioms
     println("tbox class count: " + allTBox.flatMap(_.getClassesInSignature).size)
     println("tbox logical axiom count: " + allTBox.filter(_.isLogicalAxiom).size)
     val tBoxWithoutDisjoints = OntologyUtil.filterDisjointAxioms(allTBox)
     val coreTBoxWithoutDisjoints = OntologyUtil.filterDisjointAxioms(coreTBox)
+
+    step("Check satisfiability with disjoints")
+    val disjointReasoner = reasoner(coreTBox)
+    if (disjointReasoner.getUnsatisfiableClasses().getEntitiesMinusBottom().isEmpty()) {
+      println("SUCCESS: all classes are satisfiable with disjoints.")
+    } else {
+      println("WARNING: some classes are unsatisfiable with disjoints.")
+      println(disjointReasoner.getUnsatisfiableClasses())
+    }
+    disjointReasoner.dispose()
 
     step("Materializing tbox classification")
     val tboxReasoner = reasoner(tBoxWithoutDisjoints)

@@ -59,8 +59,12 @@ class KnowledgeBaseBuilder extends App {
     PropertyNormalizer.normalize(ont)
   }
 
-  def loadFromWebWithImports(iri: IRI): SourcedAxioms = {
+  def loadFromWeb(iri: IRI, excludeImports: Boolean): SourcedAxioms = {
     val manager = OWLManager.createOWLOntologyManager()
+    if (excludeImports) {
+      manager.clearIRIMappers()
+      manager.addIRIMapper(NullIRIMapper)
+    }
     val ont = manager.loadOntology(iri)
     val importsAxioms = (ont.getImportsClosure - ont).flatMap(_.getAxioms)
     manager.addAxioms(ont, importsAxioms)
