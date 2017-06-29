@@ -21,6 +21,8 @@ import org.semanticweb.owlapi.reasoner.OWLReasoner
 import org.semanticweb.owlapi.model.OWLClassExpression
 import org.phenoscape.scowl._
 import org.apache.jena.query.Query
+import org.semanticweb.owlapi.model.OWLOntology
+import org.semanticweb.owlapi.search.EntitySearcher
 
 object EvolutionaryProfiles {
 
@@ -29,19 +31,19 @@ object EvolutionaryProfiles {
 
   type StateAssociations = GenMap[TaxonNode, GenMap[Character, Set[State]]]
 
-  def computePhenotypeProfiles(rootTaxon: TaxonNode, reasoner: OWLReasoner, db: SailRepositoryConnection): Set[Statement] = {
+  def computePhenotypeProfiles(rootTaxon: TaxonNode, taxonomy: OWLOntology, db: SailRepositoryConnection): Set[Statement] = {
     val observedAssociations = queryAssociations(db)
     val associationsIndex = index(observedAssociations)
-    val (associations, profiles) = postorder(rootTaxon, reasoner, index(observedAssociations), Map.empty)
-    profilesToRDF(profiles, reasoner, db)
+    val (associations, profiles) = postorder(rootTaxon, taxonomy, index(observedAssociations), Map.empty)
+    profilesToRDF(profiles, db)
   }
 
-  def report(profiles: Map[TaxonNode, Map[Character, Set[State]]], reasoner: OWLReasoner): Unit = {
+  def report(profiles: Map[TaxonNode, Map[Character, Set[State]]], taxonomy: OWLOntology): Unit = {
     for {
       (taxon, profile) <- profiles
       if profile.nonEmpty
     } {
-      val taxonLabel = ExpressionsUtil.labelFor(taxon, reasoner.getRootOntology.getImportsClosure).getOrElse("unlabeled")
+      val taxonLabel = ExpressionsUtil.labelFor(taxon, taxonomy).getOrElse("unlabeled")
       println(s"$taxonLabel")
       for { (character, states) <- profile } {
         println(s"\t${character.label}: ${states.map(_.label).mkString("\t")}")
@@ -59,7 +61,7 @@ object EvolutionaryProfiles {
         }
     }
 
-  def profilesToRDF(profiles: StateAssociations, reasoner: OWLReasoner, db: SailRepositoryConnection): Set[Statement] = {
+  def profilesToRDF(profiles: StateAssociations, db: SailRepositoryConnection): Set[Statement] = {
     val statePhenotypes: Map[State, Set[Phenotype]] = queryStatePhenotypes(db)
     (for {
       (taxon, profile) <- toSequential(profiles)
@@ -78,13 +80,18 @@ object EvolutionaryProfiles {
 
   def toSequential(associations: StateAssociations): Map[TaxonNode, Map[Character, Set[State]]] = associations.map({ case (taxon, states) => taxon -> states.seq.toMap }).seq.toMap
 
-  def postorder(node: TaxonNode, reasoner: OWLReasoner, startingAssociations: StateAssociations, startingProfiles: StateAssociations): (StateAssociations, StateAssociations) = {
-    val children = reasoner.getSubClasses(node, true).getFlattened.filterNot(_.isOWLNothing).map(aClass => TaxonNode(aClass.getIRI))
+  def postorder(node: TaxonNode, taxonomy: OWLOntology, startingAssociations: StateAssociations, startingProfiles: StateAssociations): (StateAssociations, StateAssociations) = {
+    val children = (for {
+      term <- EntitySearcher.getSubClasses(node, taxonomy)
+      if !term.isOWLNothing
+      if term.isInstanceOf[OWLClass]
+      classTerm = term.asInstanceOf[OWLClass]
+    } yield TaxonNode(classTerm.getIRI)).toSet
     val nodeStates = startingAssociations.getOrElse(node, Map.empty)
     if (children.isEmpty) {
       (Map(node -> nodeStates), Map.empty)
     } else {
-      val (subtreeAssociationsGroups, subtreeProfilesGroups) = children.par.map(postorder(_, reasoner, startingAssociations, startingProfiles)).unzip
+      val (subtreeAssociationsGroups, subtreeProfilesGroups) = children.par.map(postorder(_, taxonomy, startingAssociations, startingProfiles)).unzip
       val subtreeAssociations = subtreeAssociationsGroups.flatten.toMap
       val subtreeProfiles = subtreeProfilesGroups.flatten.toMap
       val charactersWithAssociations = subtreeAssociations.values.flatMap(_.keys).toSet ++ nodeStates.keys

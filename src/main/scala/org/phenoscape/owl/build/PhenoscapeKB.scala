@@ -299,6 +299,10 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     val reducedTbox = OntologyUtil.reduceOntologyToHierarchy(tboxOut)
     write(reducedTbox, cwd + "/staging/kb/tbox-hierarchy-only.owl")
 
+    step("Building evolutionary profiles using ancestral states reconstruction")
+    val vtoOnt = OWLManager.createOWLOntologyManager().createOntology(vto.axioms)
+    bigdata.add(EvolutionaryProfiles.computePhenotypeProfiles(TaxonNode(CHORDATA), vtoOnt, bigdata), graphURI)
+
     bigdata.commit()
 
     negationReasoner
@@ -320,11 +324,6 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
       t('entity, OWLRDFVocabulary.RDFS_IS_DEFINED_BY.getIRI, IRI.create("http://purl.obolibrary.org/obo/uberon.owl"))),
       subClassOf('taxon, Class(Vocab.CHORDATA)),
       subClassOf('entity, Class(Vocab.ANATOMICAL_ENTITY)))
-
-  step("Building evolutionary profiles using ancestral states reconstruction")
-  bigdata.begin()
-  bigdata.add(EvolutionaryProfiles.computePhenotypeProfiles(TaxonNode(CHORDATA), fullReasoner, bigdata), graphURI)
-  bigdata.commit()
 
   step("Building gene profiles")
   bigdata.begin()

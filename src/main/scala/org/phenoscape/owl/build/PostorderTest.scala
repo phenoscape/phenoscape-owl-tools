@@ -90,7 +90,7 @@ object PostorderTest extends KnowledgeBaseBuilder {
 
   step("Testing postorder part of ancestral states reconstruction")
   println("Triples: " + connection.getTripleStore.getStatementCount)
-  val result = EvolutionaryProfiles.computePhenotypeProfiles(TaxonNode(CHORDATA), tboxReasoner, connection)
+  val result = EvolutionaryProfiles.computePhenotypeProfiles(TaxonNode(CHORDATA), tbox, connection)
   println("Size of profile data: " + result.size)
   result.take(100).foreach(println)
 
