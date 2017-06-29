@@ -24,6 +24,8 @@ import org.semanticweb.owlapi.model.OWLOntologyManager
 import org.semanticweb.owlapi.reasoner.OWLReasoner
 import org.semanticweb.owlapi.formats.RDFXMLDocumentFormat
 import org.semanticweb.owlapi.model.parameters.Imports
+import org.semanticweb.owlapi.rio.RioRenderer
+import org.openrdf.rio.helpers.StatementCollector
 
 class KnowledgeBaseBuilder extends App {
 
@@ -94,13 +96,10 @@ class KnowledgeBaseBuilder extends App {
   def isTboxAxiom(axiom: OWLAxiom): Boolean = axiom.isOfType(AxiomType.TBoxAxiomTypes)
 
   def addTriples(ontology: OWLOntology, db: SailRepositoryConnection, graph: URI): Unit = {
-    val manager = ontology.getOWLOntologyManager
-    val outStream = new ByteArrayOutputStream()
-    manager.saveOntology(ontology, new RDFXMLDocumentFormat, outStream)
-    outStream.close()
-    val inStream = new ByteArrayInputStream(outStream.toByteArray())
-    db.add(inStream, "", RDFFormat.RDFXML, graph)
-    inStream.close()
+    val collector = new StatementCollector()
+    val renderer = new RioRenderer(ontology, collector, null)
+    renderer.render()
+    db.add(collector.getStatements(), graph)
   }
 
   def addTriples(axioms: SourcedAxioms, db: SailRepositoryConnection, graph: URI): Unit = {
