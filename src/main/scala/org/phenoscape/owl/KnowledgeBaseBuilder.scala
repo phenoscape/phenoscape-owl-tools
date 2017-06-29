@@ -23,6 +23,7 @@ import org.semanticweb.owlapi.model.OWLOntology
 import org.semanticweb.owlapi.model.OWLOntologyManager
 import org.semanticweb.owlapi.reasoner.OWLReasoner
 import org.semanticweb.owlapi.formats.RDFXMLDocumentFormat
+import org.semanticweb.owlapi.model.parameters.Imports
 
 class KnowledgeBaseBuilder extends App {
 
@@ -61,17 +62,16 @@ class KnowledgeBaseBuilder extends App {
 
   def loadFromWeb(iri: IRI, excludeImports: Boolean): SourcedAxioms = {
     val manager = OWLManager.createOWLOntologyManager()
-    if (excludeImports) {
-      manager.clearIRIMappers()
-      manager.addIRIMapper(NullIRIMapper)
-    }
+    // Even if we are excluding axioms from imports, we want to initially include imports in case property types rely on declarations there
     val ont = manager.loadOntology(iri)
-    val importsAxioms = (ont.getImportsClosure - ont).flatMap(_.getAxioms)
-    manager.addAxioms(ont, importsAxioms)
-    val definedByAxioms = ont.getClassesInSignature().flatMap(OBOUtil.createDefinedByAnnotation)
+    if (!excludeImports) {
+      val importsAxioms = ont.getImports.flatMap(_.getAxioms)
+      manager.addAxioms(ont, importsAxioms)
+    }
+    val definedByAxioms = ont.getClassesInSignature(Imports.EXCLUDED).flatMap(OBOUtil.createDefinedByAnnotation)
     manager.addAxioms(ont, definedByAxioms)
     PropertyNormalizer.normalize(ont)
-    SourcedAxioms(ont.getAxioms().toSet, iri, Option(ont.getOntologyID.getVersionIRI.get))
+    SourcedAxioms(ont.getAxioms(Imports.EXCLUDED).toSet, iri, Option(ont.getOntologyID.getVersionIRI.orNull))
   }
 
   def write(ontology: OWLOntology, filename: String): Unit = {
@@ -119,6 +119,6 @@ case class SourcedAxioms(axioms: Set[OWLAxiom], ont: IRI, ontVersion: Option[IRI
 
 object SourcedAxioms {
 
-  def apply(ont: OWLOntology): SourcedAxioms = SourcedAxioms(ont.getAxioms().toSet, ont.getOntologyID.getOntologyIRI.get, Option(ont.getOntologyID.getVersionIRI.get))
+  def apply(ont: OWLOntology): SourcedAxioms = SourcedAxioms(ont.getAxioms().toSet, ont.getOntologyID.getOntologyIRI.get, Option(ont.getOntologyID.getVersionIRI.orNull))
 
 }
