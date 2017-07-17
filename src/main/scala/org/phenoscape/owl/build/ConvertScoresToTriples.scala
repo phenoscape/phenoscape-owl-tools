@@ -1,34 +1,18 @@
 package org.phenoscape.owl.build
 
-import scala.collection.JavaConverters._
-import scala.collection.mutable
-import scala.collection.parallel._
-import scala.collection.optimizer._
-import scala.collection.par.Scheduler.Implicits.global
-import org.semanticweb.elk.owlapi.ElkReasonerFactory
-import org.semanticweb.owlapi.apibinding.OWLManager
-import org.semanticweb.owlapi.model.OWLClass
-import org.semanticweb.owlapi.model.OWLNamedIndividual
-import org.semanticweb.owlapi.model.OWLOntology
-import org.semanticweb.owlapi.reasoner.{ Node => ReasonerNode }
-import org.semanticweb.owlapi.reasoner.OWLReasoner
-import org.openrdf.model.Statement
-import org.phenoscape.owl.util.OntologyUtil
-import org.openrdf.model.impl.URIImpl
-import org.openrdf.model.impl.StatementImpl
-import org.phenoscape.owl.Vocab
-import org.openrdf.model.impl.NumericLiteralImpl
 import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileOutputStream
-import java.util.Date
-import scala.collection.JavaConverters._
+
+import scala.io.Source
+
+import org.openrdf.model.Statement
+import org.openrdf.model.impl.NumericLiteralImpl
+import org.openrdf.model.impl.StatementImpl
+import org.openrdf.model.impl.URIImpl
 import org.openrdf.rio.RDFFormat
 import org.openrdf.rio.Rio
-import org.phenoscape.owl.sim.OWLsim
-import org.phenoscape.owl.util.OntologyUtil
-import org.semanticweb.owlapi.apibinding.OWLManager
-import scala.io.Source
+import org.phenoscape.owl.Vocab
 
 object ConvertScoresToTriples extends App {
 

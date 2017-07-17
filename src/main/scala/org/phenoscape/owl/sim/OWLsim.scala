@@ -1,10 +1,19 @@
 package org.phenoscape.owl.sim
 
+import java.io.File
+import java.io.PrintWriter
+
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.collection.parallel._
-import scala.collection.optimizer._
-import scala.collection.par.Scheduler.Implicits.global
+
+import org.openrdf.model.Statement
+import org.openrdf.model.impl.NumericLiteralImpl
+import org.openrdf.model.impl.StatementImpl
+import org.openrdf.model.impl.URIImpl
+import org.openrdf.model.vocabulary.RDF
+import org.phenoscape.kb.ingest.util.OntUtil
+import org.phenoscape.owl.Vocab
 import org.semanticweb.elk.owlapi.ElkReasonerFactory
 import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model.OWLClass
@@ -12,15 +21,6 @@ import org.semanticweb.owlapi.model.OWLNamedIndividual
 import org.semanticweb.owlapi.model.OWLOntology
 import org.semanticweb.owlapi.reasoner.{ Node => ReasonerNode }
 import org.semanticweb.owlapi.reasoner.OWLReasoner
-import org.openrdf.model.Statement
-import org.phenoscape.kb.ingest.util.OntUtil
-import org.openrdf.model.impl.URIImpl
-import org.openrdf.model.impl.StatementImpl
-import org.phenoscape.owl.Vocab
-import org.openrdf.model.impl.NumericLiteralImpl
-import org.openrdf.model.vocabulary.RDF
-import java.io.File
-import java.io.PrintWriter
 
 class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
 
@@ -209,7 +209,7 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
 
   def maxICSubsumer(i: Node, j: Node): Node = if (i == j) i else commonSubsumersOf(i, j).maxBy(nodeIC)
 
-  def groupWiseSimilarity(queryIndividual: OWLNamedIndividual, corpusIndividual: OWLNamedIndividual): GroupWiseSimilarity = optimize {
+  def groupWiseSimilarity(queryIndividual: OWLNamedIndividual, corpusIndividual: OWLNamedIndividual): GroupWiseSimilarity = {
     val pairScores = for {
       queryAnnotation <- directAssociationsByIndividual(queryIndividual)
     } yield {
