@@ -5,27 +5,24 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import java.util.Date
 
-import scala.annotation.migration
 import scala.collection.JavaConversions._
 
 import org.openrdf.model.URI
 import org.openrdf.repository.sail.SailRepositoryConnection
 import org.openrdf.rio.RDFFormat
-import org.phenoscape.owl.util.NullIRIMapper
 import org.phenoscape.kb.ingest.util.OBOUtil
+import org.phenoscape.owl.util.NullIRIMapper
 import org.semanticweb.elk.owlapi.ElkReasonerFactory
 import org.semanticweb.owlapi.apibinding.OWLManager
+import org.semanticweb.owlapi.formats.RDFXMLDocumentFormat
 import org.semanticweb.owlapi.io.FileDocumentTarget
 import org.semanticweb.owlapi.model.AxiomType
 import org.semanticweb.owlapi.model.IRI
 import org.semanticweb.owlapi.model.OWLAxiom
 import org.semanticweb.owlapi.model.OWLOntology
 import org.semanticweb.owlapi.model.OWLOntologyManager
-import org.semanticweb.owlapi.reasoner.OWLReasoner
-import org.semanticweb.owlapi.formats.RDFXMLDocumentFormat
 import org.semanticweb.owlapi.model.parameters.Imports
-import org.semanticweb.owlapi.rio.RioRenderer
-import org.openrdf.rio.helpers.StatementCollector
+import org.semanticweb.owlapi.reasoner.OWLReasoner
 
 class KnowledgeBaseBuilder extends App {
 
@@ -96,10 +93,13 @@ class KnowledgeBaseBuilder extends App {
   def isTboxAxiom(axiom: OWLAxiom): Boolean = axiom.isOfType(AxiomType.TBoxAxiomTypes)
 
   def addTriples(ontology: OWLOntology, db: SailRepositoryConnection, graph: URI): Unit = {
-    val collector = new StatementCollector()
-    val renderer = new RioRenderer(ontology, collector, null)
-    renderer.render()
-    db.add(collector.getStatements(), graph)
+    val manager = ontology.getOWLOntologyManager
+    val outStream = new ByteArrayOutputStream()
+    manager.saveOntology(ontology, new RDFXMLDocumentFormat, outStream)
+    outStream.close()
+    val inStream = new ByteArrayInputStream(outStream.toByteArray())
+    db.add(inStream, "", RDFFormat.RDFXML, graph)
+    inStream.close()
   }
 
   def addTriples(axioms: SourcedAxioms, db: SailRepositoryConnection, graph: URI): Unit = {
