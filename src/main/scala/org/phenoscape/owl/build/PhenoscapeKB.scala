@@ -158,6 +158,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     cd(KB)
     val nexmlTBoxAxioms: mutable.Set[OWLAxiom] = mutable.Set()
     for (file <- filesToConvert) {
+      println(s"Adding NeXML file: $file")
       val nexOntology = PropertyNormalizer.normalize(PhenexToOWL.convert(file, vocabForNeXML))
       nexmlTBoxAxioms.addAll(nexOntology.getTBoxAxioms(Imports.EXCLUDED))
       addTriples(nexOntology, bigdata, graphURI)
