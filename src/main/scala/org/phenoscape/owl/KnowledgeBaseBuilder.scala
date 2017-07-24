@@ -24,6 +24,7 @@ import org.semanticweb.owlapi.model.OWLOntology
 import org.semanticweb.owlapi.model.OWLOntologyManager
 import org.semanticweb.owlapi.model.parameters.Imports
 import org.semanticweb.owlapi.reasoner.OWLReasoner
+import org.semanticweb.owlapi.formats.NTriplesDocumentFormat
 
 class KnowledgeBaseBuilder extends App {
 
@@ -96,10 +97,10 @@ class KnowledgeBaseBuilder extends App {
   def addTriples(ontology: OWLOntology, db: SailRepositoryConnection, graph: URI): Unit = {
     val manager = ontology.getOWLOntologyManager
     val outStream = new ByteArrayOutputStream()
-    manager.saveOntology(ontology, new TurtleDocumentFormat(), outStream)
+    manager.saveOntology(ontology, new NTriplesDocumentFormat(), outStream)
     outStream.close()
     val inStream = new ByteArrayInputStream(outStream.toByteArray())
-    db.add(inStream, "", RDFFormat.TURTLE, graph)
+    db.add(inStream, "", RDFFormat.NTRIPLES, graph)
     inStream.close()
   }
 

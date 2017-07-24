@@ -33,7 +33,7 @@ libraryDependencies ++= {
       "org.apache.commons"          %   "commons-lang3"          % "3.1",
       "commons-io"                  %   "commons-io"             % "2.4",
       "org.jdom"                    %   "jdom"                   % "2.0.2",
-      "net.sourceforge.owlapi"      %   "owlapi-distribution"    % "4.2.8",
+      "net.sourceforge.owlapi"      %   "owlapi-distribution"    % "4.3.1",
       "org.semanticweb.elk"         %   "elk-owlapi"             % "0.4.3",
       "com.blazegraph"              %   "bigdata-core"           % "2.1.2",
       "org.openrdf.sesame"          %   "sesame-rio"             % "2.7.12",
