@@ -15,7 +15,7 @@ import org.phenoscape.owl.util.NullIRIMapper
 import org.semanticweb.elk.owlapi.ElkReasonerFactory
 import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.formats.RDFXMLDocumentFormat
-import org.semanticweb.owlapi.formats.TurtleDocumentFormat
+import org.semanticweb.owlapi.formats.RioRDFXMLDocumentFormat
 import org.semanticweb.owlapi.io.FileDocumentTarget
 import org.semanticweb.owlapi.model.AxiomType
 import org.semanticweb.owlapi.model.IRI
@@ -24,7 +24,6 @@ import org.semanticweb.owlapi.model.OWLOntology
 import org.semanticweb.owlapi.model.OWLOntologyManager
 import org.semanticweb.owlapi.model.parameters.Imports
 import org.semanticweb.owlapi.reasoner.OWLReasoner
-import org.semanticweb.owlapi.formats.NTriplesDocumentFormat
 
 class KnowledgeBaseBuilder extends App {
 
@@ -97,10 +96,10 @@ class KnowledgeBaseBuilder extends App {
   def addTriples(ontology: OWLOntology, db: SailRepositoryConnection, graph: URI): Unit = {
     val manager = ontology.getOWLOntologyManager
     val outStream = new ByteArrayOutputStream()
-    manager.saveOntology(ontology, new NTriplesDocumentFormat(), outStream)
+    manager.saveOntology(ontology, new RioRDFXMLDocumentFormat(), outStream)
     outStream.close()
     val inStream = new ByteArrayInputStream(outStream.toByteArray())
-    db.add(inStream, "", RDFFormat.NTRIPLES, graph)
+    db.add(inStream, "", RDFFormat.RDFXML, graph)
     inStream.close()
   }
 
