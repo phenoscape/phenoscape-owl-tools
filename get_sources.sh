@@ -9,7 +9,7 @@ curl -L 'https://github.com/phenoscape/phenoscape-data/blob/master/MGI_static_da
 gunzip mgi_expression_data.txt.gz
 curl -L 'https://github.com/phenoscape/phenoscape-data/blob/master/MGI_static_data/mgi_phenotypes.txt.gz?raw=true' >mgi_phenotypes.txt.gz
 gunzip mgi_phenotypes.txt.gz
-curl -L 'ftp://ftp.informatics.jax.org/pub/reports/MRK_List2.rpt' >mgi_genes.txt
+curl -L 'http://www.informatics.jax.org/downloads/reports/MRK_List2.rpt' >mgi_genes.txt
 curl -L 'http://zfin.org/downloads/genetic_markers.txt' >zfin_genetic_markers.txt
 curl -L 'http://zfin.org/downloads/aliases.txt' >zfin_aliases.txt
 curl -L 'http://zfin.org/downloads/wildtype-expression_fish.txt' >zfin_wildtype_expression.txt
