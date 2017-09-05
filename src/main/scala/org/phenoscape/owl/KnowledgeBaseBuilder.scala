@@ -24,6 +24,7 @@ import org.semanticweb.owlapi.model.OWLOntology
 import org.semanticweb.owlapi.model.OWLOntologyManager
 import org.semanticweb.owlapi.model.parameters.Imports
 import org.semanticweb.owlapi.reasoner.OWLReasoner
+import org.semanticweb.owlapi.model.OWLOntologyID
 
 class KnowledgeBaseBuilder extends App {
 
@@ -71,7 +72,7 @@ class KnowledgeBaseBuilder extends App {
     val definedByAxioms = ont.getClassesInSignature(Imports.EXCLUDED).flatMap(OBOUtil.createDefinedByAnnotation)
     manager.addAxioms(ont, definedByAxioms)
     PropertyNormalizer.normalize(ont)
-    SourcedAxioms(ont.getAxioms(Imports.EXCLUDED).toSet, iri, Option(ont.getOntologyID.getVersionIRI.orNull))
+    SourcedAxioms(ont.getAxioms(Imports.EXCLUDED).toSet, ont.getOntologyID)
   }
 
   def write(ontology: OWLOntology, filename: String): Unit = {
@@ -104,21 +105,22 @@ class KnowledgeBaseBuilder extends App {
   }
 
   def addTriples(axioms: SourcedAxioms, db: SailRepositoryConnection, graph: URI): Unit = {
-    addTriples(axioms.axioms, db, graph)
+    addTriples(axioms.axioms, db, graph, axioms.ontologyID)
   }
 
-  def addTriples(axioms: Iterable[OWLAxiom], db: SailRepositoryConnection, graph: URI): Unit = {
+  def addTriples(axioms: Iterable[OWLAxiom], db: SailRepositoryConnection, graph: URI, ontID: OWLOntologyID = new OWLOntologyID()): Unit = {
     val manager = OWLManager.createOWLOntologyManager()
-    val ont = manager.createOntology(axioms.toSet)
+    val ont = manager.createOntology(ontID)
+    manager.addAxioms(ont, axioms.toSet[OWLAxiom])
     addTriples(ont, db, graph)
   }
 
 }
 
-case class SourcedAxioms(axioms: Set[OWLAxiom], ont: IRI, ontVersion: Option[IRI])
+case class SourcedAxioms(axioms: Set[OWLAxiom], ontologyID: OWLOntologyID)
 
 object SourcedAxioms {
 
-  def apply(ont: OWLOntology): SourcedAxioms = SourcedAxioms(ont.getAxioms().toSet, ont.getOntologyID.getOntologyIRI.get, Option(ont.getOntologyID.getVersionIRI.orNull))
+  def apply(ont: OWLOntology): SourcedAxioms = SourcedAxioms(ont.getAxioms().toSet, ont.getOntologyID)
 
 }
