@@ -267,12 +267,18 @@ object PhenexToOWL extends OWLTask {
         logger.warn("Related entity with no quality. Shouldn't be possible.")
         Option(has_part some (Present and (inheres_in some entity)))
       }
-      case (Some(entity), Some(Absent), None)                             => Option(has_part some (LacksAllPartsOfType and (inheres_in some MultiCellularOrganism) and (towards value Individual(entity.getIRI))))
-      case (Some(entity), Some(LacksAllPartsOfType), Some(relatedEntity)) => Option(has_part some (LacksAllPartsOfType and (inheres_in some entity) and (towards value Individual(relatedEntity.getIRI))))
-      case (None, Some(quality), None)                                    => Option(has_part some (quality))
-      case (None, Some(quality), Some(relatedEntity))                     => Option(has_part some (quality and (towards some relatedEntity)))
-      case (Some(entity), Some(quality), None)                            => Option(has_part some (quality and (inheres_in some entity)))
-      case (Some(entity), Some(quality), Some(relatedEntity))             => Option(has_part some (quality and (inheres_in some entity) and (towards some relatedEntity)))
+      case (Some(entity), Some(Absent), None) => Option(
+        (has_part some (LacksAllPartsOfType and (inheres_in some MultiCellularOrganism) and (towards value Individual(entity.getIRI))))
+          and
+          (has_part some (phenotype_of some entity)))
+      case (Some(entity), Some(LacksAllPartsOfType), Some(relatedEntity)) => Option(
+        (has_part some (LacksAllPartsOfType and (inheres_in some entity) and (towards value Individual(relatedEntity.getIRI))))
+          and
+          (has_part some (phenotype_of some relatedEntity)))
+      case (None, Some(quality), None)                        => Option(has_part some (quality))
+      case (None, Some(quality), Some(relatedEntity))         => Option(has_part some (quality and (towards some relatedEntity)))
+      case (Some(entity), Some(quality), None)                => Option(has_part some (quality and (inheres_in some entity)))
+      case (Some(entity), Some(quality), Some(relatedEntity)) => Option(has_part some (quality and (inheres_in some entity) and (towards some relatedEntity)))
       //TODO comparisons, etc.
     }
     val (phenotypeClass, phenotypeAxioms) = optionWithSet(eqPhenotypeOption.map(ExpressionUtil.uniqueNameForExpressionWithAxioms))
