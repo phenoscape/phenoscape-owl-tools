@@ -17,7 +17,7 @@ crossScalaVersions := Seq("2.11.8", "2.12.2")
 
 scalacOptions := Seq("-unchecked", "-deprecation", "-feature", "-encoding", "utf8")
 
-resolvers += "Phenoscape Maven repository" at "http://phenoscape.svn.sourceforge.net/svnroot/phenoscape/trunk/maven/repository"
+resolvers += "Phenoscape Maven repository" at "https://svn.code.sf.net/p/phenoscape/code/trunk/maven/repository"
 
 //resolvers += "Sonatype OSS Releases" at "https://oss.sonatype.org/content/repositories/releases"
 
@@ -39,7 +39,7 @@ libraryDependencies ++= {
       "org.openrdf.sesame"          %   "sesame-rio"             % "2.7.12",
       "org.phenoscape"              %%  "scowl"                  % "1.3",
       "org.phenoscape"              %%  "owlet"                  % "1.6",
-      "org.phenoscape"              %%  "phenoscape-kb-ingest"   % "1.5.1",
+      "org.phenoscape"              %%  "phenoscape-kb-ingest"   % "1.5.2",
       "log4j"                       %   "log4j"                  % "1.2.17",
       "org.apache.directory.studio" % "org.apache.commons.codec" % "1.8"
   )

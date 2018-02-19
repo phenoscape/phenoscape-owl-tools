@@ -1,32 +1,33 @@
 package org.phenoscape.owl
 
 import java.io.File
-import java.util.UUID
-import scala.collection.JavaConversions._
+
+import scala.collection.JavaConverters._
 import scala.collection.mutable
+
 import org.apache.commons.lang3.StringUtils
 import org.jdom2.Element
 import org.jdom2.Namespace
 import org.jdom2.filter.ElementFilter
 import org.jdom2.input.SAXBuilder
+import org.phenoscape.kb.ingest.util.ExpressionUtil
+import org.phenoscape.kb.ingest.util.OBOUtil
 import org.phenoscape.kb.ingest.util.OntUtil
+import org.phenoscape.owl.util.ExpressionsUtil
+import org.phenoscape.owl.util.OntologyUtil.optionWithSet
 import org.phenoscape.scowl._
 import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model.IRI
+import org.semanticweb.owlapi.model.OWLAnnotation
 import org.semanticweb.owlapi.model.OWLAxiom
 import org.semanticweb.owlapi.model.OWLClass
+import org.semanticweb.owlapi.model.OWLClassExpression
 import org.semanticweb.owlapi.model.OWLNamedIndividual
+import org.semanticweb.owlapi.model.OWLObject
 import org.semanticweb.owlapi.model.OWLOntology
 import org.semanticweb.owlapi.vocab.DublinCoreVocabulary
+
 import Vocab._
-import org.semanticweb.owlapi.model.OWLClassExpression
-import org.phenoscape.kb.ingest.util.OBOUtil
-import org.semanticweb.owlapi.model.OWLEquivalentClassesAxiom
-import org.phenoscape.kb.ingest.util.ExpressionUtil
-import org.phenoscape.owl.util.ExpressionsUtil
-import org.semanticweb.owlapi.model.OWLObject
-import org.phenoscape.owl.util.OntologyUtil.optionWithSet
-import org.semanticweb.owlapi.model.OWLAnnotation
 
 object PhenexToOWL extends OWLTask {
 
@@ -58,7 +59,7 @@ object PhenexToOWL extends OWLTask {
     val (charactersAxioms, characterToOWLMap) = translateCharacters(nexml, matrix, labelRenderer)
     val matrixAxioms = translateMatrixRows(nexml, matrix, taxonOTUToOWLMap, characterToOWLMap)
     val allAxioms = axioms ++ descriptionAxiom ++ otusAxioms ++ charactersAxioms ++ matrixAxioms
-    manager.createOntology(allAxioms, OntUtil.nextIRI())
+    manager.createOntology(allAxioms.asJava, OntUtil.nextIRI())
   }
 
   def translateMatrix(nexml: Element, fileName: String): (OWLNamedIndividual, Set[OWLAxiom]) = {
@@ -68,7 +69,8 @@ object PhenexToOWL extends OWLTask {
       citation <- getLiteralMetaValues(sourceMeta, "bibliographicCitation", dcTermsNS)
       label <- getLiteralMetaValues(sourceMeta, "title", dcTermsNS)
     } yield {
-      (matrix,
+      (
+        matrix,
         Set[OWLAxiom](
           matrix Type CharacterStateDataMatrix,
           matrix Annotation (dcBibliographicCitation, citation),
@@ -76,7 +78,8 @@ object PhenexToOWL extends OWLTask {
     }
     sourceAxioms.headOption.getOrElse {
       val matrix = OntUtil.nextIndividual()
-      (matrix,
+      (
+        matrix,
         Set[OWLAxiom](
           matrix Type CharacterStateDataMatrix,
           matrix Annotation (dcBibliographicCitation, "<missing citation>"),
@@ -85,14 +88,14 @@ object PhenexToOWL extends OWLTask {
   }
 
   def translateMatrixRows(nexml: Element, matrix: OWLNamedIndividual, taxonOTUToOWLMap: Map[String, OWLNamedIndividual], characterToOWLMap: Map[String, OWLNamedIndividual]): Set[OWLAxiom] = {
-    val axioms = nexml.getChild("characters", nexmlNS).getChild("matrix", nexmlNS).getChildren("row", nexmlNS).map(translateMatrixRow(_, matrix, taxonOTUToOWLMap, characterToOWLMap))
+    val axioms = nexml.getChild("characters", nexmlNS).getChild("matrix", nexmlNS).getChildren("row", nexmlNS).asScala.map(translateMatrixRow(_, matrix, taxonOTUToOWLMap, characterToOWLMap))
     axioms.flatten.toSet
   }
 
   def translateMatrixRow(row: Element, matrix: OWLNamedIndividual, taxonOTUToOWLMap: Map[String, OWLNamedIndividual], characterToOWLMap: Map[String, OWLNamedIndividual]): Set[OWLAxiom] = {
     val otuID = row.getAttributeValue("otu")
     val owlOTU = taxonOTUToOWLMap(otuID)
-    val cells = row.getChildren("cell", nexmlNS)
+    val cells = row.getChildren("cell", nexmlNS).asScala
     cells.flatMap(translateMatrixCell(_, otuID, owlOTU, characterToOWLMap)).toSet
   }
 
@@ -106,8 +109,8 @@ object PhenexToOWL extends OWLTask {
       owlCell Fact (belongs_to_character, owlCharacter),
       owlCell Fact (belongs_to_TU, owlOTU))
     // We are flattening uncertain/polymorphic states into multiple individual states related to the matrix cell
-    val states = if (characterToOWLMap.containsKey(stateID)) Set(stateID)
-    else getElementByID(stateID, cell).getChildren("member", nexmlNS).map(_.getAttributeValue("state")).toSet
+    val states = if (characterToOWLMap.contains(stateID)) Set(stateID)
+    else getElementByID(stateID, cell).getChildren("member", nexmlNS).asScala.map(_.getAttributeValue("state")).toSet
     val stateAxioms = for {
       singleState <- states
       owlState <- characterToOWLMap.get(singleState)
@@ -119,7 +122,7 @@ object PhenexToOWL extends OWLTask {
   }
 
   def translateOTUs(nexml: Element, matrix: OWLNamedIndividual): (Set[OWLAxiom], Map[String, OWLNamedIndividual]) = {
-    val translations = nexml.getChild("otus", nexmlNS).getChildren("otu", nexmlNS).map(translateOTU(_, matrix))
+    val translations = nexml.getChild("otus", nexmlNS).getChildren("otu", nexmlNS).asScala.map(translateOTU(_, matrix))
     val (axioms, owlOTUAssociations) = translations.unzip
     (axioms.flatten.toSet, owlOTUAssociations.toMap)
   }
@@ -165,7 +168,7 @@ object PhenexToOWL extends OWLTask {
   }
 
   def translateCharacters(nexml: Element, matrix: OWLNamedIndividual, labelRenderer: LabelRenderer): (Set[OWLAxiom], Map[String, OWLNamedIndividual]) = {
-    val characterElements = nexml.getChild("characters", nexmlNS).getChild("format", nexmlNS).getChildren("char", nexmlNS)
+    val characterElements = nexml.getChild("characters", nexmlNS).getChild("format", nexmlNS).getChildren("char", nexmlNS).asScala
     val charactersWithIndex = characterElements.zipWithIndex
     val translations = charactersWithIndex.map { case (characterElement, index) => translateCharacter(characterElement, index, matrix, labelRenderer) }
     val (axioms, nexmlToOWLMaps) = translations.unzip
@@ -190,7 +193,7 @@ object PhenexToOWL extends OWLTask {
   }
 
   def translateStates(statesBlock: Element, owlCharacter: OWLNamedIndividual, characterLabel: String, labelRenderer: LabelRenderer): (Set[OWLAxiom], Map[String, OWLNamedIndividual]) = {
-    val stateElements = statesBlock.getChildren("state", nexmlNS)
+    val stateElements = statesBlock.getChildren("state", nexmlNS).asScala
     val translations = stateElements.map(translateState(_, owlCharacter, characterLabel, labelRenderer))
     val (axioms, owlStateAssociations) = translations.unzip
     (axioms.flatten.toSet, owlStateAssociations.toMap)
@@ -210,57 +213,55 @@ object PhenexToOWL extends OWLTask {
       owlState Annotation (dcDescription, stateDescription))
     val stateComments = for { comment <- getLiteralMetaValues(state, "comment", rdfsNS) }
       yield owlState Annotation (rdfsComment, comment)
-    val phenotypeAxioms = translatePhenotypes(state, owlState, stateDescription, labelRenderer)
+    val phenotypeAxioms = translatePhenotypes(state, owlState, labelRenderer)
     (stateAxioms ++ stateComments ++ phenotypeAxioms, stateID -> owlState)
   }
 
-  def translatePhenotypes(state: Element, owlState: OWLNamedIndividual, phenotypeGroupLabel: String, labelRenderer: LabelRenderer): Set[OWLAxiom] = {
-    val phenotypeElements = state.getDescendants(new ElementFilter("phenotype_character", phenoNS)).iterator
-    val phenotypeGroupClass = Class(owlState.getIRI.toString + "#phenotype")
-    val linkToPhenotype = if (phenotypeElements.nonEmpty) Set(
-      owlState Annotation (describes_phenotype, phenotypeGroupClass.getIRI),
-      phenotypeGroupClass Annotation (rdfsLabel, phenotypeGroupLabel))
-    else Set.empty
-    phenotypeElements.flatMap(translatePhenotype(_, owlState, phenotypeGroupClass, labelRenderer)).toSet ++ linkToPhenotype
-  }
-
-  def translatePhenotype(phenotypeElement: Element, owlState: OWLNamedIndividual, phenotypeGroupClass: OWLClass, labelRenderer: LabelRenderer): Set[OWLAxiom] = {
-    val (phenotypeOption, phenotypeAxioms) = translatePhenotypeSemantics(phenotypeElement, labelRenderer)
-    val semantics = phenotypeOption.map(phen => phenotypeGroupClass SubClassOf phen).toSet
-    phenotypeAxioms ++ semantics
+  def translatePhenotypes(state: Element, owlState: OWLNamedIndividual, labelRenderer: LabelRenderer): Set[OWLAxiom] = {
+    val phenotypeElements = state.getDescendants(new ElementFilter("phenotype_character", phenoNS)).iterator.asScala.toSet
+    val (phenotypeOptions, phenotypeAxiomSets) = phenotypeElements.map(phenotypeElement => translatePhenotypeSemantics(phenotypeElement, labelRenderer)).unzip
+    val linksToPhenotypes = phenotypeOptions.flatten.map(owlState Annotation (describes_phenotype, _))
+    phenotypeAxiomSets.flatten ++ linksToPhenotypes
   }
 
   def translatePhenotypeSemantics(phenotypeElement: Element, labelRenderer: LabelRenderer): (Option[OWLClass], Set[OWLAxiom]) = {
     val annotations = mutable.Set.empty[OWLAnnotation]
-    val (entityOption, entityAxioms) = optionWithSet(for {
+    val (entityAndLabelOption, entityAxioms) = optionWithSet(for {
       bearerElement <- Option(phenotypeElement.getChild("bearer", phenoNS))
       bearerType <- Option(bearerElement.getChild("typeref", phenoNS))
     } yield {
       val (entity, axioms) = namedClassFromTyperef(bearerType, labelRenderer)
+      val entityLabel = labelRenderer(entity)
       annotations += factory.getOWLAnnotation(entity_term, entity.getIRI)
-      (entity,
+      ((entity, entityLabel),
         axioms ++ AbsenceClassGenerator.generateAllAbsenceAxiomsForEntity(entity))
     })
+    val entityLabel = entityAndLabelOption.map(_._2).getOrElse("")
     val qualityElementOption = Option(phenotypeElement.getChild("quality", phenoNS))
-    val (qualityOption, qualityAxioms) = optionWithSet(for {
+    val (qualityAndLabelOption, qualityAxioms) = optionWithSet(for {
       qualityElement <- qualityElementOption
       qualityType <- Option(qualityElement.getChild("typeref", phenoNS))
     } yield {
       val (quality, axioms) = namedClassFromTyperef(qualityType, labelRenderer)
       annotations += factory.getOWLAnnotation(quality_term, quality.getIRI)
-      (quality, axioms)
+      val qualityLabel = labelRenderer(quality)
+      ((quality, qualityLabel), axioms)
     })
-    val (relatedEntityOption, relatedEntityAxioms) = optionWithSet(for {
+    val qualityLabel = qualityAndLabelOption.map(_._2).getOrElse("")
+    val (relatedEntityAndLabelOption, relatedEntityAxioms) = optionWithSet(for {
       qualityElement <- qualityElementOption
       relatedEntityElement <- Option(qualityElement.getChild("related_entity", phenoNS))
       relatedEntityType <- Option(relatedEntityElement.getChild("typeref", phenoNS))
     } yield {
       val (relatedEntity, axioms) = namedClassFromTyperef(relatedEntityType, labelRenderer)
       annotations += factory.getOWLAnnotation(related_entity_term, relatedEntity.getIRI)
-      (relatedEntity,
+      val relatedEntityLabel = labelRenderer(relatedEntity)
+      ((relatedEntity, relatedEntityLabel),
         axioms ++ AbsenceClassGenerator.generateAllAbsenceAxiomsForEntity(relatedEntity))
     })
-    val eqPhenotypeOption = (entityOption, qualityOption, relatedEntityOption) match {
+    val relatedEntityLabel = relatedEntityAndLabelOption.map(_._2).map(re => s" towards $re").getOrElse("")
+    val phenotypeLabel = s"$entityLabel $qualityLabel$relatedEntityLabel"
+    val eqPhenotypeOption = (entityAndLabelOption.map(_._1), qualityAndLabelOption.map(_._1), relatedEntityAndLabelOption.map(_._1)) match {
       case (None, None, _)            => None
       case (Some(entity), None, None) => Option(has_part some (Present and (inheres_in some entity)))
       case (Some(entity), None, Some(relatedEntity)) => {
@@ -281,17 +282,18 @@ object PhenexToOWL extends OWLTask {
       case (Some(entity), Some(quality), Some(relatedEntity)) => Option(has_part some (quality and (inheres_in some entity) and (towards some relatedEntity)))
       //TODO comparisons, etc.
     }
-    val (phenotypeClass, phenotypeAxioms) = optionWithSet(eqPhenotypeOption.map(ExpressionUtil.uniqueNameForExpressionWithAxioms))
+    val (phenotypeClass, phenotypeAxioms) = optionWithSet(eqPhenotypeOption.map(ExpressionUtil.nameForExpressionWithAxioms))
+    annotations += factory.getOWLAnnotation(RDFSLabel, factory.getOWLLiteral(phenotypeLabel))
     val annotationAxioms = phenotypeClass.map(term => annotations.map(factory.getOWLAnnotationAssertionAxiom(term.getIRI, _))).toSet.flatten
     (phenotypeClass, (entityAxioms ++ qualityAxioms ++ relatedEntityAxioms ++ phenotypeAxioms ++ annotationAxioms))
   }
 
   def classFromTyperef(typeref: Element): OWLClassExpression = {
     val genusID = typeref.getAttributeValue("about")
-    val qualifiers = typeref.getChildren("qualifier", phenoNS)
+    val qualifiers = typeref.getChildren("qualifier", phenoNS).asScala
     val genus = Class(OBOUtil.iriForTermID(genusID))
     if (qualifiers.isEmpty) genus
-    else factory.getOWLObjectIntersectionOf(qualifiers.map(restrictionFromQualifier).toSet + genus)
+    else factory.getOWLObjectIntersectionOf((qualifiers.map(restrictionFromQualifier).toSet + genus).asJava)
   }
 
   def namedClassFromTyperef(typeref: Element, labelRenderer: LabelRenderer): (OWLClass, Set[OWLAxiom]) = {
@@ -318,7 +320,7 @@ object PhenexToOWL extends OWLTask {
 
   def getLiteralMetaValues(element: Element, property: String, namespace: Namespace): Set[String] = {
     val values = for {
-      meta <- element.getChildren("meta", nexmlNS)
+      meta <- element.getChildren("meta", nexmlNS).asScala
       if meta.getAttributeValue("property") == (prefixForNamespace(meta, namespace) + property)
       value <- (optString(meta.getValue) ++ optString(meta.getAttributeValue("content")))
     } yield value
@@ -327,7 +329,7 @@ object PhenexToOWL extends OWLTask {
 
   def getResourceMetasForProperty(element: Element, property: String, propertyNamespace: Namespace): Iterable[Element] = {
     for {
-      meta <- element.getChildren("meta", nexmlNS)
+      meta <- element.getChildren("meta", nexmlNS).asScala
       if meta.getAttributeValue("rel") == (prefixForNamespace(meta, propertyNamespace) + property)
     } yield meta
   }
@@ -342,7 +344,7 @@ object PhenexToOWL extends OWLTask {
 
   def prefixForNamespace(element: Element, namespace: Namespace): String = {
     val prefixes = for {
-      localNamespace <- element.getNamespacesInScope
+      localNamespace <- element.getNamespacesInScope.asScala
       if localNamespace.getURI == namespace.getURI
     } yield localNamespace.getPrefix + ":"
     return prefixes.headOption.getOrElse("")
@@ -351,7 +353,7 @@ object PhenexToOWL extends OWLTask {
   def optString(text: String): Option[String] = Option(StringUtils.stripToNull(text))
 
   def getElementByID(id: String, elementInDoc: Element): Element = {
-    val elements = elementInDoc.getDocument.getRootElement.getDescendants(new ElementFilter()).iterator
+    val elements = elementInDoc.getDocument.getRootElement.getDescendants(new ElementFilter()).iterator.asScala
     elements.find(_.getAttributeValue("id") == id).get
   }
 
