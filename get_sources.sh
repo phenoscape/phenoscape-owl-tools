@@ -22,5 +22,4 @@ curl -L http://compbio.charite.de/hudson/job/hpo.annotations.monthly/lastStableB
 
 svn checkout 'https://github.com/phenoscape/phenoscape-data/trunk/xenbase-phenotypes' xenbase-phenotypes
 
-cd ..
 svn checkout 'https://github.com/phenoscape/phenoscape-data/trunk/Curation Files' nexml

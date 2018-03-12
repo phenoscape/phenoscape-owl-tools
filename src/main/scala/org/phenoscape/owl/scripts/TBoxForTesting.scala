@@ -129,7 +129,7 @@ object TBoxForTesting extends KnowledgeBaseBuilder {
 
   step("Writing tbox axioms for ELK")
   val tboxOut = OWLManager.createOWLOntologyManager().createOntology(tBoxWithoutDisjoints)
-  write(tboxOut, cwd + "/staging/kb/tbox-for-pascal.owl")
+  write(tboxOut, new File(cwd + "/staging/kb/tbox-for-pascal.owl"))
 
   step("Done")
 

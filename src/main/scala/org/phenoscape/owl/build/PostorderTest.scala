@@ -70,7 +70,7 @@ object PostorderTest extends KnowledgeBaseBuilder {
   val BIGDATA_JOURNAL = new File("staging/bigdata.jnl")
   STAGING.mkdir()
   KB.mkdir()
-  cd(KB)
+  
 
   step("Loading ontologies")
   val tbox = manager.loadOntologyFromOntologyDocument(new File(cwd + "/staging/kb/tbox.owl"))

@@ -29,18 +29,19 @@ javaOptions += "-Xmx100G"
 
 libraryDependencies ++= {
   Seq(
-      "junit"                       %   "junit"                  % "4.10" % "test",
-      "org.apache.commons"          %   "commons-lang3"          % "3.1",
-      "commons-io"                  %   "commons-io"             % "2.4",
-      "org.jdom"                    %   "jdom"                   % "2.0.2",
-      "net.sourceforge.owlapi"      %   "owlapi-distribution"    % "4.3.1",
-      "org.semanticweb.elk"         %   "elk-owlapi"             % "0.4.3",
-      "com.blazegraph"              %   "bigdata-core"           % "2.1.2",
-      "org.openrdf.sesame"          %   "sesame-rio"             % "2.7.12",
-      "org.phenoscape"              %%  "scowl"                  % "1.3",
-      "org.phenoscape"              %%  "owlet"                  % "1.6",
-      "org.phenoscape"              %%  "phenoscape-kb-ingest"   % "1.5.2",
-      "log4j"                       %   "log4j"                  % "1.2.17",
-      "org.apache.directory.studio" % "org.apache.commons.codec" % "1.8"
+      "junit"                       %   "junit"                    % "4.10" % "test",
+      "org.apache.commons"          %   "commons-lang3"            % "3.1",
+      "commons-io"                  %   "commons-io"               % "2.4",
+      "org.jdom"                    %   "jdom"                     % "2.0.2",
+      "net.sourceforge.owlapi"      %   "owlapi-distribution"      % "4.3.1",
+      "org.semanticweb.elk"         %   "elk-owlapi"               % "0.4.3",
+      "com.blazegraph"              %   "bigdata-core"             % "2.1.2",
+      "org.openrdf.sesame"          %   "sesame-rio"               % "2.7.12",
+      "org.phenoscape"              %%  "scowl"                    % "1.3",
+      "org.phenoscape"              %%  "owlet"                    % "1.6",
+      "org.phenoscape"              %%  "phenoscape-kb-ingest"     % "1.5.2",
+      "log4j"                       %   "log4j"                    % "1.2.17",
+      "org.apache.directory.studio" %   "org.apache.commons.codec" % "1.8",
+      "com.github.pathikrit"        %%  "better-files"             % "3.4.0"
   )
 }

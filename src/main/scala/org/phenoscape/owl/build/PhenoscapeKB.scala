@@ -1,12 +1,12 @@
 package org.phenoscape.owl.build
 
 import java.io.BufferedOutputStream
-import java.io.File
+import java.io.{ File => JFile }
 import java.io.FileOutputStream
 import java.io.FileReader
 import java.util.Properties
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.io.Source
 import scala.language.postfixOps
@@ -46,6 +46,7 @@ import org.phenoscape.owl.SourcedAxioms
 import org.phenoscape.owl.TaxonNode
 import org.phenoscape.owl.Vocab
 import org.phenoscape.owl.Vocab._
+import org.phenoscape.owl.util.Conversions.BetterFileOps
 import org.phenoscape.owl.util.OntologyUtil
 import org.phenoscape.owlet.SPARQLComposer._
 import org.phenoscape.scowl._
@@ -60,7 +61,12 @@ import com.bigdata.journal.Options
 import com.bigdata.rdf.sail.BigdataSail
 import com.bigdata.rdf.sail.BigdataSailRepository
 
+import better.files._
+
 object PhenoscapeKB extends KnowledgeBaseBuilder {
+
+  val targetDir = File(args(0))
+  val BIGDATA_PROPERTIES = new JFile(args(1))
 
   BasicConfigurator.configure()
   Logger.getRootLogger().setLevel(Level.ERROR)
@@ -69,20 +75,16 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
   val rdfsSubClassOf = ObjectProperty(OWLRDFVocabulary.RDFS_SUBCLASS_OF.getIRI)
   val implies_presence_of_some = NamedRestrictionGenerator.getClassRelationIRI(Vocab.IMPLIES_PRESENCE_OF.getIRI)
 
-  val cwd = System.getProperty("user.dir")
-  val STAGING = new File("staging")
-  val KB = new File("staging/kb")
-  val NEXML = new File("staging/nexml")
-  val BIGDATA_PROPERTIES = new File("bigdata.properties")
-  val BIGDATA_JOURNAL = new File("staging/bigdata.jnl")
-  STAGING.mkdir()
-  KB.mkdir()
-  cd(KB)
+  val SOURCES = targetDir / "sources"
+  val NEXML = SOURCES / "nexml"
+  val KB = targetDir / "kb"
+  val BIGDATA_JOURNAL = targetDir / "blazegraph.jnl"
+  KB.createIfNotExists(true, true)
 
   step("Loading Bigdata")
   val bigdataProperties = new Properties()
   bigdataProperties.load(new FileReader(BIGDATA_PROPERTIES))
-  bigdataProperties.setProperty(Options.FILE, BIGDATA_JOURNAL.getAbsolutePath)
+  bigdataProperties.setProperty(Options.FILE, BIGDATA_JOURNAL.pathAsString)
   val sail = new BigdataSail(bigdataProperties)
   val repository = new BigdataSailRepository(sail)
   repository.initialize()
@@ -135,7 +137,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     addTriples(zfaToUberon, bigdata, graphURI)
     val xaoToUberon = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/uberon/bridge/uberon-bridge-to-xao.owl"), true)
     addTriples(xaoToUberon, bigdata, graphURI)
-    val mgiToEMAPA = SourcedAxioms(loadNormalized(new File(cwd + "/staging/sources/mgi_anatomy.owl")))
+    val mgiToEMAPA = SourcedAxioms(loadNormalized((SOURCES / "mgi_anatomy.owl").toJava))
     addTriples(mgiToEMAPA, bigdata, graphURI)
     //val emapa = loadFromWebWithImports(IRI.create("http://purl.obolibrary.org/obo/emapa.owl"))
     //addTriples(emapa, bigdata, graphURI)
@@ -144,58 +146,56 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
 
     step("Querying entities and qualities")
     val coreReasoner = reasoner(Set(uberon, pato, bspo, phenoscapeVocab).flatMap(_.axioms))
-    val anatomicalEntities = coreReasoner.getSubClasses(Class(Vocab.ANATOMICAL_ENTITY), false).getFlattened.filterNot(_.isOWLNothing) + Class(Vocab.ANATOMICAL_ENTITY)
-    val qualities = coreReasoner.getSubClasses(Class(Vocab.QUALITY), false).getFlattened.filterNot(_.isOWLNothing) + Class(Vocab.QUALITY)
+    val anatomicalEntities = coreReasoner.getSubClasses(Class(Vocab.ANATOMICAL_ENTITY), false).getFlattened.asScala.filterNot(_.isOWLNothing) + Class(Vocab.ANATOMICAL_ENTITY)
+    val qualities = coreReasoner.getSubClasses(Class(Vocab.QUALITY), false).getFlattened.asScala.filterNot(_.isOWLNothing) + Class(Vocab.QUALITY)
     coreReasoner.dispose()
 
     step("Converting NeXML to OWL")
     val vocabForNeXML = combine(uberon, pato, bspo, phenoscapeVocab)
-    cd(NEXML)
-    val filesToConvert = (FileUtils.listFiles(new File(cwd + "/staging/nexml/completed-phenex-files"), Array("xml"), true) ++
-      FileUtils.listFiles(new File(cwd + "/staging/nexml/fin_limb-incomplete-files"), Array("xml"), true) ++
-      FileUtils.listFiles(new File(cwd + "/staging/nexml/Jackson Dissertation Files"), Array("xml"), true) ++
-      FileUtils.listFiles(new File(cwd + "/staging/nexml/matrix-vs-monograph"), Array("xml"), true)).filterNot(_.getName == "catalog-v001.xml")
-    cd(KB)
+    val filesToConvert = (FileUtils.listFiles((NEXML / "completed-phenex-files").toJava, Array("xml"), true).asScala ++
+      FileUtils.listFiles((NEXML / "fin_limb-incomplete-files").toJava, Array("xml"), true).asScala ++
+      FileUtils.listFiles((NEXML / "Jackson Dissertation Files").toJava, Array("xml"), true).asScala ++
+      FileUtils.listFiles((NEXML / "matrix-vs-monograph").toJava, Array("xml"), true).asScala).filterNot(_.getName == "catalog-v001.xml")
     val nexmlTBoxAxioms: mutable.Set[OWLAxiom] = mutable.Set()
     for (file <- filesToConvert) {
       println(s"Adding NeXML file: $file")
       val nexOntology = PropertyNormalizer.normalize(PhenexToOWL.convert(file, vocabForNeXML))
-      nexmlTBoxAxioms.addAll(nexOntology.getTBoxAxioms(Imports.EXCLUDED))
+      nexmlTBoxAxioms ++= nexOntology.getTBoxAxioms(Imports.EXCLUDED).asScala
       addTriples(nexOntology, bigdata, graphURI)
     }
 
     step("Converting ZFIN data")
-    val zfinGenes = PropertyNormalizer.normalize(ZFINGeneticMarkersToOWL.convert(Source.fromFile(new File(cwd + "/staging/sources/zfin_genetic_markers.txt"), "ISO-8859-1")))
+    val zfinGenes = PropertyNormalizer.normalize(ZFINGeneticMarkersToOWL.convert((SOURCES / "zfin_genetic_markers.txt").toSource("ISO-8859-1")))
     addTriples(zfinGenes, bigdata, graphURI)
-    val zfinPreviousGeneNames = PropertyNormalizer.normalize(ZFINPreviousGeneNamesToOWL.convert(Source.fromFile(new File(cwd + "/staging/sources/zfin_aliases.txt"), "ISO-8859-1")))
+    val zfinPreviousGeneNames = PropertyNormalizer.normalize(ZFINPreviousGeneNamesToOWL.convert((SOURCES / "zfin_aliases.txt").toSource("ISO-8859-1")))
     addTriples(zfinPreviousGeneNames, bigdata, graphURI)
-    val zfinExpressionData = PropertyNormalizer.normalize(ZFINExpressionToOWL.convert(Source.fromFile(new File(cwd + "/staging/sources/zfin_wildtype_expression.txt"), "ISO-8859-1")))
+    val zfinExpressionData = PropertyNormalizer.normalize(ZFINExpressionToOWL.convert((SOURCES / "zfin_wildtype_expression.txt").toSource("ISO-8859-1")))
     addTriples(zfinExpressionData, bigdata, graphURI)
-    val zfinPhenotypeData = PropertyNormalizer.normalize(ZFINPhenotypesToOWL.convert(Source.fromFile(new File(cwd + "/staging/sources/zfin_phenotypes.txt"), "ISO-8859-1")))
+    val zfinPhenotypeData = PropertyNormalizer.normalize(ZFINPhenotypesToOWL.convert((SOURCES / "zfin_phenotypes.txt").toSource("ISO-8859-1")))
     addTriples(zfinPhenotypeData, bigdata, graphURI)
 
     step("Converting MGI data")
-    val mgiGenes = PropertyNormalizer.normalize(MGIGeneticMarkersToOWL.convert(Source.fromFile(new File(cwd + "/staging/sources/mgi_genes.txt"), "utf-8")))
+    val mgiGenes = PropertyNormalizer.normalize(MGIGeneticMarkersToOWL.convert((SOURCES / "mgi_genes.txt").toSource("utf-8")))
     addTriples(mgiGenes, bigdata, graphURI)
-    val mgiExpressionData = PropertyNormalizer.normalize(MGIExpressionToOWL.convert(Source.fromFile(new File(cwd + "/staging/sources/mgi_expression_data.txt"), "utf-8")))
+    val mgiExpressionData = PropertyNormalizer.normalize(MGIExpressionToOWL.convert((SOURCES / "mgi_expression_data.txt").toSource("utf-8")))
     addTriples(mgiExpressionData, bigdata, graphURI)
-    val mgiPhenotypeData = PropertyNormalizer.normalize(MGIPhenotypesToOWL.convert(Source.fromFile(new File(cwd + "/staging/sources/mgi_phenotypes.txt"), "utf-8")))
+    val mgiPhenotypeData = PropertyNormalizer.normalize(MGIPhenotypesToOWL.convert((SOURCES / "mgi_phenotypes.txt").toSource("utf-8")))
     addTriples(mgiPhenotypeData, bigdata, graphURI)
 
     step("Converting Xenbase data")
-    val xenbaseGenes = PropertyNormalizer.normalize(XenbaseGenesToOWL.convert(Source.fromFile(new File(cwd + "/staging/sources/xenbase_genes.txt"), "utf-8")))
+    val xenbaseGenes = PropertyNormalizer.normalize(XenbaseGenesToOWL.convert((SOURCES / "xenbase_genes.txt").toSource("utf-8")))
     addTriples(xenbaseGenes, bigdata, graphURI)
     val xenbaseExpressionData = PropertyNormalizer.normalize(XenbaseExpressionToOWL.convert(
-      Source.fromFile(new File(cwd + "/staging/sources/xenbase_genepage_mappings.txt"), "utf-8"),
-      Source.fromFile(new File(cwd + "/staging/sources/GeneExpression_laevis.txt"), "utf-8"),
-      Source.fromFile(new File(cwd + "/staging/sources/GeneExpression_tropicalis.txt"), "utf-8")))
+      (SOURCES / "xenbase_genepage_mappings.txt").toSource("utf-8"),
+      (SOURCES / "GeneExpression_laevis.txt").toSource("utf-8"),
+      (SOURCES / "GeneExpression_tropicalis.txt").toSource("utf-8")))
     addTriples(xenbaseExpressionData, bigdata, graphURI)
-    val xenbasePhenotypeFiles = FileUtils.listFiles(new File(cwd + "/staging/sources/xenbase-phenotypes"), Array("txt"), true)
-    val xenbasePhenotypeData = PropertyNormalizer.normalize(xenbasePhenotypeFiles.flatMap(f => XenbasePhenotypesToOWL.convertToAxioms(Source.fromFile(f))).toSet)
+    val xenbasePhenotypeFiles = FileUtils.listFiles((SOURCES / "xenbase-phenotypes").toJava, Array("txt"), true)
+    val xenbasePhenotypeData = PropertyNormalizer.normalize(xenbasePhenotypeFiles.asScala.flatMap(f => XenbasePhenotypesToOWL.convertToAxioms(Source.fromFile(f))).toSet)
     addTriples(xenbasePhenotypeData, bigdata, graphURI)
 
     step("Converting human data")
-    val humanPhenotypeData = PropertyNormalizer.normalize(HumanPhenotypesToOWL.convert(Source.fromFile(new File(cwd + "/staging/sources/hp_phenotypes.txt"), "utf-8")))
+    val humanPhenotypeData = PropertyNormalizer.normalize(HumanPhenotypesToOWL.convert((SOURCES / "hp_phenotypes.txt").toSource(f"utf-8")))
     addTriples(humanPhenotypeData, bigdata, graphURI)
 
     step("Generating tbox")
@@ -231,7 +231,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     addTriples(developsFromRulesForAbsence, bigdata, graphURI)
 
     step("Generating additional semantic similarity subsumers")
-    val attributeQualities = attributes.axioms.flatMap(_.getClassesInSignature) + HasNumberOf
+    val attributeQualities = attributes.axioms.flatMap(_.getClassesInSignature.asScala) + HasNumberOf
     val subsumers = for {
       entity <- anatomicalEntities
       (partsTerm, entityPartsAxioms) = SimilarityTemplates.partsOfEntity(entity)
@@ -247,7 +247,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     val coreTBox = ro.axioms ++ uberon.axioms ++ homology.axioms ++ pato.axioms ++ bspo.axioms ++ vto.axioms ++ vtoToNCBI.axioms ++ zfa.axioms ++ xao.axioms ++ hp.axioms ++ mp.axioms ++
       caroToUberon.axioms ++ zfaToUberon.axioms ++ xaoToUberon.axioms ++ mgiToEMAPA.axioms ++ emapaToUberon.axioms ++ eco.axioms ++
       developsFromRulesForAbsence ++ tboxFromData ++ phenoscapeVocab.axioms
-    println("tbox class count: " + allTBox.flatMap(_.getClassesInSignature).size)
+    println("tbox class count: " + allTBox.flatMap(_.getClassesInSignature.asScala).size)
     println("tbox logical axiom count: " + allTBox.filter(_.isLogicalAxiom).size)
     val tBoxWithoutDisjoints = OntologyUtil.filterDisjointAxioms(allTBox)
     val coreTBoxWithoutDisjoints = OntologyUtil.filterDisjointAxioms(coreTBox)
@@ -268,15 +268,15 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     MaterializeInferences.materializeInferences(inferredAxioms, tboxReasoner)
     tboxReasoner.dispose()
 
-    val coreTboxOntology = manager.createOntology(coreTBoxWithoutDisjoints)
+    val coreTboxOntology = manager.createOntology(coreTBoxWithoutDisjoints.asJava)
     val coreTboxReasoner = reasoner(coreTboxOntology)
     MaterializeInferences.materializeInferences(coreTboxOntology, coreTboxReasoner)
     coreTboxReasoner.dispose()
 
     step("Asserting reverse negation hierarchy")
-    val hierarchyAxioms = NegationHierarchyAsserter.assertNegationHierarchy(tBoxWithoutDisjoints ++ inferredAxioms.getAxioms())
-    manager.addAxioms(inferredAxioms, hierarchyAxioms)
-    implicit val negationReasoner = reasoner(tBoxWithoutDisjoints ++ inferredAxioms.getAxioms())
+    val hierarchyAxioms = NegationHierarchyAsserter.assertNegationHierarchy(tBoxWithoutDisjoints ++ inferredAxioms.getAxioms().asScala)
+    manager.addAxioms(inferredAxioms, hierarchyAxioms.asJava)
+    implicit val negationReasoner = reasoner(tBoxWithoutDisjoints ++ inferredAxioms.getAxioms().asScala)
     MaterializeInferences.materializeInferences(inferredAxioms, negationReasoner)
 
     if (negationReasoner.getUnsatisfiableClasses().getEntitiesMinusBottom().isEmpty()) {
@@ -290,19 +290,20 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     //addTriples(inferredAxioms, bigdata, graphURI)
 
     step("Writing tbox axioms for ELK")
-    val tboxOut = OWLManager.createOWLOntologyManager().createOntology((tBoxWithoutDisjoints ++ inferredAxioms.getAxioms()))
-    write(tboxOut, cwd + "/staging/kb/tbox.owl")
-    bigdata.add(new File(cwd + "/staging/kb/tbox.owl"), "", RDFFormat.RDFXML, graphURI)
+    val tboxOut = OWLManager.createOWLOntologyManager().createOntology((tBoxWithoutDisjoints ++ inferredAxioms.getAxioms().asScala).asJava)
 
-    write(coreTboxOntology, cwd + "/staging/kb/core-tbox.owl")
+    write(tboxOut, (KB / "tbox.owl").toJava)
+    bigdata.add((KB / "tbox.owl").toJava, "", RDFFormat.RDFXML, graphURI)
+
+    write(coreTboxOntology, (KB / "core-tbox.owl").toJava)
 
     step("Reducing tbox for OWLsim")
     val reducedTbox = OntologyUtil.reduceOntologyToHierarchy(tboxOut)
-    write(reducedTbox, cwd + "/staging/kb/tbox-hierarchy-only.owl")
+    write(reducedTbox, (KB / "tbox-hierarchy-only.owl").toJava)
 
     step("Building evolutionary profiles using ancestral states reconstruction")
-    val vtoOnt = OWLManager.createOWLOntologyManager().createOntology(vto.axioms)
-    bigdata.add(EvolutionaryProfiles.computePhenotypeProfiles(TaxonNode(CHORDATA), vtoOnt, bigdata), graphURI)
+    val vtoOnt = OWLManager.createOWLOntologyManager().createOntology(vto.axioms.asJava)
+    bigdata.add(EvolutionaryProfiles.computePhenotypeProfiles(TaxonNode(CHORDATA), vtoOnt, bigdata).asJava, graphURI)
 
     bigdata.commit()
 
@@ -328,20 +329,20 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
 
   step("Building gene profiles")
   bigdata.begin()
-  bigdata.add(GeneProfiles.generateGeneProfiles(bigdata), graphURI)
+  bigdata.add(GeneProfiles.generateGeneProfiles(bigdata).asJava, graphURI)
   bigdata.commit()
 
   fullReasoner.dispose()
   System.gc()
 
   step("Exporting presence assertions")
-  val presencesFile = new File(cwd + "/staging/kb/presences.ttl")
+  val presencesFile = (KB / "presences.ttl").toJava
   val presencesOutput = new BufferedOutputStream(new FileOutputStream(presencesFile))
   bigdata.prepareGraphQuery(QueryLanguage.SPARQL, presencesQuery.toString).evaluate(new TurtleWriter(presencesOutput))
   presencesOutput.close()
 
   step("Exporting absence assertions")
-  val absencesFile = new File(cwd + "/staging/kb/absences.ttl")
+  val absencesFile = (KB / "absences.ttl").toJava
   val absencesOutput = new BufferedOutputStream(new FileOutputStream(absencesFile))
   bigdata.prepareGraphQuery(QueryLanguage.SPARQL, absencesQuery.toString).evaluate(new TurtleWriter(absencesOutput))
   absencesOutput.close()
@@ -362,7 +363,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
    ?s ?p ?o .
   }
   """)
-  val triplesOutput = new BufferedOutputStream(new FileOutputStream(new File(cwd + "/staging/kb/kb.ttl")))
+  val triplesOutput = new BufferedOutputStream(new FileOutputStream((KB / "kb.ttl").toJava))
   triplesQuery.evaluate(new TurtleWriter(triplesOutput))
   triplesOutput.close()
 
@@ -381,7 +382,7 @@ WHERE {
   ?profile rdf:type ?phenotype .
 }
     """)
-  val profilesOutput = new BufferedOutputStream(new FileOutputStream(new File(cwd + "/staging/kb/profiles.ttl")))
+  val profilesOutput = new BufferedOutputStream(new FileOutputStream((KB / "profiles.ttl").toJava))
   profilesQuery.evaluate(new TurtleWriter(profilesOutput))
   profilesOutput.close()
 

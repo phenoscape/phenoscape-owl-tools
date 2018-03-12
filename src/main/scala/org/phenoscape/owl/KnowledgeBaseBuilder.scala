@@ -75,17 +75,9 @@ class KnowledgeBaseBuilder extends App {
     SourcedAxioms(ont.getAxioms(Imports.EXCLUDED).toSet, ont.getOntologyID)
   }
 
-  def write(ontology: OWLOntology, filename: String): Unit = {
+  def write(ontology: OWLOntology, file: File): Unit = {
     val ontManager = ontology.getOWLOntologyManager()
-    ontManager.saveOntology(ontology, new RDFXMLDocumentFormat(), new FileDocumentTarget(new File(filename)))
-  }
-
-  def cd(dir: String): Unit = {
-    cd(new File(dir))
-  }
-
-  def cd(dir: File): Unit = {
-    System.setProperty("user.dir", dir.getAbsolutePath())
+    ontManager.saveOntology(ontology, new RDFXMLDocumentFormat(), new FileDocumentTarget(file))
   }
 
   def step(message: String): Unit = {
