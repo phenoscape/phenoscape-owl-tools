@@ -1,0 +1,14 @@
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl:  <http://www.w3.org/2002/07/owl#>
+PREFIX ps: <http://purl.org/phenoscape/vocab.owl#>
+CONSTRUCT { 
+?s rdf:type ?o .
+}
+FROM <http://kb.phenoscape.org/>
+WHERE { 
+    ?s rdf:type/rdfs:subClassOf* ?o .
+    ?o a owl:Class .
+    ?something ps:has_phenotypic_profile ?s .
+    FILTER(isIRI(?o))
+}
