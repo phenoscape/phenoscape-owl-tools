@@ -39,7 +39,7 @@ libraryDependencies ++= {
       "org.openrdf.sesame"          %   "sesame-rio"               % "2.7.12",
       "org.phenoscape"              %%  "scowl"                    % "1.3",
       "org.phenoscape"              %%  "owlet"                    % "1.6",
-      "org.phenoscape"              %%  "phenoscape-kb-ingest"     % "1.6",
+      "org.phenoscape"              %%  "phenoscape-kb-ingest"     % "1.6.1",
       "log4j"                       %   "log4j"                    % "1.2.17",
       "org.apache.directory.studio" %   "org.apache.commons.codec" % "1.8",
       "com.github.pathikrit"        %%  "better-files"             % "3.4.0"
