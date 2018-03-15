@@ -5,15 +5,15 @@ organization  := "org.phenoscape"
 
 name          := "kb-owl-tools"
 
-version       := "1.5.1"
+version       := "1.6-SNAPSHOT"
 
 packageArchetype.java_application
 
 mainClass in Compile := Some("org.phenoscape.owl.build.Command")
 
-scalaVersion  := "2.12.2"
+scalaVersion  := "2.12.4"
 
-crossScalaVersions := Seq("2.11.8", "2.12.2")
+crossScalaVersions := Seq("2.11.8", "2.12.4")
 
 scalacOptions := Seq("-unchecked", "-deprecation", "-feature", "-encoding", "utf8")
 
@@ -39,7 +39,7 @@ libraryDependencies ++= {
       "org.openrdf.sesame"          %   "sesame-rio"               % "2.7.12",
       "org.phenoscape"              %%  "scowl"                    % "1.3",
       "org.phenoscape"              %%  "owlet"                    % "1.6",
-      "org.phenoscape"              %%  "phenoscape-kb-ingest"     % "1.5.2",
+      "org.phenoscape"              %%  "phenoscape-kb-ingest"     % "1.6",
       "log4j"                       %   "log4j"                    % "1.2.17",
       "org.apache.directory.studio" %   "org.apache.commons.codec" % "1.8",
       "com.github.pathikrit"        %%  "better-files"             % "3.4.0"
