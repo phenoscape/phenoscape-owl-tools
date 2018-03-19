@@ -118,7 +118,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     addTriples(vto, bigdata, graphURI)
     val collections = loadFromWeb(IRI.create("http://svn.code.sf.net/p/phenoscape/code/trunk/vocab/fish_collection_abbreviation.obo"), true)
     addTriples(collections, bigdata, graphURI)
-    val zfa = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/zfa.owl"), true)
+    val zfa = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/upheno/imports/zfa_import.owl"), true)
     addTriples(zfa, bigdata, graphURI)
     val xao = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/xao.owl"), true)
     addTriples(xao, bigdata, graphURI)
@@ -133,7 +133,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
 
     val caroToUberon = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/uberon/bridge/uberon-bridge-to-caro.owl"), true)
     addTriples(caroToUberon, bigdata, graphURI)
-    val zfaToUberon = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/uberon/bridge/uberon-ext-bridge-to-zfa.owl"), true)
+    val zfaToUberon = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/uberon/bridge/uberon-bridge-to-zfa.owl"), true)
     addTriples(zfaToUberon, bigdata, graphURI)
     val xaoToUberon = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/uberon/bridge/uberon-bridge-to-xao.owl"), true)
     addTriples(xaoToUberon, bigdata, graphURI)
