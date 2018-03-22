@@ -230,8 +230,7 @@ object PhenexToOWL extends OWLTask {
       bearerElement <- Option(phenotypeElement.getChild("bearer", phenoNS))
       bearerType <- Option(bearerElement.getChild("typeref", phenoNS))
     } yield {
-      val (entity, axioms) = namedClassFromTyperef(bearerType, labelRenderer)
-      val entityLabel = labelRenderer(entity)
+      val (entity, entityLabel, axioms) = namedClassFromTyperef(bearerType, labelRenderer)
       annotations += factory.getOWLAnnotation(entity_term, entity.getIRI)
       ((entity, entityLabel),
         axioms ++ AbsenceClassGenerator.generateAllAbsenceAxiomsForEntity(entity))
@@ -242,9 +241,8 @@ object PhenexToOWL extends OWLTask {
       qualityElement <- qualityElementOption
       qualityType <- Option(qualityElement.getChild("typeref", phenoNS))
     } yield {
-      val (quality, axioms) = namedClassFromTyperef(qualityType, labelRenderer)
+      val (quality, qualityLabel, axioms) = namedClassFromTyperef(qualityType, labelRenderer)
       annotations += factory.getOWLAnnotation(quality_term, quality.getIRI)
-      val qualityLabel = labelRenderer(quality)
       ((quality, qualityLabel), axioms)
     })
     val qualityLabel = qualityAndLabelOption.map(_._2).getOrElse("")
@@ -253,9 +251,8 @@ object PhenexToOWL extends OWLTask {
       relatedEntityElement <- Option(qualityElement.getChild("related_entity", phenoNS))
       relatedEntityType <- Option(relatedEntityElement.getChild("typeref", phenoNS))
     } yield {
-      val (relatedEntity, axioms) = namedClassFromTyperef(relatedEntityType, labelRenderer)
+      val (relatedEntity, relatedEntityLabel, axioms) = namedClassFromTyperef(relatedEntityType, labelRenderer)
       annotations += factory.getOWLAnnotation(related_entity_term, relatedEntity.getIRI)
-      val relatedEntityLabel = labelRenderer(relatedEntity)
       ((relatedEntity, relatedEntityLabel),
         axioms ++ AbsenceClassGenerator.generateAllAbsenceAxiomsForEntity(relatedEntity))
     })
@@ -296,13 +293,13 @@ object PhenexToOWL extends OWLTask {
     else factory.getOWLObjectIntersectionOf((qualifiers.map(restrictionFromQualifier).toSet + genus).asJava)
   }
 
-  def namedClassFromTyperef(typeref: Element, labelRenderer: LabelRenderer): (OWLClass, Set[OWLAxiom]) = {
+  def namedClassFromTyperef(typeref: Element, labelRenderer: LabelRenderer): (OWLClass, String, Set[OWLAxiom]) = {
     classFromTyperef(typeref) match {
-      case named: OWLClass => (named, Set.empty)
+      case named: OWLClass => (named, labelRenderer(named), Set.empty)
       case expression => {
         val (named, axioms) = ExpressionUtil.nameForSubClassWithAxioms(expression)
         val expressionLabel = labelRenderer(expression)
-        (named, axioms + (named Annotation (rdfsLabel, expressionLabel)))
+        (named, expressionLabel, axioms + (named Annotation (rdfsLabel, expressionLabel)))
       }
     }
   }
