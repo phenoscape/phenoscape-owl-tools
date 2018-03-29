@@ -256,7 +256,7 @@ object PhenexToOWL extends OWLTask {
       ((relatedEntity, relatedEntityLabel),
         axioms ++ AbsenceClassGenerator.generateAllAbsenceAxiomsForEntity(relatedEntity))
     })
-    val relatedEntityLabel = relatedEntityAndLabelOption.map(_._2).map(re => s" towards $re").getOrElse("")
+    val relatedEntityLabel = relatedEntityAndLabelOption.map(_._2).map(re => s" $re").getOrElse("")
     val phenotypeLabel = s"$entityLabel $qualityLabel$relatedEntityLabel"
     val eqPhenotypeOption = (entityAndLabelOption.map(_._1), qualityAndLabelOption.map(_._1), relatedEntityAndLabelOption.map(_._1)) match {
       case (None, None, _)            => None
