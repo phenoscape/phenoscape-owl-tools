@@ -17,6 +17,7 @@ object ComputeICs extends App {
   val ontfile = new File(args(0))
   val profilesFile = new File(args(1))
   val corpus = args(2)
+  val outfile = new File(args(3))
 
   val inCorpusFunc = if (corpus == "taxa") {
     ind: OWLNamedIndividual => ind.getIRI.toString.contains("VTO_")
@@ -32,7 +33,7 @@ object ComputeICs extends App {
 
   val owlSim = new OWLsim(combined, inCorpusFunc)
   val triples = owlSim.classICScoresAsTriples
-  val triplesOutput = new BufferedOutputStream(new FileOutputStream(new File(s"corpus_ics-$corpus.ttl")))
+  val triplesOutput = new BufferedOutputStream(new FileOutputStream(outfile))
   val writer = Rio.createWriter(RDFFormat.TURTLE, triplesOutput)
   writer.startRDF()
   triples.foreach(writer.handleStatement)

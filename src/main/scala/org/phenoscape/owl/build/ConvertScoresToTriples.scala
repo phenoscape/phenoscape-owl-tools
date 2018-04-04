@@ -19,9 +19,10 @@ object ConvertScoresToTriples extends App {
   import ConvertScoresToTriplesUtil._
 
   val scoresFilePath = args(0)
+  val outfile = new File(args(1))
   val scoresFile = Source.fromFile(scoresFilePath, "utf-8")
   val triples = scoresFile.getLines.drop(1).map(lineToTriple)
-  val triplesOutput = new BufferedOutputStream(new FileOutputStream(new File("expect_scores.ttl")))
+  val triplesOutput = new BufferedOutputStream(new FileOutputStream(outfile))
   val writer = Rio.createWriter(RDFFormat.TURTLE, triplesOutput)
   writer.startRDF()
   triples.foreach(writer.handleStatement)
