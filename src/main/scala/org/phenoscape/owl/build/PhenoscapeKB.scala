@@ -62,6 +62,8 @@ import com.bigdata.rdf.sail.BigdataSail
 import com.bigdata.rdf.sail.BigdataSailRepository
 
 import better.files._
+import java.util.Date
+import org.openrdf.model.vocabulary.DCTERMS
 
 object PhenoscapeKB extends KnowledgeBaseBuilder {
 
@@ -88,10 +90,13 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
   val sail = new BigdataSail(bigdataProperties)
   val repository = new BigdataSailRepository(sail)
   repository.initialize()
-  val bigdata = repository.getUnisolatedConnection()
-
   val baseURI = ""
   val graphURI = new URIImpl("http://kb.phenoscape.org/")
+  val bigdata = repository.getUnisolatedConnection()
+  val valueFactory = bigdata.getValueFactory
+  bigdata.begin()
+  bigdata.add(graphURI, DCTERMS.CREATED, valueFactory.createLiteral(new Date()), graphURI)
+  bigdata.commit()
 
   def loadOntologiesAndCreateReasoner(): OWLReasoner = {
     bigdata.begin()
