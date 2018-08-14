@@ -284,8 +284,11 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
 
     step("Asserting reverse negation hierarchy")
     val hierarchyAxioms = NegationHierarchyAsserter.assertNegationHierarchy(tBoxWithoutDisjoints ++ inferredAxioms.getAxioms().asScala)
+    step("Adding negation hierarchy axioms")
     manager.addAxioms(inferredAxioms, hierarchyAxioms.asJava)
+    step("Creating negation reasoner")
     implicit val negationReasoner = reasoner(tBoxWithoutDisjoints ++ inferredAxioms.getAxioms().asScala)
+    step("Materializing negation reasoner inferences")
     MaterializeInferences.materializeInferences(inferredAxioms, negationReasoner)
 
     if (negationReasoner.getUnsatisfiableClasses().getEntitiesMinusBottom().isEmpty()) {

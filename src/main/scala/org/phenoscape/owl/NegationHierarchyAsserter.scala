@@ -1,28 +1,21 @@
 package org.phenoscape.owl
 
-import java.io.File
-import scala.collection.JavaConversions._
-import org.semanticweb.owlapi.apibinding.OWLManager
-import org.semanticweb.owlapi.model.AxiomType
-import org.semanticweb.owlapi.model.IRI
-import org.semanticweb.owlapi.model.OWLClass
-import org.semanticweb.owlapi.model.OWLOntology
-import org.semanticweb.owlapi.model.OWLSubClassOfAxiom
-import org.semanticweb.owlapi.model.OWLAxiom
+import scala.collection.JavaConverters._
+
 import org.phenoscape.scowl._
-import org.semanticweb.owlapi.model.OWLAnnotationAssertionAxiom
-import org.semanticweb.owlapi.model.OWLClassExpression
-import org.semanticweb.owlapi.model.OWLEquivalentClassesAxiom
+import org.semanticweb.owlapi.model.IRI
+import org.semanticweb.owlapi.model.OWLAxiom
+import org.semanticweb.owlapi.model.OWLClass
+import org.semanticweb.owlapi.model.OWLSubClassOfAxiom
 
 object NegationHierarchyAsserter extends OWLTask {
 
-  val negates = factory.getOWLAnnotationProperty(Vocab.NEGATES)
+  val Negates = factory.getOWLAnnotationProperty(Vocab.NEGATES)
 
   def assertNegationHierarchy(axioms: Set[OWLAxiom]): Set[OWLAxiom] = {
     val negatesPairs = for {
-      annotationAxiom <- axioms.collect { case ax: OWLAnnotationAssertionAxiom => ax }
-      if annotationAxiom.getProperty == negates
-    } yield (annotationAxiom.getSubject.asInstanceOf[IRI], annotationAxiom.getValue.asInstanceOf[IRI])
+      AnnotationAssertion(_, Negates, subject: IRI, value: IRI) <- axioms
+    } yield (subject, value)
     val negatesIndex = buildIndex(negatesPairs)
     val negatedByIndex = buildReverseIndex(negatesPairs)
     val superToSubclassPairs = for {
@@ -32,19 +25,18 @@ object NegationHierarchyAsserter extends OWLTask {
     } yield (subClassOfAxiom.getSuperClass.asOWLClass, subClassOfAxiom.getSubClass.asOWLClass)
     val subclassesIndex = buildIndex(superToSubclassPairs)
     val subclassAxioms = for {
-      term <- axioms.flatMap(_.getClassesInSignature)
+      term <- axioms.flatMap(_.getClassesInSignature.asScala)
       axiom <- createSubclassOfAxioms(term, negatesIndex, negatedByIndex, subclassesIndex)
     } yield axiom
 
     val equivalentClassAxioms = for {
-      equivAxiom <- axioms.collect { case ax: OWLEquivalentClassesAxiom => ax }
-      classes = equivAxiom.getNamedClasses
+      equivAxiom @ EquivalentClasses(_, _) <- axioms
+      classes = equivAxiom.getNamedClasses.asScala
       if classes.size > 1
     } yield {
       val negations = classes.flatMap(c => negatedByIndex(c.getIRI))
-      factory.getOWLEquivalentClassesAxiom(negations.map(Class(_)))
+      factory.getOWLEquivalentClassesAxiom(negations.map(Class(_)).asJava)
     }
-
     subclassAxioms ++ equivalentClassAxioms
   }
 
