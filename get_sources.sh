@@ -1,11 +1,9 @@
 #!/bin/bash
 
-mkdir staging
-mkdir staging/sources
-cd staging/sources
-curl -L 'https://github.com/phenoscape/phenoscape-data/blob/master/MGI_static_data/mgi_anatomy.owl.gz?raw=true' >mgi_anatomy.owl.gz
-gunzip mgi_anatomy.owl.gz
-curl -L 'https://github.com/phenoscape/phenoscape-data/blob/master/MGI_static_data/mgi_expression_data.txt.gz?raw=true' >mgi_expression_data.txt.gz
+mkdir -p $TARGET/sources
+cd $TARGET/sources
+curl -L -O 'https://github.com/phenoscape/phenoscape-data/raw/master/MGI_static_data/mgi_anatomy.owl'
+curl -L 'https://github.com/phenoscape/phenoscape-data/raw/master/MGI_static_data/mgi_expression_data.txt.gz' >mgi_expression_data.txt.gz
 gunzip mgi_expression_data.txt.gz
 curl -L 'https://github.com/phenoscape/phenoscape-data/blob/master/MGI_static_data/mgi_phenotypes.txt.gz?raw=true' >mgi_phenotypes.txt.gz
 gunzip mgi_phenotypes.txt.gz
