@@ -19,15 +19,15 @@ object NegationHierarchyAsserter extends OWLTask {
     val negatesIndex = buildIndex(negatesPairs)
     val negatedByIndex = buildReverseIndex(negatesPairs)
     val superToSubclassPairs = for {
-      subClassOfAxiom <- axioms.collect { case ax: OWLSubClassOfAxiom => ax }
-      if !subClassOfAxiom.getSubClass.isAnonymous
-      if !subClassOfAxiom.getSuperClass.isAnonymous
-    } yield (subClassOfAxiom.getSuperClass.asOWLClass, subClassOfAxiom.getSubClass.asOWLClass)
+      subClassOfAxiom @ SubClassOf(_, subclass @ Class(_), superclass @ Class(_)) <- axioms
+    } yield (superclass, subclass)
     val subclassesIndex = buildIndex(superToSubclassPairs)
+
     val subclassAxioms = for {
-      term <- axioms.flatMap(_.getClassesInSignature.asScala)
-      axiom <- createSubclassOfAxioms(term, negatesIndex, negatedByIndex, subclassesIndex)
-    } yield axiom
+      AnnotationAssertion(_, Negates, negater: IRI, negated: IRI) <- axioms
+      subClassOfNegatedClass <- subclassesIndex(Class(negated))
+      superClassOfOntClassIRI <- negatedByIndex(subClassOfNegatedClass.getIRI)
+    } yield Class(negater) SubClassOf Class(superClassOfOntClassIRI)
 
     val equivalentClassAxioms = for {
       equivAxiom @ EquivalentClasses(_, _) <- axioms
@@ -38,15 +38,6 @@ object NegationHierarchyAsserter extends OWLTask {
       factory.getOWLEquivalentClassesAxiom(negations.map(Class(_)).asJava)
     }
     subclassAxioms ++ equivalentClassAxioms
-  }
-
-  def createSubclassOfAxioms(ontClass: OWLClass, negatesIndex: Map[IRI, Set[IRI]], negatedByIndex: Map[IRI, Set[IRI]], subclassesIndex: Map[OWLClass, Set[OWLClass]]): Set[OWLSubClassOfAxiom] = {
-    for {
-      negatedClassIRI <- negatesIndex(ontClass.getIRI)
-      subClassOfNegatedClass <- subclassesIndex(Class(negatedClassIRI))
-      if !subClassOfNegatedClass.isAnonymous
-      superClassOfOntClassIRI <- negatedByIndex(subClassOfNegatedClass.asOWLClass.getIRI)
-    } yield ontClass SubClassOf Class(superClassOfOntClassIRI)
   }
 
   def buildIndex[A, B](pairs: Iterable[(A, B)]): Map[A, Set[B]] =
