@@ -17,6 +17,7 @@ object Command extends App {
     case "sparql-select"        => RunSPARQLQuery.main(commandArgs)
     case "sparql-construct"     => RunSPARQLConstruct.main(commandArgs)
     case "sparql-update"        => RunSPARQLUpdate.main(commandArgs)
+    case "convert-nexml"        => ConvertNeXML.main(commandArgs)
     case _ => println("""
 Valid commands are:
 
