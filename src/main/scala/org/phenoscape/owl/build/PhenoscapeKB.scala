@@ -135,7 +135,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     addTriples(mp, bigdata, graphURI)
     val ro = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/ro.owl"), false) //.axioms.filter(_.isAnnotationAxiom)
     addTriples(ro, bigdata, graphURI)
-    val eco = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/eco.owl"), false)
+    val eco = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/eco/eco-base.owl"), false)
     addTriples(eco, bigdata, graphURI)
 
     val caroToUberon = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/uberon/bridge/uberon-bridge-to-caro.owl"), true)
