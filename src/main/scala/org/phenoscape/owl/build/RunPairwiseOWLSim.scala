@@ -19,6 +19,7 @@ object RunPairwiseOWLSim extends App {
   val ontfile = new File(args(2))
   val profilesFile = new File(args(3))
   val corpus = args(4)
+  val outfile = args(5)
 
   val manager = OWLManager.createOWLOntologyManager()
   val ontology = manager.loadOntologyFromOntologyDocument(ontfile)
@@ -42,7 +43,7 @@ object RunPairwiseOWLSim extends App {
   println("Computing similarity matrix")
   val similarityMatrix = owlSim.computeAllSimilarityToCorpus(group.toSet)
   println("Writing results to file")
-  val triplesOutput = new BufferedOutputStream(new FileOutputStream(new File(s"similarities-$taskNum.ttl")))
+  val triplesOutput = new BufferedOutputStream(new FileOutputStream(new File(outfile)))
   val writer = Rio.createWriter(RDFFormat.TURTLE, triplesOutput)
   writer.startRDF()
   similarityMatrix.foreach(writer.handleStatement)
