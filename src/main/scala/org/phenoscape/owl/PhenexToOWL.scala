@@ -266,11 +266,11 @@ object PhenexToOWL extends OWLTask {
       case (Some(entity), Some(Absent), None)                             => Option(
         (has_part some (LacksAllPartsOfType and (inheres_in some MultiCellularOrganism) and (towards value Individual(entity.getIRI))))
           and
-          (has_part some (phenotype_of some entity)))
+          (phenotype_of some entity))
       case (Some(entity), Some(LacksAllPartsOfType), Some(relatedEntity)) => Option(
         (has_part some (LacksAllPartsOfType and (inheres_in some entity) and (towards value Individual(relatedEntity.getIRI))))
           and
-          (has_part some (phenotype_of some relatedEntity)))
+          (phenotype_of some relatedEntity))
       case (None, Some(quality), None)                                    => Option(has_part some quality)
       case (None, Some(quality), Some(relatedEntity))                     => Option(has_part some (quality and (towards some relatedEntity)))
       case (Some(entity), Some(quality), None)                            => Option(has_part some (quality and (inheres_in some entity)))
