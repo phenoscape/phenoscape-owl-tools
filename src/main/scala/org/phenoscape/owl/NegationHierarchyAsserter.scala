@@ -8,7 +8,7 @@ import org.semanticweb.owlapi.model.OWLAxiom
 import org.semanticweb.owlapi.model.OWLClass
 import org.semanticweb.owlapi.model.OWLSubClassOfAxiom
 
-object NegationHierarchyAsserter extends OWLTask {
+object NegationHierarchyAsserter {
 
   val Negates = factory.getOWLAnnotationProperty(Vocab.NEGATES)
 
