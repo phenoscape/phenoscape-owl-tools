@@ -11,12 +11,16 @@ import org.semanticweb.owlapi.model.OWLSubClassOfAxiom
 
 object NegationHierarchyAsserter {
 
-  def main(axioms: Set[OWLAxiom]): Unit = {
+  val factory = OWLManager.getOWLDataFactory
+  val Negates = factory.getOWLAnnotationProperty(Vocab.NEGATES)
 
-    val factory = OWLManager.getOWLDataFactory
-    val Negates = factory.getOWLAnnotationProperty(Vocab.NEGATES)
+  def main(args: Array[String]): Unit = {
 
-    def assertNegationHierarchy(): Set[OWLAxiom] = {
+    val axioms = args(0).asInstanceOf[Set[OWLAxiom]]
+    assertNegationHierarchy(axioms)
+  }
+
+    def assertNegationHierarchy(axioms: Set[OWLAxiom]): Set[OWLAxiom] = {
 
       val negatesPairs = for {
         AnnotationAssertion(_, Negates, subject: IRI, value: IRI) <- axioms
@@ -53,6 +57,6 @@ object NegationHierarchyAsserter {
 
     def emptyIndex[A, B](): Map[A, Set[B]] = Map.empty.withDefaultValue(Set.empty)
 
-  }
+
 
 }

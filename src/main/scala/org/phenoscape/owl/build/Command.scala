@@ -1,6 +1,7 @@
 package org.phenoscape.owl.build
 
 import com.bigdata.rdf.store.DataLoader
+import org.phenoscape.owl.NegationHierarchyAsserter
 
 object Command extends App {
 
@@ -18,6 +19,7 @@ object Command extends App {
     case "sparql-construct"     => RunSPARQLConstruct.main(commandArgs)
     case "sparql-update"        => RunSPARQLUpdate.main(commandArgs)
     case "convert-nexml"        => ConvertNeXML.main(commandArgs)
+    case "assert-negation-hierarchy" => NegationHierarchyAsserter.main(commandArgs)
     case _ => println("""
 Valid commands are:
 
