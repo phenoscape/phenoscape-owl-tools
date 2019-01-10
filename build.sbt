@@ -1,19 +1,16 @@
-import com.typesafe.sbt.SbtNativePackager._
-import NativePackagerKeys._
+enablePlugins(JavaAppPackaging)
 
 organization  := "org.phenoscape"
 
 name          := "kb-owl-tools"
 
-version       := "1.6-SNAPSHOT"
-
-packageArchetype.java_application
+version       := "1.6"
 
 mainClass in Compile := Some("org.phenoscape.owl.build.Command")
 
-scalaVersion  := "2.12.4"
+scalaVersion  := "2.12.8"
 
-crossScalaVersions := Seq("2.11.8", "2.12.4")
+crossScalaVersions := Seq("2.11.8", "2.12.8")
 
 scalacOptions := Seq("-unchecked", "-deprecation", "-feature", "-encoding", "utf8")
 
