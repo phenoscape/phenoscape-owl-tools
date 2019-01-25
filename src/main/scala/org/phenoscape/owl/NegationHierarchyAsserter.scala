@@ -18,12 +18,12 @@ object NegationHierarchyAsserter extends OWLTask {
     val classTuples = for {
       EquivalentClasses(_, expr) <- axioms
       //  extract named classes and expressions
-      expressions = expr.collect{case n@ObjectSomeValuesFrom(`has_part`, _) => n}
+      expressions = expr.collect{case hasPartAxiom@ObjectSomeValuesFrom(`has_part`, _) => hasPartAxiom}
       if expressions.nonEmpty
-      namedClasses =  expr.collect{case n: OWLClass => n}
-      x <- namedClasses
-      y <- expressions
-    } yield (y, x)
+      namedClasses =  expr.collect{case owlClass: OWLClass => owlClass}
+      namedClass <- namedClasses
+      expression <- expressions
+    } yield (expression, namedClass)
     // map (class expression -> named classes)
     val classMap = buildIndex(classTuples)
 
@@ -33,8 +33,8 @@ object NegationHierarchyAsserter extends OWLTask {
       expressions = expr.collect{case ObjectComplementOf(n@ObjectSomeValuesFrom(`has_part`, _)) => n}
       if expressions.nonEmpty
       namedNegationClasses =  expr.collect{case n: OWLClass => n}
-      x <- expressions
-      namedClass <- classMap.getOrElse(x, Set.empty)
+      expression <- expressions
+      namedClass <- classMap.getOrElse(expression, Set.empty)
       namedNegationClass <- namedNegationClasses
     } yield (namedNegationClass.getIRI, namedClass.getIRI)
 
