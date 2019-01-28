@@ -8,11 +8,13 @@ import org.semanticweb.owlapi.model.OWLAxiom
 import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model.OWLClass
 import org.semanticweb.owlapi.model.OWLSubClassOfAxiom
+import org.phenoscape.owl.Vocab.has_part
 
 object NegationHierarchyAsserter {
 
   val factory = OWLManager.getOWLDataFactory
   val Negates = factory.getOWLAnnotationProperty(Vocab.NEGATES)
+
 
   def main(args: Array[String]): Unit = {
 
@@ -20,34 +22,55 @@ object NegationHierarchyAsserter {
     assertNegationHierarchy(axioms)
   }
 
-    def assertNegationHierarchy(axioms: Set[OWLAxiom]): Set[OWLAxiom] = {
+  def assertNegationHierarchy(axioms: Set[OWLAxiom]): Set[OWLAxiom] = {
+    //  create tuples (class expressions, named classes)
+    val classTuples = for {
+      EquivalentClasses(_, expr) <- axioms
+      //  extract named classes and expressions
+      expressions = expr.collect{case hasPartAxiom@ObjectSomeValuesFrom(`has_part`, _) => hasPartAxiom}
+      if expressions.nonEmpty
+      namedClasses =  expr.collect{case owlClass: OWLClass => owlClass}
+      namedClass <- namedClasses
+      expression <- expressions
+    } yield (expression, namedClass)
+    // map (class expression -> named classes)
+    val classMap = buildIndex(classTuples)
 
-      val negatesPairs = for {
-        AnnotationAssertion(_, Negates, subject: IRI, value: IRI) <- axioms
-      } yield (subject, value)
-      val negatesIndex = buildIndex(negatesPairs)
-      val negatedByIndex = buildReverseIndex(negatesPairs)
-      val superToSubclassPairs = for {
-        subClassOfAxiom @ SubClassOf(_, subclass @ Class(_), superclass @ Class(_)) <- axioms
-      } yield (superclass, subclass)
-      val subclassesIndex = buildIndex(superToSubclassPairs)
+    //  create tuples (named class, named negation classes)
+    val negatesPairs = for {
+      EquivalentClasses(_, expr) <- axioms
+      expressions = expr.collect{case ObjectComplementOf(hasPartAxiom@ObjectSomeValuesFrom(`has_part`, _)) => hasPartAxiom}
+      if expressions.nonEmpty
+      namedNegationClasses =  expr.collect{case owlClass: OWLClass => owlClass}
+      expression <- expressions
+      namedClass <- classMap.getOrElse(expression, Set.empty)
+      namedNegationClass <- namedNegationClasses
+    } yield (namedNegationClass.getIRI, namedClass.getIRI)
 
-      val subclassAxioms = for {
-        AnnotationAssertion(_, Negates, negater: IRI, negated: IRI) <- axioms
-        subClassOfNegatedClass <- subclassesIndex(Class(negated))
-        superClassOfOntClassIRI <- negatedByIndex(subClassOfNegatedClass.getIRI)
-      } yield Class(negater) SubClassOf Class(superClassOfOntClassIRI)
+    val negatesIndex = buildIndex(negatesPairs)
+    val negatedByIndex = buildReverseIndex(negatesPairs)
 
-      val equivalentClassAxioms = for {
-        equivAxiom @ EquivalentClasses(_, _) <- axioms
-        classes = equivAxiom.getNamedClasses.asScala
-        if classes.size > 1
-      } yield {
-        val negations = classes.flatMap(c => negatedByIndex(c.getIRI))
-        factory.getOWLEquivalentClassesAxiom(negations.map(Class(_)).asJava)
-      }
-      subclassAxioms ++ equivalentClassAxioms
+    val superToSubclassPairs = for {
+      subClassOfAxiom @ SubClassOf(_, subclass @ Class(_), superclass @ Class(_)) <- axioms
+    } yield (superclass, subclass)
+    val subclassesIndex = buildIndex(superToSubclassPairs)
+
+    val subclassAxioms = for {
+      AnnotationAssertion(_, Negates, negater: IRI, negated: IRI) <- axioms
+      subClassOfNegatedClass <- subclassesIndex(Class(negated))
+      superClassOfOntClassIRI <- negatedByIndex(subClassOfNegatedClass.getIRI)
+    } yield Class(negater) SubClassOf Class(superClassOfOntClassIRI)
+
+    val equivalentClassAxioms = for {
+      equivAxiom @ EquivalentClasses(_, _) <- axioms
+      classes = equivAxiom.getNamedClasses.asScala
+      if classes.size > 1
+    } yield {
+      val negations = classes.flatMap(c => negatedByIndex(c.getIRI))
+      factory.getOWLEquivalentClassesAxiom(negations.map(Class(_)).asJava)
     }
+    subclassAxioms ++ equivalentClassAxioms
+  }
 
     def buildIndex[A, B](pairs: Iterable[(A, B)]): Map[A, Set[B]] =
       pairs.foldLeft(emptyIndex[A, B]()) { case (index, (a, b)) => index.updated(a, (index(a) + b)) }
