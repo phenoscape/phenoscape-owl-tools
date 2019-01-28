@@ -1,14 +1,14 @@
 package org.phenoscape.owl
 
 import scala.collection.JavaConverters._
-
 import org.phenoscape.scowl._
-import org.semanticweb.owlapi.model.IRI
-import org.semanticweb.owlapi.model.OWLAxiom
+import org.semanticweb.owlapi.model._
 import org.semanticweb.owlapi.apibinding.OWLManager
-import org.semanticweb.owlapi.model.OWLClass
-import org.semanticweb.owlapi.model.OWLSubClassOfAxiom
 import org.phenoscape.owl.Vocab.has_part
+import java.io.File
+import scala.collection.JavaConverters._
+import org.semanticweb.owlapi.model.parameters.Imports
+
 
 object NegationHierarchyAsserter {
 
@@ -18,7 +18,9 @@ object NegationHierarchyAsserter {
 
   def main(args: Array[String]): Unit = {
 
-    val axioms = args(0).asInstanceOf[Set[OWLAxiom]]
+    val manager: OWLOntologyManager = OWLManager.createOWLOntologyManager()
+    val inputOntology: OWLOntology = manager.loadOntologyFromOntologyDocument(new File(args(0)))
+    val axioms: Set[OWLAxiom] = inputOntology.getAxioms(Imports.INCLUDED).asScala.toSet 
     assertNegationHierarchy(axioms)
   }
 
@@ -27,9 +29,9 @@ object NegationHierarchyAsserter {
     val classTuples = for {
       EquivalentClasses(_, expr) <- axioms
       //  extract named classes and expressions
-      expressions = expr.collect{case hasPartAxiom@ObjectSomeValuesFrom(`has_part`, _) => hasPartAxiom}
+      expressions = expr.collect { case hasPartAxiom@ObjectSomeValuesFrom(`has_part`, _) => hasPartAxiom }
       if expressions.nonEmpty
-      namedClasses =  expr.collect{case owlClass: OWLClass => owlClass}
+      namedClasses = expr.collect { case owlClass: OWLClass => owlClass }
       namedClass <- namedClasses
       expression <- expressions
     } yield (expression, namedClass)
@@ -39,9 +41,9 @@ object NegationHierarchyAsserter {
     //  create tuples (named class, named negation classes)
     val negatesPairs = for {
       EquivalentClasses(_, expr) <- axioms
-      expressions = expr.collect{case ObjectComplementOf(hasPartAxiom@ObjectSomeValuesFrom(`has_part`, _)) => hasPartAxiom}
+      expressions = expr.collect { case ObjectComplementOf(hasPartAxiom@ObjectSomeValuesFrom(`has_part`, _)) => hasPartAxiom }
       if expressions.nonEmpty
-      namedNegationClasses =  expr.collect{case owlClass: OWLClass => owlClass}
+      namedNegationClasses = expr.collect { case owlClass: OWLClass => owlClass }
       expression <- expressions
       namedClass <- classMap.getOrElse(expression, Set.empty)
       namedNegationClass <- namedNegationClasses
@@ -51,7 +53,7 @@ object NegationHierarchyAsserter {
     val negatedByIndex = buildReverseIndex(negatesPairs)
 
     val superToSubclassPairs = for {
-      subClassOfAxiom @ SubClassOf(_, subclass @ Class(_), superclass @ Class(_)) <- axioms
+      subClassOfAxiom@SubClassOf(_, subclass@Class(_), superclass@Class(_)) <- axioms
     } yield (superclass, subclass)
     val subclassesIndex = buildIndex(superToSubclassPairs)
 
@@ -62,7 +64,7 @@ object NegationHierarchyAsserter {
     } yield Class(negater) SubClassOf Class(superClassOfOntClassIRI)
 
     val equivalentClassAxioms = for {
-      equivAxiom @ EquivalentClasses(_, _) <- axioms
+      equivAxiom@EquivalentClasses(_, _) <- axioms
       classes = equivAxiom.getNamedClasses.asScala
       if classes.size > 1
     } yield {
@@ -72,14 +74,13 @@ object NegationHierarchyAsserter {
     subclassAxioms ++ equivalentClassAxioms
   }
 
-    def buildIndex[A, B](pairs: Iterable[(A, B)]): Map[A, Set[B]] =
-      pairs.foldLeft(emptyIndex[A, B]()) { case (index, (a, b)) => index.updated(a, (index(a) + b)) }
+  def buildIndex[A, B](pairs: Iterable[(A, B)]): Map[A, Set[B]] =
+    pairs.foldLeft(emptyIndex[A, B]()) { case (index, (a, b)) => index.updated(a, (index(a) + b)) }
 
-    def buildReverseIndex[A, B](pairs: Iterable[(A, B)]): Map[B, Set[A]] =
-      pairs.foldLeft(emptyIndex[B, A]()) { case (index, (a, b)) => index.updated(b, (index(b) + a)) }
+  def buildReverseIndex[A, B](pairs: Iterable[(A, B)]): Map[B, Set[A]] =
+    pairs.foldLeft(emptyIndex[B, A]()) { case (index, (a, b)) => index.updated(b, (index(b) + a)) }
 
-    def emptyIndex[A, B](): Map[A, Set[B]] = Map.empty.withDefaultValue(Set.empty)
-
+  def emptyIndex[A, B](): Map[A, Set[B]] = Map.empty.withDefaultValue(Set.empty)
 
 
 }
