@@ -7,17 +7,40 @@ import org.semanticweb.owlapi.model.IRI
 import org.semanticweb.owlapi.model.OWLAxiom
 import org.semanticweb.owlapi.model.OWLClass
 import org.semanticweb.owlapi.model.OWLSubClassOfAxiom
+import org.phenoscape.owl.Vocab.has_part
 
 object NegationHierarchyAsserter extends OWLTask {
 
   val Negates = factory.getOWLAnnotationProperty(Vocab.NEGATES)
 
   def assertNegationHierarchy(axioms: Set[OWLAxiom]): Set[OWLAxiom] = {
+    //  create tuples (class expressions, named classes)
+    val classTuples = for {
+      EquivalentClasses(_, expr) <- axioms
+      //  extract named classes and expressions
+      expressions = expr.collect{case hasPartAxiom@ObjectSomeValuesFrom(`has_part`, _) => hasPartAxiom}
+      if expressions.nonEmpty
+      namedClasses =  expr.collect{case owlClass: OWLClass => owlClass}
+      namedClass <- namedClasses
+      expression <- expressions
+    } yield (expression, namedClass)
+    // map (class expression -> named classes)
+    val classMap = buildIndex(classTuples)
+
+    //  create tuples (named class, named negation classes)
     val negatesPairs = for {
-      AnnotationAssertion(_, Negates, subject: IRI, value: IRI) <- axioms
-    } yield (subject, value)
+      EquivalentClasses(_, expr) <- axioms
+      expressions = expr.collect{case ObjectComplementOf(hasPartAxiom@ObjectSomeValuesFrom(`has_part`, _)) => hasPartAxiom}
+      if expressions.nonEmpty
+      namedNegationClasses =  expr.collect{case owlClass: OWLClass => owlClass}
+      expression <- expressions
+      namedClass <- classMap.getOrElse(expression, Set.empty)
+      namedNegationClass <- namedNegationClasses
+    } yield (namedNegationClass.getIRI, namedClass.getIRI)
+
     val negatesIndex = buildIndex(negatesPairs)
     val negatedByIndex = buildReverseIndex(negatesPairs)
+
     val superToSubclassPairs = for {
       subClassOfAxiom @ SubClassOf(_, subclass @ Class(_), superclass @ Class(_)) <- axioms
     } yield (superclass, subclass)
