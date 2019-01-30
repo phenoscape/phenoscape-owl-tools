@@ -24,7 +24,7 @@ object NegationHierarchyAsserter {
     val axioms: Set[OWLAxiom] = inputOntology.getAxioms(Imports.INCLUDED).asScala.toSet
     val negationAxioms: Set[OWLAxiom] = assertNegationHierarchy(axioms)
     val negationOntology: OWLOntology = manager.createOntology(negationAxioms.asJava)
-    manager.saveOntology(negationOntology, new FileOutputStream(("negationAxiomsFile")))
+    manager.saveOntology(negationOntology, new FileOutputStream(args(1)))     //  negation axioms file
   }
 
   def assertNegationHierarchy(axioms: Set[OWLAxiom]): Set[OWLAxiom] = {
