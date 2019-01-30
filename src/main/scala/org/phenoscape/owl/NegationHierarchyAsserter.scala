@@ -6,6 +6,7 @@ import org.semanticweb.owlapi.model._
 import org.semanticweb.owlapi.apibinding.OWLManager
 import org.phenoscape.owl.Vocab.has_part
 import java.io.File
+import java.io.FileOutputStream
 import scala.collection.JavaConverters._
 import org.semanticweb.owlapi.model.parameters.Imports
 
@@ -22,6 +23,8 @@ object NegationHierarchyAsserter {
     val inputOntology: OWLOntology = manager.loadOntologyFromOntologyDocument(new File(args(0)))
     val axioms: Set[OWLAxiom] = inputOntology.getAxioms(Imports.INCLUDED).asScala.toSet
     val negationAxioms: Set[OWLAxiom] = assertNegationHierarchy(axioms)
+    val negationOntology: OWLOntology = manager.createOntology(negationAxioms.asJava)
+    manager.saveOntology(negationOntology, new FileOutputStream(("negationAxiomsFile")))
   }
 
   def assertNegationHierarchy(axioms: Set[OWLAxiom]): Set[OWLAxiom] = {
