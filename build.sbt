@@ -24,6 +24,8 @@ resolvers += "Phenoscape Maven repository" at "https://svn.code.sf.net/p/phenosc
 
 javaOptions += "-Xmx100G"
 
+testFrameworks += new TestFramework("utest.runner.Framework")
+
 libraryDependencies ++= {
   Seq(
       "junit"                       %   "junit"                    % "4.10" % "test",
@@ -39,6 +41,7 @@ libraryDependencies ++= {
       "org.phenoscape"              %%  "phenoscape-kb-ingest"     % "1.6.1",
       "log4j"                       %   "log4j"                    % "1.2.17",
       "org.apache.directory.studio" %   "org.apache.commons.codec" % "1.8",
-      "com.github.pathikrit"        %%  "better-files"             % "3.4.0"
+      "com.github.pathikrit"        %%  "better-files"             % "3.4.0",
+      "com.lihaoyi"                %% "utest"                  % "0.6.3"     % Test
   )
 }
