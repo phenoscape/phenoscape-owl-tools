@@ -15,21 +15,71 @@ Declaration(Class(:A))
 Declaration(Class(:B))
 Declaration(Class(:C))
 Declaration(Class(:D))
+Declaration(Class(:HasPartB))
+Declaration(Class(:HasPartC))
 Declaration(Class(:NotA))
 Declaration(Class(:NotB))
 Declaration(Class(:NotC))
 Declaration(Class(:NotD))
+Declaration(Class(:NotHasPartB))
+Declaration(Class(:NotHasPartC))
+Declaration(ObjectProperty(:has_part))
 Declaration(AnnotationProperty(vocab3:negation_of_class))
+
+
+############################
+#   Classes
+############################
+
+# Class: :B (:B)
+
 EquivalentClasses(:B :D)
 SubClassOf(:B :A)
+
+# Class: :C (:C)
+
 SubClassOf(:C :B)
+
+# Class: :D (:D)
+
 SubClassOf(:D :A)
+
+# Class: :HasPartB (:HasPartB)
+
+EquivalentClasses(:HasPartB ObjectSomeValuesFrom(:has_part :B))
+
+# Class: :HasPartC (:HasPartC)
+
+EquivalentClasses(:HasPartC ObjectSomeValuesFrom(:has_part :C))
+SubClassOf(:HasPartC :HasPartB)
+
+# Class: :NotA (:NotA)
+
 AnnotationAssertion(vocab3:negation_of_class :NotA :A)
 EquivalentClasses(:NotA ObjectComplementOf(:A))
+
+# Class: :NotB (:NotB)
+
 AnnotationAssertion(vocab3:negation_of_class :NotB :B)
 EquivalentClasses(:NotB ObjectComplementOf(:B))
+
+# Class: :NotC (:NotC)
+
 AnnotationAssertion(vocab3:negation_of_class :NotC :C)
 EquivalentClasses(:NotC ObjectComplementOf(:C))
+
+# Class: :NotD (:NotD)
+
 AnnotationAssertion(vocab3:negation_of_class :NotD :D)
 EquivalentClasses(:NotD ObjectComplementOf(:D))
+
+# Class: :NotHasPartB (:NotHasPartB)
+
+EquivalentClasses(:NotHasPartB ObjectComplementOf(ObjectSomeValuesFrom(:has_part :B)))
+
+# Class: :NotHasPartC (:NotHasPartC)
+
+EquivalentClasses(:NotHasPartC ObjectComplementOf(ObjectSomeValuesFrom(:has_part :C)))
+
+
 )

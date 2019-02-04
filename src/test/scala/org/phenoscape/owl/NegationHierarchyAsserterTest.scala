@@ -41,6 +41,7 @@ object NegationHierarchyAsserterTest extends TestSuite {
 
       'test6 - {
         assert(!(ontology.containsAxiom(Class(s"$base#NotB") EquivalentTo Class(s"$base#NotD"))))
+        assert(!ontology.containsAxiom(Class(s"$base#NotHasPartB") SubClassOf Class(s"$base#NotHasPartC")))
       }
     }
 
@@ -58,6 +59,7 @@ object NegationHierarchyAsserterTest extends TestSuite {
 
       'test9 - {
         assert(ontology.containsAxiom(Class(s"$base#NotB") EquivalentTo Class(s"$base#NotD")))
+        assert(ontology.containsAxiom(Class(s"$base#NotHasPartB") SubClassOf Class(s"$base#NotHasPartC")))
       }
     }
   }
