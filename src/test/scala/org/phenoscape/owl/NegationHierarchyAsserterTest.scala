@@ -44,10 +44,9 @@ object NegationHierarchyAsserterTest extends TestSuite {
       }
     }
 
-    manager.addAxioms(ontology, NegationHierarchyAsserter.assertNegationHierarchy(ontology.getAxioms().toSet))
-
-
     'afterAxioms - {
+
+      manager.addAxioms(ontology, NegationHierarchyAsserter.assertNegationHierarchy(ontology.getAxioms().toSet))
 
       'test7 - {
         assert(ontology.containsAxiom(Class(s"$base#NotA") SubClassOf Class(s"$base#NotB")))
