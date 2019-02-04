@@ -24,6 +24,8 @@ resolvers += "Phenoscape Maven repository" at "https://svn.code.sf.net/p/phenosc
 
 javaOptions += "-Xmx100G"
 
+testFrameworks += new TestFramework("utest.runner.Framework")
+
 libraryDependencies ++= {
   Seq(
       "junit"                       %   "junit"                    % "4.10" % "test",
