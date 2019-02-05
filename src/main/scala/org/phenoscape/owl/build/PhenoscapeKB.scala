@@ -161,9 +161,10 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     val vocabForNeXML = combine(uberon, pato, bspo, phenoscapeVocab)
     val filesToConvert = (FileUtils.listFiles((NEXML / "completed-phenex-files").toJava, Array("xml"), true).asScala ++
       FileUtils.listFiles((NEXML / "fin_limb-incomplete-files").toJava, Array("xml"), true).asScala ++
-      FileUtils.listFiles((NEXML / "Jackson Dissertation Files").toJava, Array("xml"), true).asScala ++
-      FileUtils.listFiles((NEXML / "teleost-incomplete-files" / "Miniature Monographs").toJava, Array("xml"), true).asScala ++
-      FileUtils.listFiles((NEXML / "teleost-incomplete-files" / "Miniatures Matrix Files").toJava, Array("xml"), true).asScala ++
+      FileUtils.listFiles((NEXML / "Jackson_Dissertation_Files").toJava, Array("xml"), true).asScala ++
+      FileUtils.listFiles((NEXML / "teleost-incomplete-files" / "Miniature_Monographs").toJava, Array("xml"), true).asScala ++
+      FileUtils.listFiles((NEXML / "teleost-incomplete-files" / "Miniatures_Matrix_Files").toJava, Array("xml"), true).asScala ++
+      FileUtils.listFiles((NEXML / "teleost-incomplete-files" / "Dillman_Supermatrix_Files").toJava, Array("xml"), true).asScala ++
       FileUtils.listFiles((NEXML / "matrix-vs-monograph").toJava, Array("xml"), true).asScala).filterNot(_.getName == "catalog-v001.xml")
     val nexmlTBoxAxioms: mutable.Set[OWLAxiom] = mutable.Set()
     for (file <- filesToConvert) {

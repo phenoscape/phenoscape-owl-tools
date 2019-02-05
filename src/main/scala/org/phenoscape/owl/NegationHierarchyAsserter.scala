@@ -4,7 +4,6 @@ import scala.collection.JavaConverters._
 import org.phenoscape.scowl._
 import org.semanticweb.owlapi.model._
 import org.semanticweb.owlapi.apibinding.OWLManager
-import org.phenoscape.owl.Vocab.has_part
 import java.io.File
 import java.io.FileOutputStream
 import scala.collection.JavaConverters._
@@ -32,11 +31,9 @@ object NegationHierarchyAsserter {
     val classTuples = for {
       EquivalentClasses(_, expr) <- axioms
       //  extract named classes and expressions
-      expressions = expr.collect { case hasPartAxiom@ObjectSomeValuesFrom(`has_part`, _) => hasPartAxiom }
-      if expressions.nonEmpty
-      namedClasses = expr.collect { case owlClass: OWLClass => owlClass }
-      namedClass <- namedClasses
-      expression <- expressions
+      namedClasses: Set[OWLClass] = expr.collect { case owlClass: OWLClass => owlClass }
+      namedClass: OWLClass <- namedClasses
+      expression: OWLClassExpression <- expr
     } yield (expression, namedClass)
     // map (class expression -> named classes)
     val classMap = buildIndex(classTuples)
@@ -44,24 +41,24 @@ object NegationHierarchyAsserter {
     //  create tuples (named class, named negation classes)
     val negatesPairs = for {
       EquivalentClasses(_, expr) <- axioms
-      expressions = expr.collect { case ObjectComplementOf(hasPartAxiom@ObjectSomeValuesFrom(`has_part`, _)) => hasPartAxiom }
+      expressions = expr.collect { case ObjectComplementOf(negated) => negated }
       if expressions.nonEmpty
       namedNegationClasses = expr.collect { case owlClass: OWLClass => owlClass }
       expression <- expressions
-      namedClass <- classMap.getOrElse(expression, Set.empty)
+      expressionAsNamed = Set(expression).collect { case n: OWLClass => n }
+      namedClass <- classMap.getOrElse(expression, Set.empty) ++ expressionAsNamed
       namedNegationClass <- namedNegationClasses
     } yield (namedNegationClass.getIRI, namedClass.getIRI)
 
-    val negatesIndex = buildIndex(negatesPairs)
-    val negatedByIndex = buildReverseIndex(negatesPairs)
+    val negatedByIndex = buildIndex(negatesPairs.map(_.swap))
 
     val superToSubclassPairs = for {
-      subClassOfAxiom@SubClassOf(_, subclass@Class(_), superclass@Class(_)) <- axioms
+      SubClassOf(_, subclass @ Class(_), superclass @ Class(_)) <- axioms
     } yield (superclass, subclass)
     val subclassesIndex = buildIndex(superToSubclassPairs)
 
     val subclassAxioms = for {
-      AnnotationAssertion(_, Negates, negater: IRI, negated: IRI) <- axioms
+      (negater, negated) <- negatesPairs
       subClassOfNegatedClass <- subclassesIndex(Class(negated))
       superClassOfOntClassIRI <- negatedByIndex(subClassOfNegatedClass.getIRI)
     } yield Class(negater) SubClassOf Class(superClassOfOntClassIRI)
@@ -78,12 +75,9 @@ object NegationHierarchyAsserter {
   }
 
   def buildIndex[A, B](pairs: Iterable[(A, B)]): Map[A, Set[B]] =
-    pairs.foldLeft(emptyIndex[A, B]()) { case (index, (a, b)) => index.updated(a, (index(a) + b)) }
+    pairs.foldLeft(emptyIndex[A, B]) { case (index, (a, b)) => index.updated(a, index(a) + b) }
 
-  def buildReverseIndex[A, B](pairs: Iterable[(A, B)]): Map[B, Set[A]] =
-    pairs.foldLeft(emptyIndex[B, A]()) { case (index, (a, b)) => index.updated(b, (index(b) + a)) }
-
-  def emptyIndex[A, B](): Map[A, Set[B]] = Map.empty.withDefaultValue(Set.empty)
+  def emptyIndex[A, B]: Map[A, Set[B]] = Map.empty.withDefaultValue(Set.empty)
 
 
 }
