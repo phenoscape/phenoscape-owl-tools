@@ -3,8 +3,28 @@ package org.phenoscape.owl
 import scala.collection.JavaConverters._
 import org.phenoscape.scowl._
 import org.semanticweb.owlapi.model._
+import org.semanticweb.owlapi.apibinding.OWLManager
+import java.io.File
+import java.io.FileOutputStream
+import scala.collection.JavaConverters._
+import org.semanticweb.owlapi.model.parameters.Imports
 
-object NegationHierarchyAsserter extends OWLTask {
+
+object NegationHierarchyAsserter {
+
+  val factory = OWLManager.getOWLDataFactory
+  val Negates = factory.getOWLAnnotationProperty(Vocab.NEGATES)
+
+
+  def main(args: Array[String]): Unit = {
+
+    val manager: OWLOntologyManager = OWLManager.createOWLOntologyManager()
+    val inputOntology: OWLOntology = manager.loadOntologyFromOntologyDocument(new File(args(0)))
+    val axioms: Set[OWLAxiom] = inputOntology.getAxioms(Imports.INCLUDED).asScala.toSet
+    val negationAxioms: Set[OWLAxiom] = assertNegationHierarchy(axioms)
+    val negationOntology: OWLOntology = manager.createOntology(negationAxioms.asJava)
+    manager.saveOntology(negationOntology, new FileOutputStream(args(1)))     //  negation axioms file
+  }
 
   def assertNegationHierarchy(axioms: Set[OWLAxiom]): Set[OWLAxiom] = {
     //  create tuples (class expressions, named classes)
@@ -44,7 +64,7 @@ object NegationHierarchyAsserter extends OWLTask {
     } yield Class(negater) SubClassOf Class(superClassOfOntClassIRI)
 
     val equivalentClassAxioms = for {
-      equivAxiom @ EquivalentClasses(_, _) <- axioms
+      equivAxiom@EquivalentClasses(_, _) <- axioms
       classes = equivAxiom.getNamedClasses.asScala
       if classes.size > 1
     } yield {
@@ -58,5 +78,6 @@ object NegationHierarchyAsserter extends OWLTask {
     pairs.foldLeft(emptyIndex[A, B]) { case (index, (a, b)) => index.updated(a, index(a) + b) }
 
   def emptyIndex[A, B]: Map[A, Set[B]] = Map.empty.withDefaultValue(Set.empty)
+
 
 }

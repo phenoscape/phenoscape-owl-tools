@@ -7,14 +7,12 @@ PREFIX owlet: <http://purl.org/phenoscape/owlet/syntax#>
 PREFIX dc: <http://purl.org/dc/elements/1.1/>
 PREFIX StandardState: <http://purl.obolibrary.org/obo/CDAO_0000045>
 
-SELECT ?match ?score ?query ?query_label ?corpusprofile ?corpusprofile_label
-FROM <http://kb.phenoscape.org/>
-FROM <http://kb.phenoscape.org/sim/genes>
+SELECT ?match ?score ?query ?corpusprofile
 WHERE
 {
 ?match ps:combined_score ?score .
-?match ps:for_query_profile/^ps:has_phenotypic_profile ?query .
-?match ps:for_corpus_profile/^ps:has_phenotypic_profile ?corpusprofile .
-?query rdfs:label ?query_label .
-?corpusprofile rdfs:label ?corpusprofile_label .
+?match ps:for_query_profile ?query .
+?match ps:for_corpus_profile  ?corpusprofile .
+
+
 }
