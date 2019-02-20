@@ -41,7 +41,7 @@ object Vocab {
   val belongs_to_character = ObjectProperty("http://purl.obolibrary.org/obo/CDAO_0000205")
   val belongs_to_TU = ObjectProperty("http://purl.obolibrary.org/obo/CDAO_0000191")
   val has_state = ObjectProperty("http://purl.obolibrary.org/obo/CDAO_0000184")
-  val towards = ObjectProperty("http://purl.obolibrary.org/obo/pato#towards")
+  val towards = ObjectProperty("http://purl.obolibrary.org/obo/RO_0002503")
   val individual_id = ObjectProperty("http://rs.tdwg.org/dwc/terms/individualID")
   val Specimen = Class("http://purl.org/dsw/Specimen")
   val collectionID = ObjectProperty("http://rs.tdwg.org/dwc/terms/collectionID")
