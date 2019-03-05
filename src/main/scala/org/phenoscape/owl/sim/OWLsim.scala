@@ -192,7 +192,8 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
         val freq = instancesInCorpus.size
         val ic = if (freq == 0) {
           if(parents.isEmpty) 1
-          parents.map(ics).max
+          else
+            parents.map(ics).max
         } else {
           normalizedIC(freq)
         }
