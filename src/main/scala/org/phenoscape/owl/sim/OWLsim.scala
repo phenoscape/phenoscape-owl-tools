@@ -19,7 +19,7 @@ import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model.OWLClass
 import org.semanticweb.owlapi.model.OWLNamedIndividual
 import org.semanticweb.owlapi.model.OWLOntology
-import org.semanticweb.owlapi.reasoner.{ Node => ReasonerNode }
+import org.semanticweb.owlapi.reasoner.{Node => ReasonerNode}
 import org.semanticweb.owlapi.reasoner.OWLReasoner
 
 class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
@@ -72,8 +72,11 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
   } yield new StatementImpl(new URIImpl(term.getIRI.toString), rdfsSubClassOf, new URIImpl(ancestor.getIRI.toString))
 
   val corpusSize: Int = individualsInCorpus.size
+
   private def uncorrectedIC(numInstances: Int): Double = -Math.log((numInstances.toDouble / corpusSize)) / Math.log(2)
+
   val MaximumIC: Double = uncorrectedIC(1)
+
   def normalizedIC(numInstances: Int): Double = uncorrectedIC(numInstances) / MaximumIC
 
   val directAndIndirectAssociationsByNode: Map[Node, Set[OWLNamedIndividual]] = accumulateAssociations(classToNode(OWLThing))
@@ -124,6 +127,7 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
   def nonRedundantHierarchy(reasoner: OWLReasoner): (SuperClassOfIndex, SubClassOfIndex) = {
     val parentToChildren = mutable.Map[Node, Set[Node]]()
     val childToParents = mutable.Map[Node, Set[Node]]()
+
     def traverse(reasonerNode: ReasonerNode[OWLClass]): Unit = {
       val parent = Node(reasonerNode)
       if (!parentToChildren.contains(parent)) {
@@ -138,6 +142,7 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
         parentToChildren += (parent -> children.map(Node(_)))
       }
     }
+
     val top = reasoner.getTopClassNode
     traverse(top)
     childToParents += (Node(top) -> Set.empty)
@@ -156,6 +161,7 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
 
   private def accumulateAssociations(node: Node): Map[Node, Set[OWLNamedIndividual]] = {
     val index = mutable.Map[Node, Set[OWLNamedIndividual]]()
+
     def traverse(node: Node): Unit = {
       if (!index.contains(node)) {
         val children = superClassOfIndex(node)
@@ -164,12 +170,14 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
         index += (node -> nodeAssociations)
       }
     }
+
     traverse(node)
     index.toMap
   }
 
   private def indexAncestorsReflexive(bottom: Node): Map[Node, Set[Node]] = {
     val index = mutable.Map[Node, Set[Node]]()
+
     def traverse(node: Node): Unit = {
       if (!index.contains(node)) {
         val parents = subClassOfIndex(node)
@@ -178,12 +186,14 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
         index += (node -> (ancestors + node))
       }
     }
+
     traverse(bottom)
     index.toMap
   }
 
   private def convertFrequenciesToInformationContent(bottom: Node): Map[Node, Double] = {
     val ics = mutable.Map[Node, Double]()
+
     def traverse(node: Node): Unit = {
       if (!ics.contains(node)) {
         val parents = subClassOfIndex(node)
@@ -191,15 +201,15 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
         val instancesInCorpus = directAndIndirectAssociationsByNode(node).intersect(individualsInCorpus)
         val freq = instancesInCorpus.size
         val ic = if (freq == 0) {
-          if(parents.isEmpty) 1
-          else
-            parents.map(ics).max
+          if (parents.isEmpty) 1
+          else parents.map(ics).max
         } else {
           normalizedIC(freq)
         }
         ics += (node -> ic)
       }
     }
+
     traverse(bottom)
     ics.toMap
   }
