@@ -2,6 +2,8 @@ package org.phenoscape.owl
 
 import scala.collection.GenMap
 import scala.collection.JavaConversions._
+import scala.collection.convert._
+import scala.collection.JavaConverters._
 import scala.language.implicitConversions
 import org.openrdf.model.Statement
 import org.openrdf.model.impl.StatementImpl
@@ -20,7 +22,9 @@ import org.semanticweb.owlapi.model.OWLClass
 import org.semanticweb.owlapi.reasoner.OWLReasoner
 import org.semanticweb.owlapi.model.OWLClassExpression
 import org.phenoscape.scowl._
-import org.apache.jena.query.Query
+import org.apache.jena.query.{Query, QueryExecutionFactory}
+import org.apache.jena.rdf.model.ModelFactory
+import org.apache.jena.rdf.model.Model
 import org.semanticweb.owlapi.model.OWLOntology
 import org.semanticweb.owlapi.search.EntitySearcher
 
@@ -31,8 +35,11 @@ object EvolutionaryProfiles {
 
   type StateAssociations = GenMap[TaxonNode, GenMap[Character, Set[State]]]
 
-  def computePhenotypeProfiles(rootTaxon: TaxonNode, taxonomy: OWLOntology, db: SailRepositoryConnection): Set[Statement] = {
-    val observedAssociations = queryAssociations(db)
+  def computePhenotypeProfiles(rootTaxon: TaxonNode, taxonomy: OWLOntology, inFile: String): Set[Statement] = {
+
+    val model = ModelFactory.createDefaultModel()
+
+    val observedAssociations = queryAssociations(model, inFile)
     val associationsIndex = index(observedAssociations)
     val (associations, profiles) = postorder(rootTaxon, taxonomy, index(observedAssociations), Map.empty)
     profilesToRDF(profiles, db)
@@ -124,18 +131,19 @@ object EvolutionaryProfiles {
     }
   }
 
-  def queryAssociations(connection: SailRepositoryConnection): Set[StateAssociation] = {
-    val query = connection.prepareTupleQuery(QueryLanguage.SPARQL, associationsQuery.toString)
-    query.evaluate().map(StateAssociation(_)).toSet
+  def queryAssociations(model: Model, inFile: String): Set[StateAssociation] = {
+    model.read(inFile)
+    val qexec = QueryExecutionFactory.create(associationsQuery, model)
+    val results = qexec.execSelect()
+
+    val stateAssociationsSet = for {
+      r <- results.next()
+    } yield r
+
   }
 
-  val associationsQuery: Query =
-    select_distinct('taxon, 'matrix_char, 'matrix_char_label, 'state, 'state_label) from "http://kb.phenoscape.org/" where (
-      bgp(
-        t('taxon, exhibits_state, 'state),
-        t('state, rdfsLabel, 'state_label),
-        t('matrix_char, may_have_state_value, 'state),
-        t('matrix_char, rdfsLabel, 'matrix_char_label)))
+  val associationsQuery: String =
+    "select distinct('taxon, 'matrix_char, 'matrix_char_label, 'state, 'state_label) where { ?taxon exhibits_state ?state . ?state rdfsLabel ?state_label . ?matrix_char may_have_state_value ?state . ?matrix_char rdfsLabel ?matrix_char_label }"
 
   def queryStatePhenotypes(connection: SailRepositoryConnection): Map[State, Set[Phenotype]] = {
     val query = connection.prepareTupleQuery(QueryLanguage.SPARQL, phenotypesQuery.toString)
