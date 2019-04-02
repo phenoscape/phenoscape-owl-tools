@@ -52,7 +52,7 @@ object EvolutionaryProfiles {
     } {
       val taxonLabel = ExpressionsUtil.labelFor(taxon, taxonomy).getOrElse("unlabeled")
       println(s"$taxonLabel")
-      for { (character, states) <- profile } {
+      for {(character, states) <- profile} {
         println(s"\t${character.label}: ${states.map(_.label).mkString("\t")}")
       }
       println
@@ -136,35 +136,40 @@ object EvolutionaryProfiles {
     val qexec = QueryExecutionFactory.create(associationsQuery, model)
     val results = qexec.execSelect()
 
-    val stateAssociationsSet = for {
+    val associationsQueryResultSet = for {
       r <- results.next()
     } yield r
 
   }
 
   val associationsQuery: String =
-    "select distinct('taxon, 'matrix_char, 'matrix_char_label, 'state, 'state_label) where { ?taxon exhibits_state ?state . ?state rdfsLabel ?state_label . ?matrix_char may_have_state_value ?state . ?matrix_char rdfsLabel ?matrix_char_label }"
+    "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> \n select distinct(?taxon, ?matrix_char, ?matrix_char_label, ?state, ?state_label) where { ?taxon http://purl.org/phenoscape/vocab.owl#exhibits_state ?state . ?state rdfs:label ?state_label . ?matrix_char may_have_state_value ?state . ?matrix_char rdfsLabel ?matrix_char_label }"
 
-  def queryStatePhenotypes(connection: SailRepositoryConnection): Map[State, Set[Phenotype]] = {
-    val query = connection.prepareTupleQuery(QueryLanguage.SPARQL, phenotypesQuery.toString)
-    query.evaluate().map { bindings =>
-      (State(IRI.create(bindings.getValue("state").stringValue), bindings.getValue("state_label").stringValue),
-        Phenotype(IRI.create(bindings.getValue("phenotype").stringValue)))
-    }.toIterable.groupBy {
-      case (state, phenotype) => state
-    }.map {
-      case (state, statesWithPhenotypes) => state -> statesWithPhenotypes.map {
-        case (state, phenotype) => phenotype
-      }.toSet
-    }
+
+  def queryStatePhenotypes(model: Model, inFile: String): Map[State, Set[Phenotype]] = {
+    model.read(inFile)
+    val qexec = QueryExecutionFactory.create(phenotypesQuery, model)
+    val results = qexec.execSelect()
+
+    for {
+      r <- results.next()
+    } yield (r, (State(IRI.create(r.getValue("state").stringValue), r.getValue("state_label").stringValue), Phenotype(IRI.create(bindings.getValue("phenotype").stringValue)))
   }
 
-  val phenotypesQuery: Query =
-    select_distinct('state, 'state_label, 'phenotype) from "http://kb.phenoscape.org/" where (
-      bgp(
-        t('state, rdfsLabel, 'state_label),
-        t('state, describes_phenotype, 'phenotype)))
+//  val query = connection.prepareTupleQuery(QueryLanguage.SPARQL, phenotypesQuery.toString)
+//  query.evaluate().map { bindings =>
+//    (State(IRI.create(bindings.getValue("state").stringValue), bindings.getValue("state_label").stringValue),
+//      Phenotype(IRI.create(bindings.getValue("phenotype").stringValue)))
+//  }.toIterable.groupBy {
+//    case (state, phenotype) => state
+//  }.map {
+//    case (state, statesWithPhenotypes) => state -> statesWithPhenotypes.map {
+//      case (state, phenotype) => phenotype
+//    }.toSet
+//  }
 
+
+  val phenotypesQuery: String = "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>  \n select distinct(?state, ?state_label, ?phenotype) where { ?state rdfs:label ?state_label . ?state http://purl.org/phenoscape/vocab.owl#describes_phenotype ?phenotype } "
 }
 
 case class TaxonNode(iri: IRI)
