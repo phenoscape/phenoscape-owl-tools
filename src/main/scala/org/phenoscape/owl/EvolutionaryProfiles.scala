@@ -22,7 +22,7 @@ import org.semanticweb.owlapi.model.OWLClass
 import org.semanticweb.owlapi.reasoner.OWLReasoner
 import org.semanticweb.owlapi.model.OWLClassExpression
 import org.phenoscape.scowl._
-import org.apache.jena.query.{Query, QueryExecutionFactory}
+import org.apache.jena.query.{Query, QueryExecutionFactory, QuerySolution, ResultSet}
 import org.apache.jena.rdf.model.ModelFactory
 import org.apache.jena.rdf.model.Model
 import org.semanticweb.owlapi.model.OWLOntology
@@ -38,11 +38,12 @@ object EvolutionaryProfiles {
   def computePhenotypeProfiles(rootTaxon: TaxonNode, taxonomy: OWLOntology, inFile: String): Set[Statement] = {
 
     val model = ModelFactory.createDefaultModel()
+    model.read(inFile)
 
-    val observedAssociations = queryAssociations(model, inFile)
+    val observedAssociations = queryAssociations(model)
     val associationsIndex = index(observedAssociations)
     val (associations, profiles) = postorder(rootTaxon, taxonomy, index(observedAssociations), Map.empty)
-    profilesToRDF(profiles, db)
+    profilesToRDF(profiles, model)
   }
 
   def report(profiles: Map[TaxonNode, Map[Character, Set[State]]], taxonomy: OWLOntology): Unit = {
@@ -68,8 +69,8 @@ object EvolutionaryProfiles {
         }
     }
 
-  def profilesToRDF(profiles: StateAssociations, db: SailRepositoryConnection): Set[Statement] = {
-    val statePhenotypes: Map[State, Set[Phenotype]] = queryStatePhenotypes(db)
+  def profilesToRDF(profiles: StateAssociations, model: Model): Set[Statement] = {
+    val statePhenotypes: Map[State, Set[Phenotype]] = queryStatePhenotypes(model)
     (for {
       (taxon, profile) <- toSequential(profiles)
       (character, states) <- profile
@@ -94,7 +95,7 @@ object EvolutionaryProfiles {
       if term.isInstanceOf[OWLClass]
       classTerm = term.asInstanceOf[OWLClass]
     } yield TaxonNode(classTerm.getIRI)).toSet
-    val nodeStates = startingAssociations.getOrElse(node, Map.empty)
+    val nodeStates = startingAssociations.getOrElse(node, Map.empty[Character, Set[State]])
     if (children.isEmpty) {
       (Map(node -> nodeStates), Map.empty)
     } else {
@@ -131,42 +132,37 @@ object EvolutionaryProfiles {
     }
   }
 
-  def queryAssociations(model: Model, inFile: String): Set[StateAssociation] = {
-    model.read(inFile)
+  def queryAssociations(model: Model): Set[StateAssociation] = {
     val qexec = QueryExecutionFactory.create(associationsQuery, model)
     val results = qexec.execSelect()
 
+    results.asScala.map(StateAssociation(_)).toSet
     val associationsQueryResultSet = for {
-      r <- results.next()
+      r <- results
     } yield r
 
+    associationsQueryResultSet.map(StateAssociation(_)).toSet
   }
 
   val associationsQuery: String =
     "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> \n select distinct(?taxon, ?matrix_char, ?matrix_char_label, ?state, ?state_label) where { ?taxon http://purl.org/phenoscape/vocab.owl#exhibits_state ?state . ?state rdfs:label ?state_label . ?matrix_char may_have_state_value ?state . ?matrix_char rdfsLabel ?matrix_char_label }"
 
 
-  def queryStatePhenotypes(model: Model, inFile: String): Map[State, Set[Phenotype]] = {
-    model.read(inFile)
+  def queryStatePhenotypes(model: Model): Map[State, Set[Phenotype]] = {
     val qexec = QueryExecutionFactory.create(phenotypesQuery, model)
     val results = qexec.execSelect()
+results.asScala.map { bindings =>
+      (State(IRI.create(bindings.getResource("state").getURI), bindings.getResource("state_label").getURI),
+        Phenotype(IRI.create(bindings.getResource("phenotype").getURI)))
+    }.toIterable.groupBy {
+      case (state, phenotype) => state
+    }.map {
+      case (state, statesWithPhenotypes) => state -> statesWithPhenotypes.map {
+        case (state, phenotype) => phenotype
+      }.toSet
+    }
 
-    for {
-      r <- results.next()
-    } yield (r, (State(IRI.create(r.getValue("state").stringValue), r.getValue("state_label").stringValue), Phenotype(IRI.create(bindings.getValue("phenotype").stringValue)))
   }
-
-//  val query = connection.prepareTupleQuery(QueryLanguage.SPARQL, phenotypesQuery.toString)
-//  query.evaluate().map { bindings =>
-//    (State(IRI.create(bindings.getValue("state").stringValue), bindings.getValue("state_label").stringValue),
-//      Phenotype(IRI.create(bindings.getValue("phenotype").stringValue)))
-//  }.toIterable.groupBy {
-//    case (state, phenotype) => state
-//  }.map {
-//    case (state, statesWithPhenotypes) => state -> statesWithPhenotypes.map {
-//      case (state, phenotype) => phenotype
-//    }.toSet
-//  }
 
 
   val phenotypesQuery: String = "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>  \n select distinct(?state, ?state_label, ?phenotype) where { ?state rdfs:label ?state_label . ?state http://purl.org/phenoscape/vocab.owl#describes_phenotype ?phenotype } "
@@ -184,10 +180,10 @@ case class StateAssociation(taxon: TaxonNode, character: Character, state: State
 
 object StateAssociation {
 
-  def apply(result: BindingSet): StateAssociation = StateAssociation(
-    TaxonNode(IRI.create(result.getValue("taxon").stringValue)),
-    Character(IRI.create(result.getValue("matrix_char").stringValue), result.getValue("matrix_char_label").stringValue),
-    State(IRI.create(result.getValue("state").stringValue), result.getValue("state_label").stringValue))
+  def apply(result: QuerySolution): StateAssociation = StateAssociation(
+    TaxonNode(IRI.create(result.getResource("taxon").getURI)),
+    Character(IRI.create(result.getResource("matrix_char").getURI), result.getResource("matrix_char_label").getURI),
+    State(IRI.create(result.getResource("state").getURI), result.getResource("state_label").getURI))
 
 }
 
