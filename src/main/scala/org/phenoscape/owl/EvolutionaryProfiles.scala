@@ -25,6 +25,7 @@ import org.phenoscape.scowl._
 import org.apache.jena.query.{Query, QueryExecutionFactory, QuerySolution, ResultSet}
 import org.apache.jena.rdf.model.ModelFactory
 import org.apache.jena.rdf.model.Model
+import org.phenoscape.owl.build.PhenoscapeKB.loadFromWeb
 import org.semanticweb.owlapi.model.OWLOntology
 import org.semanticweb.owlapi.search.EntitySearcher
 
@@ -34,6 +35,20 @@ object EvolutionaryProfiles {
   val PhenoscapeKB = new URIImpl("http://kb.phenoscape.org/")
 
   type StateAssociations = GenMap[TaxonNode, GenMap[Character, Set[State]]]
+
+  def main(args: Array[String]): Unit = {
+
+    val inFile = args(0)
+    val outFile = args(1)
+
+    val rootTaxon = (TaxonNode(CHORDATA))
+    val vto = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/vto.owl"), true)
+    val vtoOnt = OWLManager.createOWLOntologyManager().createOntology(vto.axioms.asJava)
+
+    val results = computePhenotypeProfiles(rootTaxon, vtoOnt, inFile)
+//    val model = ModelFactory.createDefaultModel()
+//    model.add(List(results))
+  }
 
   def computePhenotypeProfiles(rootTaxon: TaxonNode, taxonomy: OWLOntology, inFile: String): Set[Statement] = {
 
