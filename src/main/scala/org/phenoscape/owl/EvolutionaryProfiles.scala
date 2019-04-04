@@ -5,7 +5,6 @@ import scala.collection.JavaConversions._
 import scala.collection.convert._
 import scala.collection.JavaConverters._
 import scala.language.implicitConversions
-import org.openrdf.model.vocabulary.RDF
 import org.phenoscape.owl.Vocab._
 import org.phenoscape.owl.util.ExpressionsUtil
 import org.phenoscape.owl.util.SesameIterationIterator.iterationToIterator
@@ -91,7 +90,7 @@ object EvolutionaryProfiles {
       state <- states
       phenotype <- statePhenotypes.getOrElse(state, Set.empty)
       profileURI = new ResourceImpl(taxonProfileURI(taxon))
-      statement <- Set(new StatementImpl(profileURI, new PropertyImpl(RDF.TYPE.toString), new ResourceImpl(phenotype.iri.toString)),
+      statement <- Set(new StatementImpl(profileURI, new PropertyImpl(rdfType.toString), new ResourceImpl(phenotype.iri.toString)),
         new StatementImpl(new ResourceImpl(taxon.iri.toString), new PropertyImpl(has_phenotypic_profile.toString), profileURI))
     } yield statement).toSet
   }
