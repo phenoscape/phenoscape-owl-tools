@@ -5,13 +5,7 @@ import scala.collection.JavaConversions._
 import scala.collection.convert._
 import scala.collection.JavaConverters._
 import scala.language.implicitConversions
-import org.openrdf.model.Statement
-import org.openrdf.model.impl.StatementImpl
-import org.openrdf.model.impl.URIImpl
 import org.openrdf.model.vocabulary.RDF
-import org.openrdf.query.BindingSet
-import org.openrdf.query.QueryLanguage
-import org.openrdf.repository.sail.SailRepositoryConnection
 import org.phenoscape.owl.Vocab._
 import org.phenoscape.owl.util.ExpressionsUtil
 import org.phenoscape.owl.util.SesameIterationIterator.iterationToIterator
@@ -25,29 +19,34 @@ import org.phenoscape.scowl._
 import org.apache.jena.query.{Query, QueryExecutionFactory, QuerySolution, ResultSet}
 import org.apache.jena.rdf.model.ModelFactory
 import org.apache.jena.rdf.model.Model
+import org.apache.jena.rdf.model.Statement
+import org.apache.jena.rdf.model.impl._
 import org.phenoscape.owl.build.PhenoscapeKB.loadFromWeb
 import org.semanticweb.owlapi.model.OWLOntology
 import org.semanticweb.owlapi.search.EntitySearcher
+import java.io.{File, FileOutputStream}
+
 
 object EvolutionaryProfiles {
 
   val factory = OWLManager.getOWLDataFactory
-  val PhenoscapeKB = new URIImpl("http://kb.phenoscape.org/")
+  val PhenoscapeKB = new ResourceImpl("http://kb.phenoscape.org/")
 
   type StateAssociations = GenMap[TaxonNode, GenMap[Character, Set[State]]]
 
   def main(args: Array[String]): Unit = {
 
     val inFile = args(0)
-    val outFile = args(1)
+    val outFile = new File(args(1))
 
     val rootTaxon = (TaxonNode(CHORDATA))
     val vto = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/vto.owl"), true)
     val vtoOnt = OWLManager.createOWLOntologyManager().createOntology(vto.axioms.asJava)
 
     val results = computePhenotypeProfiles(rootTaxon, vtoOnt, inFile)
-//    val model = ModelFactory.createDefaultModel()
-//    model.add(List(results))
+    val model = ModelFactory.createDefaultModel()
+    model.add(results.toList.asJava)
+    model.write(new FileOutputStream(outFile), "TTL")
   }
 
   def computePhenotypeProfiles(rootTaxon: TaxonNode, taxonomy: OWLOntology, inFile: String): Set[Statement] = {
@@ -91,9 +90,9 @@ object EvolutionaryProfiles {
       (character, states) <- profile
       state <- states
       phenotype <- statePhenotypes.getOrElse(state, Set.empty)
-      profileURI = new URIImpl(taxonProfileURI(taxon))
-      statement <- Set(new StatementImpl(profileURI, RDF.TYPE, new URIImpl(phenotype.iri.toString)),
-        new StatementImpl(new URIImpl(taxon.iri.toString), new URIImpl(has_phenotypic_profile.toString), profileURI))
+      profileURI = new ResourceImpl(taxonProfileURI(taxon))
+      statement <- Set(new StatementImpl(profileURI, new PropertyImpl(RDF.TYPE.toString), new ResourceImpl(phenotype.iri.toString)),
+        new StatementImpl(new ResourceImpl(taxon.iri.toString), new PropertyImpl(has_phenotypic_profile.toString), profileURI))
     } yield statement).toSet
   }
 
