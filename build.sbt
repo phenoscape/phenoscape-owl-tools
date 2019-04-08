@@ -4,7 +4,7 @@ organization  := "org.phenoscape"
 
 name          := "kb-owl-tools"
 
-version       := "1.7"
+version       := "1.8"
 
 mainClass in Compile := Some("org.phenoscape.owl.build.Command")
 
@@ -44,5 +44,6 @@ libraryDependencies ++= {
       "com.github.pathikrit"        %%  "better-files"             % "3.4.0",
       "com.lihaoyi"                %% "utest"                  % "0.6.3"     % Test,
       "org.phenoscape" %% "sparql-interpolator" % "1.0"
+
   )
 }

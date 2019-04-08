@@ -24,6 +24,9 @@ import org.semanticweb.owlapi.model.OWLIndividual
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.lang3.StringUtils
 
+/**
+  * This corresponds to the REA homology model in the Phenoscape homology paper.
+  */
 object HomologyTableWithTaxa extends App {
 
   val factory = OWLManager.getOWLDataFactory
