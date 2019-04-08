@@ -149,7 +149,8 @@ object EvolutionaryProfiles {
     results.asScala.map(StateAssociation(_)).toSet
   }
 
-  val associationsQuery: QueryText = sparql"""
+  val associationsQuery: QueryText =
+    sparql"""
     PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> \n select distinct(?taxon, ?matrix_char, ?matrix_char_label, ?state, ?state_label) where { ?taxon http://purl.org/phenoscape/vocab.owl#exhibits_state ?state . ?state rdfs:label ?state_label . ?matrix_char may_have_state_value ?state . ?matrix_char rdfsLabel ?matrix_char_label }
     """
 
@@ -171,7 +172,8 @@ object EvolutionaryProfiles {
   }
 
 
-  val phenotypesQuery: QueryText = sparql""""
+  val phenotypesQuery: QueryText =
+    sparql""""
     "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>  \n select distinct(?state, ?state_label, ?phenotype) where { ?state rdfs:label ?state_label . ?state http://purl.org/phenoscape/vocab.owl#describes_phenotype ?phenotype }
     """
 }
