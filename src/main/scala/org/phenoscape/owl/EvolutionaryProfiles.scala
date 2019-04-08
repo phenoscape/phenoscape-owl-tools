@@ -10,26 +10,23 @@ import org.phenoscape.owl.util.ExpressionsUtil
 import org.phenoscape.owl.util.SesameIterationIterator.iterationToIterator
 import org.phenoscape.owlet.SPARQLComposer._
 import org.semanticweb.owlapi.apibinding.OWLManager
-import org.semanticweb.owlapi.model.IRI
-import org.semanticweb.owlapi.model.OWLClass
+import org.semanticweb.owlapi.model._
 import org.semanticweb.owlapi.reasoner.OWLReasoner
-import org.semanticweb.owlapi.model.OWLClassExpression
 import org.phenoscape.scowl._
 import org.apache.jena.query.{Query, QueryExecutionFactory, QuerySolution, ResultSet}
-import org.apache.jena.rdf.model.ModelFactory
-import org.apache.jena.rdf.model.Model
-import org.apache.jena.rdf.model.Statement
+import org.apache.jena.rdf.model._
 import org.apache.jena.rdf.model.impl._
 import org.phenoscape.owl.build.PhenoscapeKB.loadFromWeb
-import org.semanticweb.owlapi.model.OWLOntology
 import org.semanticweb.owlapi.search.EntitySearcher
 import java.io.{File, FileOutputStream}
+//import org.phenoscape.kb.util.SPARQLInterpolatorOWLAPI._
+import org.phenoscape.sparql.SPARQLInterpolation._
 
 
 object EvolutionaryProfiles {
 
   val factory = OWLManager.getOWLDataFactory
-  val PhenoscapeKB = new ResourceImpl("http://kb.phenoscape.org/")
+  val OWLNothing = factory.getOWLNothing.getIRI.toString
 
   type StateAssociations = GenMap[TaxonNode, GenMap[Character, Set[State]]]
 
@@ -39,23 +36,23 @@ object EvolutionaryProfiles {
     val outFile = new File(args(1))
 
     val rootTaxon = (TaxonNode(CHORDATA))
-    val vto = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/vto.owl"), true)
-    val vtoOnt = OWLManager.createOWLOntologyManager().createOntology(vto.axioms.asJava)
+    //    val vto = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/vto.owl"), true)
+    //    val vtoOnt = OWLManager.createOWLOntologyManager().createOntology(vto.axioms.asJava)
 
-    val results = computePhenotypeProfiles(rootTaxon, vtoOnt, inFile)
+    val results = computePhenotypeProfiles(rootTaxon, inFile)
     val model = ModelFactory.createDefaultModel()
     model.add(results.toList.asJava)
     model.write(new FileOutputStream(outFile), "TTL")
   }
 
-  def computePhenotypeProfiles(rootTaxon: TaxonNode, taxonomy: OWLOntology, inFile: String): Set[Statement] = {
+  def computePhenotypeProfiles(rootTaxon: TaxonNode, inFile: String): Set[Statement] = {
 
     val model = ModelFactory.createDefaultModel()
     model.read(inFile)
 
     val observedAssociations = queryAssociations(model)
     val associationsIndex = index(observedAssociations)
-    val (associations, profiles) = postorder(rootTaxon, taxonomy, index(observedAssociations), Map.empty)
+    val (associations, profiles) = postorder(rootTaxon, model, index(observedAssociations), Map.empty)
     profilesToRDF(profiles, model)
   }
 
@@ -89,9 +86,9 @@ object EvolutionaryProfiles {
       (character, states) <- profile
       state <- states
       phenotype <- statePhenotypes.getOrElse(state, Set.empty)
-      profileURI = new ResourceImpl(taxonProfileURI(taxon))
-      statement <- Set(new StatementImpl(profileURI, new PropertyImpl(rdfType.toString), new ResourceImpl(phenotype.iri.toString)),
-        new StatementImpl(new ResourceImpl(taxon.iri.toString), new PropertyImpl(has_phenotypic_profile.toString), profileURI))
+      profileURI = ResourceFactory.createResource(taxonProfileURI(taxon))
+      statement <- Set(ResourceFactory.createStatement(profileURI, ResourceFactory.createProperty(rdfType.toString), ResourceFactory.createResource(phenotype.iri.toString)),
+        ResourceFactory.createStatement(ResourceFactory.createResource(taxon.iri.toString), ResourceFactory.createProperty(has_phenotypic_profile.toString), profileURI))
     } yield statement).toSet
   }
 
@@ -101,18 +98,18 @@ object EvolutionaryProfiles {
 
   def toSequential(associations: StateAssociations): Map[TaxonNode, Map[Character, Set[State]]] = associations.map({ case (taxon, states) => taxon -> states.seq.toMap }).seq.toMap
 
-  def postorder(node: TaxonNode, taxonomy: OWLOntology, startingAssociations: StateAssociations, startingProfiles: StateAssociations): (StateAssociations, StateAssociations) = {
+  def postorder(node: TaxonNode, model: Model, startingAssociations: StateAssociations, startingProfiles: StateAssociations): (StateAssociations, StateAssociations) = {
     val children = (for {
-      term <- EntitySearcher.getSubClasses(node, taxonomy)
-      if !term.isOWLNothing
-      if term.isInstanceOf[OWLClass]
-      classTerm = term.asInstanceOf[OWLClass]
-    } yield TaxonNode(classTerm.getIRI)).toSet
+      s <- model.listStatements(null, ResourceFactory.createProperty(rdfsSubClassOf.toString), node.asInstanceOf[RDFNode])
+      term = s.getSubject
+      if term.getURI == OWLNothing
+      if !term.isAnon
+    } yield TaxonNode(IRI.create(term.getURI))).toSet
     val nodeStates = startingAssociations.getOrElse(node, Map.empty[Character, Set[State]])
     if (children.isEmpty) {
       (Map(node -> nodeStates), Map.empty)
     } else {
-      val (subtreeAssociationsGroups, subtreeProfilesGroups) = children.par.map(postorder(_, taxonomy, startingAssociations, startingProfiles)).unzip
+      val (subtreeAssociationsGroups, subtreeProfilesGroups) = children.par.map(postorder(_, model, startingAssociations, startingProfiles)).unzip
       val subtreeAssociations = subtreeAssociationsGroups.flatten.toMap
       val subtreeProfiles = subtreeProfilesGroups.flatten.toMap
       val charactersWithAssociations = subtreeAssociations.values.flatMap(_.keys).toSet ++ nodeStates.keys
@@ -146,25 +143,21 @@ object EvolutionaryProfiles {
   }
 
   def queryAssociations(model: Model): Set[StateAssociation] = {
-    val qexec = QueryExecutionFactory.create(associationsQuery, model)
+    val qexec = QueryExecutionFactory.create(associationsQuery.text, model)
     val results = qexec.execSelect()
 
     results.asScala.map(StateAssociation(_)).toSet
-    val associationsQueryResultSet = for {
-      r <- results
-    } yield r
-
-    associationsQueryResultSet.map(StateAssociation(_)).toSet
   }
 
-  val associationsQuery: String =
-    "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> \n select distinct(?taxon, ?matrix_char, ?matrix_char_label, ?state, ?state_label) where { ?taxon http://purl.org/phenoscape/vocab.owl#exhibits_state ?state . ?state rdfs:label ?state_label . ?matrix_char may_have_state_value ?state . ?matrix_char rdfsLabel ?matrix_char_label }"
+  val associationsQuery: QueryText = sparql"""
+    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> \n select distinct(?taxon, ?matrix_char, ?matrix_char_label, ?state, ?state_label) where { ?taxon http://purl.org/phenoscape/vocab.owl#exhibits_state ?state . ?state rdfs:label ?state_label . ?matrix_char may_have_state_value ?state . ?matrix_char rdfsLabel ?matrix_char_label }
+    """
 
 
   def queryStatePhenotypes(model: Model): Map[State, Set[Phenotype]] = {
-    val qexec = QueryExecutionFactory.create(phenotypesQuery, model)
+    val qexec = QueryExecutionFactory.create(phenotypesQuery.text, model)
     val results = qexec.execSelect()
-results.asScala.map { bindings =>
+    results.asScala.map { bindings =>
       (State(IRI.create(bindings.getResource("state").getURI), bindings.getResource("state_label").getURI),
         Phenotype(IRI.create(bindings.getResource("phenotype").getURI)))
     }.toIterable.groupBy {
@@ -178,7 +171,9 @@ results.asScala.map { bindings =>
   }
 
 
-  val phenotypesQuery: String = "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>  \n select distinct(?state, ?state_label, ?phenotype) where { ?state rdfs:label ?state_label . ?state http://purl.org/phenoscape/vocab.owl#describes_phenotype ?phenotype } "
+  val phenotypesQuery: QueryText = sparql""""
+    "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>  \n select distinct(?state, ?state_label, ?phenotype) where { ?state rdfs:label ?state_label . ?state http://purl.org/phenoscape/vocab.owl#describes_phenotype ?phenotype }
+    """
 }
 
 case class TaxonNode(iri: IRI)
