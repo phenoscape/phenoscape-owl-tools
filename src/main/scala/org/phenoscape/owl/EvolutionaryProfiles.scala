@@ -12,14 +12,9 @@ import org.phenoscape.owlet.SPARQLComposer._
 import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model._
 import org.semanticweb.owlapi.reasoner.OWLReasoner
-import org.phenoscape.scowl._
 import org.apache.jena.query.{Query, QueryExecutionFactory, QuerySolution, ResultSet}
 import org.apache.jena.rdf.model._
-import org.apache.jena.rdf.model.impl._
-import org.phenoscape.owl.build.PhenoscapeKB.loadFromWeb
-import org.semanticweb.owlapi.search.EntitySearcher
 import java.io.{File, FileOutputStream}
-//import org.phenoscape.kb.util.SPARQLInterpolatorOWLAPI._
 import org.phenoscape.sparql.SPARQLInterpolation._
 
 
@@ -36,8 +31,6 @@ object EvolutionaryProfiles {
     val outFile = new File(args(1))
 
     val rootTaxon = (TaxonNode(CHORDATA))
-    //    val vto = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/vto.owl"), true)
-    //    val vtoOnt = OWLManager.createOWLOntologyManager().createOntology(vto.axioms.asJava)
 
     val results = computePhenotypeProfiles(rootTaxon, inFile)
     val model = ModelFactory.createDefaultModel()
