@@ -1,11 +1,10 @@
 package org.phenoscape.owl
 
-import scala.collection.JavaConversions._
-
-import utest._
-import org.semanticweb.owlapi.apibinding.OWLManager
-
 import org.phenoscape.scowl._
+import org.semanticweb.owlapi.apibinding.OWLManager
+import utest._
+
+import scala.collection.JavaConverters._
 
 
 object NegationHierarchyAsserterTest extends TestSuite {
@@ -47,7 +46,7 @@ object NegationHierarchyAsserterTest extends TestSuite {
 
     'afterAxioms - {
 
-      manager.addAxioms(ontology, NegationHierarchyAsserter.assertNegationHierarchy(ontology.getAxioms().toSet))
+      manager.addAxioms(ontology, NegationHierarchyAsserter.assertNegationHierarchy(ontology.getAxioms().asScala.toSet).asJava)
 
       'test7 - {
         assert(ontology.containsAxiom(Class(s"$base#NotA") SubClassOf Class(s"$base#NotB")))
