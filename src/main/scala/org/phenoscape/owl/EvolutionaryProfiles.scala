@@ -23,9 +23,9 @@ object EvolutionaryProfiles {
   val factory = OWLManager.getOWLDataFactory
   val OWLNothing = factory.getOWLNothing.getIRI.toString
   val RdfsLabel = factory.getRDFSLabel.getIRI.toString
-  val MayHaveStateValue = "http://purl.org/phenoscape/vocab.owl#may_have_state_value"
-  val ExhibitsState = "http://purl.org/phenoscape/vocab.owl#exhibits_state"
-  val DescribesPhenotype = "http://purl.org/phenoscape/vocab.owl#describes_phenotype"
+  val MayHaveStateValue = ResourceFactory.createProperty(may_have_state_value.getIRI.toString)
+  val ExhibitsState = ResourceFactory.createProperty(exhibits_state.getIRI.toString)
+  val DescribesPhenotype = ResourceFactory.createProperty(describes_phenotype.getIRI.toString)
 
   type StateAssociations = GenMap[TaxonNode, GenMap[Character, Set[State]]]
 
