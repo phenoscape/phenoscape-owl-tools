@@ -97,7 +97,7 @@ object EvolutionaryProfiles {
 
   def postorder(node: TaxonNode, model: Model, startingAssociations: StateAssociations, startingProfiles: StateAssociations): (StateAssociations, StateAssociations) = {
     val children = (for {
-      s <- model.listStatements(null, ResourceFactory.createProperty(rdfsSubClassOf.toString), node.asInstanceOf[RDFNode])
+      s <- model.listStatements(null, ResourceFactory.createProperty(rdfsSubClassOf.toString), node.asJenaNode)
       term = s.getSubject
       if term.getURI == OWLNothing
       if !term.isAnon
@@ -185,7 +185,9 @@ object EvolutionaryProfiles {
     """
 }
 
-case class TaxonNode(iri: IRI)
+case class TaxonNode(iri: IRI){
+  def asJenaNode: RDFNode = ResourceFactory.createResource(iri.toString)
+}
 
 case class Character(iri: IRI, label: String)
 
@@ -199,8 +201,8 @@ object StateAssociation {
 
   def apply(result: QuerySolution): StateAssociation = StateAssociation(
     TaxonNode(IRI.create(result.getResource("taxon").getURI)),
-    Character(IRI.create(result.getResource("matrix_char").getURI), result.getResource("matrix_char_label").getURI),
-    State(IRI.create(result.getResource("state").getURI), result.getResource("state_label").getURI))
+    Character(IRI.create(result.getResource("matrix_char").getURI), result.getLiteral("matrix_char_label").getLexicalForm),
+    State(IRI.create(result.getResource("state").getURI), result.getLiteral("state_label").getLexicalForm))
 
 }
 
