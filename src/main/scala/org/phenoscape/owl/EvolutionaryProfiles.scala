@@ -22,7 +22,7 @@ object EvolutionaryProfiles {
 
   val factory = OWLManager.getOWLDataFactory
   val OWLNothing = factory.getOWLNothing.getIRI.toString
-  val RdfsLabel = factory.getRDFSLabel.getIRI.toString
+  val RdfsLabel = ResourceFactory.createProperty(rdfsLabel.getIRI.toString)
   val MayHaveStateValue = ResourceFactory.createProperty(may_have_state_value.getIRI.toString)
   val ExhibitsState = ResourceFactory.createProperty(exhibits_state.getIRI.toString)
   val DescribesPhenotype = ResourceFactory.createProperty(describes_phenotype.getIRI.toString)
