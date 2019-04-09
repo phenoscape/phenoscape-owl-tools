@@ -148,7 +148,7 @@ object EvolutionaryProfiles {
 
   val associationsQuery: QueryText =
     sparql"""
-     select distinct(?taxon, ?matrix_char, ?matrix_char_label, ?state, ?state_label)
+     select distinct ?taxon, ?matrix_char, ?matrix_char_label, ?state, ?state_label
      where {
      ?taxon $ExhibitsState ?state .
      ?state $RdfsLabel ?state_label .
@@ -177,7 +177,7 @@ object EvolutionaryProfiles {
 
   val phenotypesQuery: QueryText =
     sparql""""
-    select distinct(?state, ?state_label, ?phenotype)
+    select distinct ?state, ?state_label, ?phenotype
     where {
     ?state $RdfsLabel ?state_label .
     ?state $DescribesPhenotype ?phenotype
