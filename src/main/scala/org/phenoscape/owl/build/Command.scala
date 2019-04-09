@@ -31,6 +31,11 @@ output-ics
 output-profile-sizes
 expects-to-triples
 sparql-select
+sparql-construct
+sparql-update
+convert-nexml
+assert-negation-hierarchy
+output-evolutionary-profiles
 
 Consult the source code for required parameters.
       """)
