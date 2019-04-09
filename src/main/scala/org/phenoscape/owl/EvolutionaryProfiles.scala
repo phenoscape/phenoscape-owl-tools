@@ -22,6 +22,10 @@ object EvolutionaryProfiles {
 
   val factory = OWLManager.getOWLDataFactory
   val OWLNothing = factory.getOWLNothing.getIRI.toString
+  val RdfsLabel = factory.getRDFSLabel.getIRI.toString
+  val MayHaveStateValue = "http://purl.org/phenoscape/vocab.owl#may_have_state_value"
+  val ExhibitsState = "http://purl.org/phenoscape/vocab.owl#exhibits_state"
+  val DescribesPhenotype = "http://purl.org/phenoscape/vocab.owl#describes_phenotype"
 
   type StateAssociations = GenMap[TaxonNode, GenMap[Character, Set[State]]]
 
@@ -144,7 +148,13 @@ object EvolutionaryProfiles {
 
   val associationsQuery: QueryText =
     sparql"""
-    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> \n select distinct(?taxon, ?matrix_char, ?matrix_char_label, ?state, ?state_label) where { ?taxon http://purl.org/phenoscape/vocab.owl#exhibits_state ?state . ?state rdfs:label ?state_label . ?matrix_char may_have_state_value ?state . ?matrix_char rdfsLabel ?matrix_char_label }
+     select distinct(?taxon, ?matrix_char, ?matrix_char_label, ?state, ?state_label)
+     where {
+     ?taxon $ExhibitsState ?state .
+     ?state $RdfsLabel ?state_label .
+     ?matrix_char $MayHaveStateValue ?state .
+     ?matrix_char $RdfsLabel ?matrix_char_label
+     }
     """
 
 
@@ -167,7 +177,11 @@ object EvolutionaryProfiles {
 
   val phenotypesQuery: QueryText =
     sparql""""
-    "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>  \n select distinct(?state, ?state_label, ?phenotype) where { ?state rdfs:label ?state_label . ?state http://purl.org/phenoscape/vocab.owl#describes_phenotype ?phenotype }
+    select distinct(?state, ?state_label, ?phenotype)
+    where {
+    ?state $RdfsLabel ?state_label .
+    ?state $DescribesPhenotype ?phenotype
+    }
     """
 }
 
