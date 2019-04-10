@@ -162,7 +162,7 @@ object EvolutionaryProfiles {
     val qexec = QueryExecutionFactory.create(phenotypesQuery.text, model)
     val results = qexec.execSelect()
     results.asScala.map { bindings =>
-      (State(IRI.create(bindings.getResource("state").getURI), bindings.getResource("state_label").getURI),
+      (State(IRI.create(bindings.getResource("state").getURI), bindings.getLiteral("state_label").getLexicalForm),
         Phenotype(IRI.create(bindings.getResource("phenotype").getURI)))
     }.toIterable.groupBy {
       case (state, phenotype) => state
