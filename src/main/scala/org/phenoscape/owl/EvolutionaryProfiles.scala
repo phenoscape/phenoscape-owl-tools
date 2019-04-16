@@ -48,7 +48,6 @@ object EvolutionaryProfiles {
     model.read(inFile)
 
     val observedAssociations = queryAssociations(model)
-    val associationsIndex = index(observedAssociations)
     val (associations, profiles) = postorder(rootTaxon, model, index(observedAssociations), Map.empty)
     profilesToRDF(profiles, model)
   }
@@ -99,7 +98,7 @@ object EvolutionaryProfiles {
     val children = (for {
       s <- model.listStatements(null, ResourceFactory.createProperty(rdfsSubClassOf.toString), node.asJenaNode)
       term = s.getSubject
-      if term.getURI == OWLNothing
+      if term.getURI != OWLNothing
       if !term.isAnon
     } yield TaxonNode(IRI.create(term.getURI))).toSet
     val nodeStates = startingAssociations.getOrElse(node, Map.empty[Character, Set[State]])
