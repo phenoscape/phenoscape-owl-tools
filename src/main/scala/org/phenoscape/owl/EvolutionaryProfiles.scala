@@ -96,7 +96,9 @@ object EvolutionaryProfiles {
       s <- model.listStatements(null, ResourceFactory.createProperty(rdfsSubClassOf.toString), node.asJenaNode).asScala.toList
       term = s.getSubject
       if term.getURI != OWLNothing
+      // check if blank node
       if !term.isAnon
+      if term.getURI.startsWith("http://purl.obolibrary.org/obo/VTO_")
     } yield TaxonNode(IRI.create(term.getURI))).toSet
     val nodeStates = startingAssociations.getOrElse(node, Map.empty[Character, Set[State]])
     if (children.isEmpty) {
