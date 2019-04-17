@@ -1,21 +1,18 @@
 package org.phenoscape.owl
 
-import scala.collection.GenMap
-import scala.collection.JavaConversions._
-import scala.collection.convert._
-import scala.collection.JavaConverters._
-import scala.language.implicitConversions
+import java.io.{File, FileOutputStream}
+
+import org.apache.jena.query.{QueryExecutionFactory, QuerySolution}
+import org.apache.jena.rdf.model._
 import org.phenoscape.owl.Vocab._
 import org.phenoscape.owl.util.ExpressionsUtil
-import org.phenoscape.owl.util.SesameIterationIterator.iterationToIterator
-import org.phenoscape.owlet.SPARQLComposer._
+import org.phenoscape.sparql.SPARQLInterpolation._
 import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model._
-import org.semanticweb.owlapi.reasoner.OWLReasoner
-import org.apache.jena.query.{Query, QueryExecutionFactory, QuerySolution, ResultSet}
-import org.apache.jena.rdf.model._
-import java.io.{File, FileOutputStream}
-import org.phenoscape.sparql.SPARQLInterpolation._
+
+import scala.collection.GenMap
+import scala.collection.JavaConverters._
+import scala.language.implicitConversions
 
 
 object EvolutionaryProfiles {
@@ -96,7 +93,7 @@ object EvolutionaryProfiles {
 
   def postorder(node: TaxonNode, model: Model, startingAssociations: StateAssociations, startingProfiles: StateAssociations): (StateAssociations, StateAssociations) = {
     val children = (for {
-      s <- model.listStatements(null, ResourceFactory.createProperty(rdfsSubClassOf.toString), node.asJenaNode)
+      s <- model.listStatements(null, ResourceFactory.createProperty(rdfsSubClassOf.toString), node.asJenaNode).asScala.toList
       term = s.getSubject
       if term.getURI != OWLNothing
       if !term.isAnon
