@@ -3,9 +3,9 @@ package org.phenoscape.owl
 import java.io.File
 import java.util.UUID
 
-import scala.collection.JavaConversions._
+//import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import scala.io.Source
-
 import org.phenoscape.kb.ingest.util.OBOUtil
 import org.phenoscape.scowl._
 import org.semanticweb.owlapi.apibinding.OWLManager
@@ -41,7 +41,7 @@ object HomologyTableWithTaxa extends App {
   val input = Source.fromFile(args(0), "utf-8")
 
   def convertFile(file: Source): OWLOntology = {
-    val axioms = (file.getLines.drop(1).flatMap(processEntry)).toSet
+    val axioms = (file.getLines.drop(1).flatMap(processEntry)).toSet.asJava
     val ontology = manager.createOntology(axioms, IRI.create("http://purl.org/phenoscape/demo/phenoscape_homology.owl"))
     manager.applyChange(new AddOntologyAnnotation(ontology, factory.getOWLAnnotation(description, factory.getOWLLiteral("Homology Assertions using the REAHM model"))))
     //manager.applyChange(new AddImport(ontology, factory.getOWLImportsDeclaration(IRI.create("http://purl.obolibrary.org/obo/uberon/ext.owl"))))

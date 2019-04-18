@@ -1,6 +1,5 @@
 package org.phenoscape.owl
 
-import scala.collection.JavaConverters._
 import org.phenoscape.scowl._
 import org.semanticweb.owlapi.model._
 import org.semanticweb.owlapi.apibinding.OWLManager

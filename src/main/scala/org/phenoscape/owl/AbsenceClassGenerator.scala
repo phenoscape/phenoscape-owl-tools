@@ -1,6 +1,6 @@
 package org.phenoscape.owl
 
-import scala.collection.JavaConversions._
+//import scala.collection.JavaConversions._
 
 import org.phenoscape.owl.Vocab._
 import org.phenoscape.scowl._

@@ -2,7 +2,8 @@ package org.phenoscape.owl
 
 import java.io.File
 
-import scala.collection.JavaConversions._
+//import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import scala.io.Source
 
 import org.apache.commons.codec.digest.DigestUtils
@@ -35,7 +36,7 @@ object HomologyTableToOWLVAHM extends App {
   val input = Source.fromFile(args(0), "utf-8")
 
   def convertFile(file: Source): OWLOntology = {
-    val axioms = (file.getLines.drop(1).flatMap(processEntry)).toSet
+    val axioms = (file.getLines.drop(1).flatMap(processEntry)).toSet.asJava
     val ontology = manager.createOntology(axioms, IRI.create("http://purl.org/phenoscape/demo/phenoscape_homology.owl"))
     manager.applyChange(new AddOntologyAnnotation(ontology, factory.getOWLAnnotation(description, factory.getOWLLiteral("Homology Assertions using the VAHM model"))))
     manager.addAxiom(ontology, HistoricalHomologyMemberof InverseOf HasHistoricalHomologyMember)

@@ -2,7 +2,8 @@ package org.phenoscape.owl
 
 import java.io.File
 import java.util.UUID
-import scala.collection.JavaConversions._
+//import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import scala.collection.TraversableOnce.flattenTraversableOnce
 import scala.io.Source
 import org.phenoscape.scowl._
@@ -32,7 +33,7 @@ object HomologyTableToOWLAsAnnotations extends OWLTask {
   }
 
   def convertFile(file: Source): OWLOntology = {
-    val axioms = (file.getLines.drop(1) flatMap processEntry).toSet
+    val axioms = (file.getLines.drop(1) flatMap processEntry).toSet.asJava
     val ontology = manager.createOntology(axioms, IRI.create("http://purl.obolibrary.org/obo/uberon/homology_annotations.owl"))
     manager.applyChange(new AddOntologyAnnotation(ontology, factory.getOWLAnnotation(description, factory.getOWLLiteral("Homology Assertions"))))
     manager.applyChange(new AddImport(ontology, factory.getOWLImportsDeclaration(IRI.create("http://purl.obolibrary.org/obo/uberon/ext.owl"))))

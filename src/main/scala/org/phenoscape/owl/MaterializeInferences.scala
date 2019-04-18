@@ -1,7 +1,8 @@
 package org.phenoscape.owl
 
 import java.io.File
-import scala.collection.JavaConversions._
+//import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import scala.collection.mutable.ListBuffer
 import org.semanticweb.elk.owlapi.ElkReasoner
 import org.semanticweb.elk.owlapi.ElkReasonerFactory
@@ -40,9 +41,9 @@ object MaterializeInferences extends OWLTask {
     val reasoner = if (propertiesOnly()) {
       val manager = ontology.getOWLOntologyManager()
       val classes = ontology.getClassesInSignature()
-      val tempOntology = manager.createOntology(ontology.getImportsClosure().flatMap(_.getAxioms()))
-      val entityRemover = new OWLEntityRemover(Set(tempOntology))
-      tempOntology.getClassesInSignature().foreach(entityRemover.visit)
+      val tempOntology = manager.createOntology(ontology.getImportsClosure.asScala.flatMap(_.getAxioms.asScala).toSet.asJava)
+      val entityRemover = new OWLEntityRemover(Set(tempOntology).asJava)
+      tempOntology.getClassesInSignature().asScala.foreach(entityRemover.visit)
       manager.applyChanges(entityRemover.getChanges())
       createReasoner(tempOntology, getReasonerChoice())
     } else {
@@ -59,9 +60,9 @@ object MaterializeInferences extends OWLTask {
       new InferredEquivalentClassAxiomGenerator(),
       new InferredSubClassAxiomGenerator())
     if (!reasoner.isInstanceOf[ElkReasoner]) {
-      axiomGenerators.add(new InferredPropertyAssertionGenerator())
+      axiomGenerators.asJava.add(new InferredPropertyAssertionGenerator())
     }
-    val generator = new InferredOntologyGenerator(reasoner, axiomGenerators)
+    val generator = new InferredOntologyGenerator(reasoner, axiomGenerators.asJava)
     generator.fillOntology(ontology.getOWLOntologyManager.getOWLDataFactory, ontology)
   }
 

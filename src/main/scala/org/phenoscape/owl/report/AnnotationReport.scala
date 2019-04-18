@@ -6,7 +6,8 @@ import java.io.FileWriter
 import java.io.StringWriter
 import java.io.Writer
 
-import scala.collection.JavaConversions._
+//import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import scala.collection.Map
 import scala.collection.mutable
 
@@ -62,7 +63,7 @@ object AnnotationReport {
 
     def render(obj: OWLObject): String = {
       val writer = new StringWriter()
-      val renderer = new ManchesterOWLSyntaxObjectRenderer(writer, new AnnotationValueShortFormProvider(List(factory.getRDFSLabel), mutable.Map.empty[OWLAnnotationProperty, java.util.List[String]], manager))
+      val renderer = new ManchesterOWLSyntaxObjectRenderer(writer, new AnnotationValueShortFormProvider(List(factory.getRDFSLabel).asJava, mutable.Map.empty[OWLAnnotationProperty, java.util.List[String]].asJava, manager))
       obj.accept(renderer)
       writer.close()
       writer.toString
@@ -83,7 +84,7 @@ object AnnotationReport {
       val pub = file.getName();
       val format = nexml.getChild("characters", nexmlNS).getChild("format", nexmlNS);
       val stateSets = format.getChildren("states", nexmlNS);
-      val stateSetsByID = stateSets.map(states => (states.getAttributeValue("id"), states.getChildren("state", nexmlNS).toIterable)).toMap;
+      val stateSetsByID = stateSets.asScala.map(states => (states.getAttributeValue("id"), states.getChildren("state", nexmlNS).asScala.toIterable)).toMap;
       val characters = format.getChildren("char", nexmlNS);
       var i = 0;
       for (character <- characters) {
@@ -99,7 +100,7 @@ object AnnotationReport {
             writeState(state, writer);
             writer.write("\t");
             if (phenotype.entity != null) {
-              properties.addAll(phenotype.entity.getObjectPropertiesInSignature());
+              properties.asJava.addAll(phenotype.entity.getObjectPropertiesInSignature());
               writer.write(getID(phenotype.entity));
               writer.write("\t");
               writer.write(getLabel(phenotype.entity));
@@ -108,7 +109,7 @@ object AnnotationReport {
             }
             writer.write("\t");
             if (phenotype.quality != null) {
-              properties.addAll(phenotype.quality.getObjectPropertiesInSignature());
+              properties.asJava.addAll(phenotype.quality.getObjectPropertiesInSignature());
               writer.write(getID(phenotype.quality));
               writer.write("\t");
               writer.write(getLabel(phenotype.quality));
@@ -117,7 +118,7 @@ object AnnotationReport {
             }
             writer.write("\t");
             if (phenotype.relatedEntity != null) {
-              properties.addAll(phenotype.relatedEntity.getObjectPropertiesInSignature());
+              properties.asJava.addAll(phenotype.relatedEntity.getObjectPropertiesInSignature());
               writer.write(getID(phenotype.relatedEntity));
               writer.write("\t");
               writer.write(getLabel(phenotype.relatedEntity));
@@ -143,7 +144,7 @@ object AnnotationReport {
 
   def getPhenotypes(state: Element): Iterable[EQ] = {
     val phenotypes = state.getDescendants(new ElementFilter("phenotype_character", phenoNS)).iterator();
-    return phenotypes.map(PhenoXMLUtil.translatePhenotypeCharacter(_)).toSeq;
+    return phenotypes.asScala.map(PhenoXMLUtil.translatePhenotypeCharacter(_)).toSeq;
   }
 
   def getID(owlClass: OWLClassExpression): String = {

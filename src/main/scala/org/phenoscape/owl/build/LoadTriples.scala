@@ -9,6 +9,7 @@ import com.bigdata.journal.Options
 import com.bigdata.rdf.sail.BigdataSail
 import com.bigdata.rdf.sail.BigdataSailRepository
 import org.apache.commons.io.FileUtils
+//import scala.collection.JavaConversions._
 import scala.collection.JavaConversions._
 import java.util.Date
 import com.bigdata.rdf.store.DataLoader
