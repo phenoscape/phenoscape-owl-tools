@@ -55,14 +55,14 @@ object MaterializeInferences extends OWLTask {
 
   def materializeInferences(ontology: OWLOntology, reasoner: OWLReasoner): Unit = {
     reasoner.precomputeInferences(InferenceType.CLASS_HIERARCHY) // this must be called first for ELK
-    val axiomGenerators = ListBuffer[InferredAxiomGenerator[_ <: OWLAxiom]](
+    val axiomGenerators = List[InferredAxiomGenerator[_ <: OWLAxiom]](
       new InferredClassAssertionAxiomGenerator(),
       new InferredEquivalentClassAxiomGenerator(),
       new InferredSubClassAxiomGenerator())
-    if (!reasoner.isInstanceOf[ElkReasoner]) {
-      axiomGenerators.asJava.add(new InferredPropertyAssertionGenerator())
-    }
-    val generator = new InferredOntologyGenerator(reasoner, axiomGenerators.asJava)
+    val axiomGeneratorsUpdated = if (!reasoner.isInstanceOf[ElkReasoner]) {
+      (new InferredPropertyAssertionGenerator()) :: axiomGenerators
+    } else axiomGenerators
+    val generator = new InferredOntologyGenerator(reasoner, axiomGeneratorsUpdated.asJava)
     generator.fillOntology(ontology.getOWLOntologyManager.getOWLDataFactory, ontology)
   }
 

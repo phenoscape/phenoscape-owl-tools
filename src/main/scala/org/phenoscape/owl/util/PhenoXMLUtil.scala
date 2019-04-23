@@ -6,7 +6,8 @@ import org.jdom2.Namespace
 import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model.OWLObjectSomeValuesFrom
 import scala.collection.mutable
-import scala.collection.JavaConversions._
+//import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import org.phenoscape.owl.Vocab
 import org.phenoscape.kb.ingest.util.OBOUtil
 
@@ -55,8 +56,8 @@ object PhenoXMLUtil {
       return genus
     } else {
       val operands: mutable.Set[OWLClassExpression] = mutable.Set(genus)
-      operands.addAll(qualifiers.map(restrictionFromQualifier(_)))
-      return factory.getOWLObjectIntersectionOf(operands)
+      operands ++ (qualifiers.asScala.map(restrictionFromQualifier(_)))
+      return factory.getOWLObjectIntersectionOf(operands.asJava)
     }
   }
 

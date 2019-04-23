@@ -64,7 +64,7 @@ object MatrixGenerator extends OWLTask {
   }
 
   def composeEntityAndQuality(entity: OWLClass, quality: OWLClass): Set[OWLAxiom] = {
-    annotateComposedEntityAndQuality(entity, quality).toSet + composeEntityAndQualityInvolves(entity, quality);
+    annotateComposedEntityAndQuality(entity, quality).toSet[OWLAxiom] + composeEntityAndQualityInvolves(entity, quality);
   }
 
   def annotateComposedEntityAndQuality(entity: OWLClass, quality: OWLClass): Set[OWLAnnotationAssertionAxiom] = {
