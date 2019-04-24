@@ -12,7 +12,7 @@ object AddDefinedBy extends App {
   val manager = OWLManager.createOWLOntologyManager()
   val ont = manager.loadOntologyFromOntologyDocument(ontFile)
   val definedByAxioms = ont.getClassesInSignature().asScala.flatMap(OBOUtil.createDefinedByAnnotation)
-  manager.addAxioms(ont, definedByAxioms)
+  manager.addAxioms(ont, definedByAxioms.asJava)
   manager.saveOntology(ont)
 
 }

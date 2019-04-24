@@ -122,7 +122,7 @@ object GenerateTboxesForSimilarityAnalysisUtil {
   def loadFromWebWithImports(iri: String): Set[OWLAxiom] = {
     val manager = OWLManager.createOWLOntologyManager()
     val ont = manager.loadOntology(IRI.create(iri))
-    val importsAxioms = (ont.getImportsClosure.asScala - ont).flatMap(_.getAxioms.asScala)
+    val importsAxioms = (ont.getImportsClosure.asScala - ont).flatMap(_.getAxioms().asScala)
     manager.addAxioms(ont, importsAxioms.asJava)
     PropertyNormalizer.normalize(ont)
     ont.getAxioms().asScala.toSet

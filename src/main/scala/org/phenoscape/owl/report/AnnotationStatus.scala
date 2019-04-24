@@ -35,7 +35,7 @@ object AnnotationStatus {
       val stateSetsByID = stateSets.asScala.map(states => (states.getAttributeValue("id"), states.getChildren("state", nexmlNS).asScala.toIterable)).toMap;
       val characters = format.getChildren("char", nexmlNS);
       var i = 0;
-      for (character <- characters) {
+      for (character <- characters.asScala) {
         allCharacters.add(character);
         val states = AnnotationReport.getStates(character, stateSetsByID);
         val annotated = mutable.Set[Element]();

@@ -1,6 +1,7 @@
 package org.phenoscape.owl
 
 //import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 
 import org.phenoscape.owl.Vocab._
 import org.phenoscape.scowl._
@@ -19,10 +20,10 @@ object AbsenceClassGenerator extends OWLTask {
     val manager = ontology.getOWLOntologyManager()
     val newIRI = getAbsenceOntologyIRI(ontology)
     val newAxioms = for {
-      ontClass <- ontology.getClassesInSignature(false)
+      ontClass <- ontology.getClassesInSignature(false).asScala
       axiom <- createAbsenceClass(ontClass)
     } yield axiom
-    manager.createOntology(newAxioms, newIRI)
+    manager.createOntology(newAxioms.asJava, newIRI)
   }
 
   def createAbsenceClass(ontClass: OWLClass): Set[OWLAxiom] = {

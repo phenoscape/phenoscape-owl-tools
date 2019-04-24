@@ -27,10 +27,10 @@ object NamedRestrictionGenerator extends OWLTask {
   def generateRestrictions(ontology: OWLOntology, property: OWLObjectProperty): OWLOntology = {
     val newIRI = property.getIRI.toString + "_some_" + ontology.getOntologyID.getOntologyIRI.toString
     val newAxioms = for {
-      ontClass <- ontology.getClassesInSignature(false)
+      ontClass <- ontology.getClassesInSignature(false).asScala
       axiom <- createRestriction(property, ontClass)
     } yield axiom
-    manager.createOntology(newAxioms, IRI.create(newIRI))
+    manager.createOntology(newAxioms.asJava, IRI.create(newIRI))
   }
 
   def createRestriction(property: OWLObjectProperty, ontClass: OWLClass): Set[OWLAxiom] = {

@@ -314,9 +314,9 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     val reducedTbox = OntologyUtil.reduceOntologyToHierarchy(tboxOut)
     write(reducedTbox, (KB / "tbox-hierarchy-only.owl").toJava)
 
-    step("Building evolutionary profiles using ancestral states reconstruction")
-    val vtoOnt = OWLManager.createOWLOntologyManager().createOntology(vto.axioms.asJava)
-    bigdata.add(EvolutionaryProfiles.computePhenotypeProfiles(TaxonNode(CHORDATA), vtoOnt, bigdata).asJava, graphURI)
+//    step("Building evolutionary profiles using ancestral states reconstruction")
+//    val vtoOnt = OWLManager.createOWLOntologyManager().createOntology(vto.axioms.asJava)
+//    bigdata.add(EvolutionaryProfiles.computePhenotypeProfiles(TaxonNode(CHORDATA), vtoOnt, bigdata).asJava, graphURI)
 
     bigdata.commit()
 

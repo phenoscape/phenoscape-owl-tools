@@ -41,7 +41,7 @@ object MaterializeInferences extends OWLTask {
     val reasoner = if (propertiesOnly()) {
       val manager = ontology.getOWLOntologyManager()
       val classes = ontology.getClassesInSignature()
-      val tempOntology = manager.createOntology(ontology.getImportsClosure.asScala.flatMap(_.getAxioms.asScala).toSet.asJava)
+      val tempOntology = manager.createOntology(ontology.getImportsClosure.asScala.flatMap(_.getAxioms().asScala).toSet.asJava)
       val entityRemover = new OWLEntityRemover(Set(tempOntology).asJava)
       tempOntology.getClassesInSignature().asScala.foreach(entityRemover.visit)
       manager.applyChanges(entityRemover.getChanges())

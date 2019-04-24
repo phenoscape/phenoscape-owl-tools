@@ -41,7 +41,7 @@ class KnowledgeBaseBuilder extends App {
       ontologies(0)
     else {
       val newManager = OWLManager.createOWLOntologyManager
-      newManager.createOntology(ontologies.flatMap(_.getAxioms.asScala).toSet.asJava)
+      newManager.createOntology(ontologies.flatMap(_.getAxioms().asScala).toSet.asJava)
     }
   }
 
@@ -66,7 +66,7 @@ class KnowledgeBaseBuilder extends App {
     // Even if we are excluding axioms from imports, we want to initially include imports in case property types rely on declarations there
     val ont = manager.loadOntology(iri)
     if (!excludeImports) {
-      val importsAxioms = ont.getImports.asScala.flatMap(_.getAxioms.asScala)
+      val importsAxioms = ont.getImports.asScala.flatMap(_.getAxioms().asScala)
       manager.addAxioms(ont, importsAxioms.asJava)
     }
     val definedByAxioms = ont.getClassesInSignature(Imports.EXCLUDED).asScala.flatMap(OBOUtil.createDefinedByAnnotation)

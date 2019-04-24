@@ -50,7 +50,7 @@ object EQCreator {
     val qualities = patoReasoner.getSubClasses(qualityRoot, false).getFlattened();
     patoReasoner.dispose();
     println(new Date() + ": building");
-    for (entity <- anatomicalEntities; quality <- qualities) {
+    for (entity <- anatomicalEntities.asScala; quality <- qualities.asScala) {
       manager.addAxiom(eqs, createEQ(entity, quality));
     }
     println(new Date() + ": saving EQs");
