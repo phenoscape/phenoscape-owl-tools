@@ -70,7 +70,7 @@ object PostorderTest extends KnowledgeBaseBuilder {
   val BIGDATA_JOURNAL = new File("staging/bigdata.jnl")
   STAGING.mkdir()
   KB.mkdir()
-  
+
 
   step("Loading ontologies")
   val tbox = manager.loadOntologyFromOntologyDocument(new File(cwd + "/staging/kb/tbox.owl"))
@@ -88,11 +88,11 @@ object PostorderTest extends KnowledgeBaseBuilder {
   val connection = repository.getUnisolatedConnection()
   connection.begin()
 
-//  step("Testing postorder part of ancestral states reconstruction")
-//  println("Triples: " + connection.getTripleStore.getStatementCount)
-//  val result = EvolutionaryProfiles.computePhenotypeProfiles(TaxonNode(CHORDATA), tbox, connection)
-//  println("Size of profile data: " + result.size)
-//  result.take(100).foreach(println)
+  step("Testing postorder part of ancestral states reconstruction")
+  println("Triples: " + connection.getTripleStore.getStatementCount)
+  val result = EvolutionaryProfiles.computePhenotypeProfiles(TaxonNode(CHORDATA), tbox, connection)
+  println("Size of profile data: " + result.size)
+  result.take(100).foreach(println)
 
   connection.commit()
   // close the repository connection

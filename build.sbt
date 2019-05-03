@@ -4,7 +4,7 @@ organization := "org.phenoscape"
 
 name := "kb-owl-tools"
 
-version := "1.7"
+version := "1.8"
 
 mainClass in Compile := Some("org.phenoscape.owl.build.Command")
 
@@ -28,7 +28,6 @@ testFrameworks += new TestFramework("utest.runner.Framework")
 
 libraryDependencies ++= {
   Seq(
-    "junit" % "junit" % "4.10" % "test",
     "org.apache.commons" % "commons-lang3" % "3.1",
     "commons-io" % "commons-io" % "2.4",
     "org.jdom" % "jdom" % "2.0.2",
