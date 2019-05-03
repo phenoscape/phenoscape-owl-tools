@@ -1,6 +1,5 @@
 package org.phenoscape.owl
 
-//import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
 import org.phenoscape.scowl._
 import org.semanticweb.owlapi.apibinding.OWLManager
@@ -13,9 +12,7 @@ import java.io.File
 import java.util.Date
 import org.semanticweb.owlapi.model.OWLClass
 import org.semanticweb.owlapi.model.OWLAxiom
-import scala.collection.Set
 import java.io.FileOutputStream
-import java.util.zip.ZipOutputStream
 import java.io.BufferedOutputStream
 import java.util.zip.GZIPOutputStream
 import org.semanticweb.owlapi.model.AddImport

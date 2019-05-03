@@ -2,7 +2,6 @@ package org.phenoscape.owl.build
 
 import java.io.File
 
-//import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.io.Source

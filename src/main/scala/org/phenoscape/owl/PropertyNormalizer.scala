@@ -1,12 +1,9 @@
 package org.phenoscape.owl
 
-import java.io.File
-//import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
 import org.semanticweb.owlapi.model.IRI
 import org.semanticweb.owlapi.model.OWLOntology
 import org.semanticweb.owlapi.util.OWLEntityRenamer
-import org.semanticweb.owlapi.model.AddImport
 import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model.OWLAxiom
 

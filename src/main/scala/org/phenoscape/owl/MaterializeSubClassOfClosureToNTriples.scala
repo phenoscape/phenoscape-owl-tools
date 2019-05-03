@@ -1,21 +1,10 @@
 package org.phenoscape.owl
 
 import java.io.File
-//import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
-import scala.collection.Set
-import scala.collection.mutable
-import org.semanticweb.owlapi.model.IRI
-import org.semanticweb.owlapi.model.OWLAxiom
-import org.semanticweb.owlapi.model.OWLClass
-import org.semanticweb.owlapi.model.OWLSubClassOfAxiom
-import org.semanticweb.owlapi.reasoner.structural.StructuralReasonerFactory
 import org.semanticweb.owlapi.reasoner.OWLReasoner
-import org.semanticweb.owlapi.model.OWLOntology
 import org.semanticweb.elk.owlapi.ElkReasonerFactory
-import org.semanticweb.owlapi.vocab.OWLRDFVocabulary
 import java.io.BufferedWriter
-import java.io.FileWriter
 import java.io.FileOutputStream
 import java.io.OutputStreamWriter
 import org.semanticweb.owlapi.apibinding.OWLManager

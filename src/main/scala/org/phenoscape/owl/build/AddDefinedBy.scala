@@ -2,7 +2,6 @@ package org.phenoscape.owl.build
 
 import org.semanticweb.owlapi.apibinding.OWLManager
 import java.io.File
-//import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
 import org.phenoscape.kb.ingest.util.OBOUtil
 

@@ -6,7 +6,6 @@ import java.io.FileWriter
 import java.io.StringWriter
 import java.io.Writer
 
-//import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
 import scala.collection.Map
 import scala.collection.mutable

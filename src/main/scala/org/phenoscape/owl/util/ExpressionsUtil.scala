@@ -2,9 +2,7 @@ package org.phenoscape.owl.util
 
 import java.io.StringWriter
 import java.net.URI
-import java.util.ArrayList
 
-//import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
 import org.apache.http.client.utils.URLEncodedUtils
 import org.phenoscape.kb.ingest.util.OntUtil

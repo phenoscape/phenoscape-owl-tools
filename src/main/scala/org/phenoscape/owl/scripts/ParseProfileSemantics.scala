@@ -1,10 +1,8 @@
 package org.phenoscape.owl.scripts
 
-import scala.io.Source
 import org.semanticweb.owlapi.model.OWLAxiom
 import org.semanticweb.owlapi.model.OWLOntology
 import org.semanticweb.owlapi.model.AxiomType
-//import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
 import org.semanticweb.owlapi.model.OWLClass
 import org.semanticweb.owlapi.model.OWLClassExpression

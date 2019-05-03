@@ -1,9 +1,7 @@
 package org.phenoscape.owl
 
-//import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
 import scala.collection.Set
-import scala.collection.mutable
 import org.semanticweb.owlapi.model.OWLOntology
 import java.io.File
 import org.semanticweb.owlapi.model.IRI
@@ -39,8 +37,6 @@ object TaxonomyConverter extends OWLTask {
     val factory = manager.getOWLDataFactory();
     val axioms = Set[OWLAxiom]();
     onlyClasses(EntitySearcher.getSuperClasses(taxonClass, classOntology).asScala).map(createSubcladeRelationship(taxonClass, _)).toSet[OWLAxiom] + factory.getOWLClassAssertionAxiom(Taxon, factory.getOWLNamedIndividual(taxonClass.getIRI()));
-//    axioms + onlyClasses(EntitySearcher.getSuperClasses(taxonClass, classOntology).asScala).map(createSubcladeRelationship(taxonClass, _));
-//    return axioms;
   }
 
   def createSubcladeRelationship(subclade: OWLClass, superclade: OWLClass): OWLObjectPropertyAssertionAxiom = {

@@ -1,17 +1,11 @@
 package org.phenoscape.owl
 
 import java.io.File
-import java.util.UUID
-
-//import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
-
 import scala.io.Source
-
 import org.phenoscape.kb.ingest.util.OBOUtil
 import org.phenoscape.scowl._
 import org.semanticweb.owlapi.apibinding.OWLManager
-import org.semanticweb.owlapi.model.AddImport
 import org.semanticweb.owlapi.model.AddOntologyAnnotation
 import org.semanticweb.owlapi.model.IRI
 import org.semanticweb.owlapi.model.OWLAxiom
@@ -20,9 +14,6 @@ import org.semanticweb.owlapi.vocab.DublinCoreVocabulary
 
 import Vocab._
 import org.phenoscape.kb.ingest.util.PostCompositionParser
-import org.semanticweb.owlapi.model.OWLClassExpression
-import org.semanticweb.owlapi.model.OWLNamedIndividual
-import org.semanticweb.owlapi.model.OWLIndividual
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.lang3.StringUtils
 
@@ -41,8 +32,6 @@ object HomologyTableDemoRolification extends App {
     val axioms = (file.getLines.drop(1).flatMap(processEntry)).toSet.asJava
     val ontology = manager.createOntology(axioms, IRI.create("http://purl.org/phenoscape/demo/phenoscape_homology.owl"))
     manager.applyChange(new AddOntologyAnnotation(ontology, factory.getOWLAnnotation(description, factory.getOWLLiteral("Homology Assertions using the rolification model"))))
-    //manager.applyChange(new AddImport(ontology, factory.getOWLImportsDeclaration(IRI.create("http://purl.obolibrary.org/obo/uberon/ext.owl"))))
-    //manager.applyChange(new AddImport(ontology, factory.getOWLImportsDeclaration(IRI.create("http://purl.obolibrary.org/obo/eco.owl"))))
     ontology
   }
 

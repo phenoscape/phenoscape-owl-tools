@@ -5,7 +5,6 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import java.util.Date
 
-//import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
 import org.openrdf.model.URI
 import org.openrdf.repository.sail.SailRepositoryConnection

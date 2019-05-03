@@ -2,9 +2,7 @@ package org.phenoscape.owl
 
 import java.io.File
 import java.util.UUID
-//import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
-import scala.collection.TraversableOnce.flattenTraversableOnce
 import scala.io.Source
 import org.phenoscape.scowl._
 import org.phenoscape.kb.ingest.util.OBOUtil

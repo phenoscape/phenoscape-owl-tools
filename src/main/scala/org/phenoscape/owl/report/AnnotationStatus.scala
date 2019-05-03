@@ -1,6 +1,5 @@
 package org.phenoscape.owl.report
 
-//import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
 import scala.collection.mutable.HashMap
 import scala.collection.mutable

@@ -1,16 +1,10 @@
 package org.phenoscape.owl.util
 
-//import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
 import org.semanticweb.owlapi.apibinding.OWLManager
-import org.semanticweb.owlapi.model.OWLClassAxiom
 import org.semanticweb.owlapi.model.OWLOntology
 import org.semanticweb.owlapi.model.AxiomType
 import org.semanticweb.owlapi.model.OWLEquivalentClassesAxiom
-import java.util.UUID
-import org.semanticweb.owlapi.model.OWLNamedIndividual
-import org.semanticweb.owlapi.model.OWLClass
-import org.semanticweb.owlapi.model.IRI
 import org.semanticweb.owlapi.model.OWLSubClassOfAxiom
 import org.semanticweb.owlapi.model.OWLAxiom
 

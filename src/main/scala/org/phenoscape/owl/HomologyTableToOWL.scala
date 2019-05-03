@@ -1,6 +1,5 @@
 package org.phenoscape.owl
 
-//import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
 
 import org.semanticweb.owlapi.apibinding.OWLManager
@@ -10,7 +9,6 @@ import scala.io.Source
 import org.semanticweb.owlapi.model.IRI
 import org.semanticweb.owlapi.model.OWLAxiom
 import org.phenoscape.scowl._
-import org.semanticweb.owlapi.vocab.OWLRDFVocabulary
 import org.semanticweb.owlapi.vocab.DublinCoreVocabulary
 import org.phenoscape.kb.ingest.util.OBOUtil
 import org.semanticweb.owlapi.model.AddOntologyAnnotation

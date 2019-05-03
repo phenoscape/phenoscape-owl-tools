@@ -1,16 +1,11 @@
 package org.phenoscape.owl
 
-import java.io.File
 import java.util.UUID
-
-import org.semanticweb.owlapi.model.OWLSubClassOfAxiom
-//import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
 import org.semanticweb.owlapi.model.AxiomType
 import org.semanticweb.owlapi.model.IRI
 import org.semanticweb.owlapi.model.OWLOntology
 import org.semanticweb.owlapi.model.OWLAxiom
-import org.semanticweb.owlapi.apibinding.OWLManager
 
 object ExtractNamedClassHierarchy extends OWLTask {
 

@@ -6,9 +6,7 @@ import org.jdom2.Namespace
 import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model.OWLObjectSomeValuesFrom
 import scala.collection.mutable
-//import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
-import org.phenoscape.owl.Vocab
 import org.phenoscape.kb.ingest.util.OBOUtil
 
 object PhenoXMLUtil {

@@ -1,7 +1,6 @@
 package org.phenoscape.owl.scripts
 
 import java.io.File
-//import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
 import scala.collection.immutable.Set
 import org.phenoscape.owl.MaterializeInferences
@@ -16,7 +15,6 @@ import org.semanticweb.owlapi.model.IRI
 import org.semanticweb.owlapi.model.OWLAxiom
 import org.semanticweb.owlapi.reasoner.OWLReasoner
 import org.semanticweb.owlapi.model.OWLClass
-import java.io.FileWriter
 import java.io.FileOutputStream
 import java.io.OutputStreamWriter
 
