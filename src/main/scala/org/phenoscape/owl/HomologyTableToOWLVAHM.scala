@@ -20,6 +20,9 @@ import org.semanticweb.owlapi.vocab.DublinCoreVocabulary
 
 import Vocab._
 
+/**
+  * This corresponds to the AVA homology model in the Phenoscape homology paper.
+  */
 object HomologyTableToOWLVAHM extends App {
 
   val factory = OWLManager.getOWLDataFactory

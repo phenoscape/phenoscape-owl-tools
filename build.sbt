@@ -43,5 +43,6 @@ libraryDependencies ++= {
     "com.github.pathikrit" %% "better-files" % "3.4.0",
     "com.lihaoyi" %% "utest" % "0.6.3" % Test,
     "org.phenoscape" %% "sparql-interpolator" % "1.0"
+
   )
 }
