@@ -6,7 +6,6 @@ import java.io.PrintWriter
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.collection.parallel._
-
 import org.openrdf.model.Statement
 import org.openrdf.model.impl.NumericLiteralImpl
 import org.openrdf.model.impl.StatementImpl
@@ -21,6 +20,8 @@ import org.semanticweb.owlapi.model.OWLNamedIndividual
 import org.semanticweb.owlapi.model.OWLOntology
 import org.semanticweb.owlapi.reasoner.{Node => ReasonerNode}
 import org.semanticweb.owlapi.reasoner.OWLReasoner
+
+import scala.util.hashing.MurmurHash3
 
 class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
 
@@ -277,7 +278,11 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
 
 }
 
-case class Node(classes: Set[OWLClass])
+final case class Node(classes: Set[OWLClass]) {
+
+  override final val hashCode: Int = MurmurHash3.productHash(this)
+
+}
 
 object Node {
 
