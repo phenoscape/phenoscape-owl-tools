@@ -223,10 +223,11 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
   def maxICSubsumer(i: Node, j: Node): Node = if (i == j) i else commonSubsumersOf(i, j).maxBy(nodeIC)
 
   def groupWiseSimilarity(queryIndividual: OWLNamedIndividual, corpusIndividual: OWLNamedIndividual): GroupWiseSimilarity = {
+    val directAssociationsByCorpusIndividual = directAssociationsByIndividual(corpusIndividual)
     val pairScores = for {
       queryAnnotation <- directAssociationsByIndividual(queryIndividual)
     } yield {
-      directAssociationsByIndividual(corpusIndividual).map { corpusAnnotation =>
+      directAssociationsByCorpusIndividual.map { corpusAnnotation =>
         val maxSubsumer = maxICSubsumer(queryAnnotation, corpusAnnotation)
         PairScore(queryAnnotation, corpusAnnotation, maxSubsumer, nodeIC(maxSubsumer))
       }.maxBy(_.maxSubsumerIC)
