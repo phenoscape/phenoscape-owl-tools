@@ -53,8 +53,8 @@ object PhenoXMLUtil {
     if (qualifiers.isEmpty()) {
       return genus
     } else {
-      val operands: mutable.Set[OWLClassExpression] = mutable.Set(genus)
-      operands ++ (qualifiers.asScala.map(restrictionFromQualifier(_)))
+//      val operands: mutable.Set[OWLClassExpression] = mutable.Set(genus)
+      val operands = qualifiers.asScala.map(restrictionFromQualifier(_)).toSet[OWLClassExpression] + genus
       return factory.getOWLObjectIntersectionOf(operands.asJava)
     }
   }
