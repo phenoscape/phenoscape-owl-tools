@@ -35,7 +35,6 @@ object TaxonomyConverter extends OWLTask {
   def translateTaxonClass(taxonClass: OWLClass, classOntology: OWLOntology): Set[OWLAxiom] = {
     val manager = classOntology.getOWLOntologyManager();
     val factory = manager.getOWLDataFactory();
-    val axioms = Set[OWLAxiom]();
     onlyClasses(EntitySearcher.getSuperClasses(taxonClass, classOntology).asScala).map(createSubcladeRelationship(taxonClass, _)).toSet[OWLAxiom] + factory.getOWLClassAssertionAxiom(Taxon, factory.getOWLNamedIndividual(taxonClass.getIRI()));
   }
 
