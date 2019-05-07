@@ -1,6 +1,6 @@
 package org.phenoscape.owl
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import org.phenoscape.scowl._
 import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.elk.owlapi.ElkReasonerFactory
@@ -12,9 +12,7 @@ import java.io.File
 import java.util.Date
 import org.semanticweb.owlapi.model.OWLClass
 import org.semanticweb.owlapi.model.OWLAxiom
-import scala.collection.Set
 import java.io.FileOutputStream
-import java.util.zip.ZipOutputStream
 import java.io.BufferedOutputStream
 import java.util.zip.GZIPOutputStream
 import org.semanticweb.owlapi.model.AddImport
@@ -49,7 +47,7 @@ object EQCreator {
     val qualities = patoReasoner.getSubClasses(qualityRoot, false).getFlattened();
     patoReasoner.dispose();
     println(new Date() + ": building");
-    for (entity <- anatomicalEntities; quality <- qualities) {
+    for (entity <- anatomicalEntities.asScala; quality <- qualities.asScala) {
       manager.addAxiom(eqs, createEQ(entity, quality));
     }
     println(new Date() + ": saving EQs");
@@ -64,10 +62,10 @@ object EQCreator {
     println(new Date() + ": done classification");
     //MaterializeInferences.materializeInferences(hierarchy, eqReasoner);
     println(new Date() + ": starting axiom generation");
-    val allClasses = eqs.getClassesInSignature(true);
+    val allClasses = eqs.getClassesInSignature(true).asScala;
     for (owlClass <- allClasses) {
-      val newAxioms = eqReasoner.getSuperClasses(owlClass, true).getFlattened().map(owlClass SubClassOf _).filterNot(eqs.containsAxiom(_, true));
-      manager.addAxioms(hierarchy, newAxioms);
+      val newAxioms = eqReasoner.getSuperClasses(owlClass, true).getFlattened().asScala.map(owlClass SubClassOf _).filterNot(eqs.containsAxiom(_, true));
+      manager.addAxioms(hierarchy, newAxioms.asJava);
     }
     println(new Date() + ": done axiom generation");
     println(new Date() + ": saving hierarchy");

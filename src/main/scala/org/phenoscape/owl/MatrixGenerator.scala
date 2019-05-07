@@ -2,7 +2,7 @@ package org.phenoscape.owl
 
 import java.io.File
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import scala.collection.Set
 
 import org.phenoscape.scowl._
@@ -46,16 +46,16 @@ object MatrixGenerator extends OWLTask {
     uberonReasoner.dispose();
     val attributes = attributesSlim.getClassesInSignature();
     println("Creating phenotype classes");
-    val newAxioms = (for (entity <- entities; quality <- attributes) yield composeEntityAndQuality(entity, quality)).flatten;
-    val characterClasses = for (entity <- entities; quality <- attributes) yield Class(compositionIRI(entity, quality));
-    manager.addAxioms(dataOntology, newAxioms);
+    val newAxioms = (for (entity <- entities.asScala; quality <- attributes.asScala) yield composeEntityAndQuality(entity, quality)).flatten;
+    val characterClasses = for (entity <- entities.asScala; quality <- attributes.asScala) yield Class(compositionIRI(entity, quality));
+    manager.addAxioms(dataOntology, newAxioms.asJava);
     val dataReasoner = new ElkReasonerFactory().createReasoner(dataOntology);
     val newManager = OWLManager.createOWLOntologyManager();
     val resultOntology = newManager.createOntology();
     println("Creating class assertions with reasoner");
-    val classAssertions = characterClasses.map(charClass => dataReasoner.getInstances(charClass, true).getFlattened().map(inst => factory.getOWLClassAssertionAxiom(charClass, inst))).flatten;
-    newManager.addAxioms(resultOntology, classAssertions);
-    newManager.addAxioms(resultOntology, newAxioms);
+    val classAssertions = characterClasses.map(charClass => dataReasoner.getInstances(charClass, true).getFlattened().asScala.map(inst => factory.getOWLClassAssertionAxiom(charClass, inst))).flatten;
+    newManager.addAxioms(resultOntology, classAssertions.asJava);
+    newManager.addAxioms(resultOntology, newAxioms.asJava);
     newManager.addAxioms(resultOntology, dataOntology.getAxioms(dcDescription));
     println("Saving");
     newManager.saveOntology(resultOntology, IRI.create(new File(args(1))));
@@ -64,7 +64,7 @@ object MatrixGenerator extends OWLTask {
   }
 
   def composeEntityAndQuality(entity: OWLClass, quality: OWLClass): Set[OWLAxiom] = {
-    annotateComposedEntityAndQuality(entity, quality).toSet + composeEntityAndQualityInvolves(entity, quality);
+    annotateComposedEntityAndQuality(entity, quality).toSet[OWLAxiom] + composeEntityAndQualityInvolves(entity, quality);
   }
 
   def annotateComposedEntityAndQuality(entity: OWLClass, quality: OWLClass): Set[OWLAnnotationAssertionAxiom] = {
@@ -83,44 +83,6 @@ object MatrixGenerator extends OWLTask {
     IRI.create("http://example.org/involves?entity=%s&quality=%s".format(entity.getIRI(), quality.getIRI()));
   }
 
-  //	def characterForState(state: OWLNamedIndividual, ontology: OWLOntology): OWLNamedIndividual = {
-  //			val axioms = ontology.getAxioms(AxiomType.OBJECT_PROPERTY_ASSERTION);
-  //			axioms.find(_.getObject() == state).find(
-  //					_.getProperty() == mayHaveState).map(
-  //							_.getSubject().asOWLNamedIndividual()).getOrElse(null);
-  //	}
 
-  //	def getLabel(entity: OWLEntity, ontology: OWLOntology): String = {
-  //			val axioms = ontology.getImportsClosure().map(_.getAxioms(AxiomType.ANNOTATION_ASSERTION)).flatten;
-  //			val b = axioms.filter(_.getSubject() == entity.getIRI());
-  //			println(b);
-  //			axioms.filter(_.getSubject() == entity.getIRI()).find(
-  //					_.getProperty() == factory.getRDFSLabel()).map(_.getValue().toString()).getOrElse(null);
-  //	}
-  //
-  //	def formatState(state: OWLNamedIndividual, ontology: OWLOntology): String = {
-  //			getLabel(characterForState(state, ontology), ontology) + ": " + getLabel(state, ontology);
-  //	}
-
-  /*
-PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-PREFIX dc: <http://purl.org/dc/elements/1.1/>
-
-SELECT DISTINCT ?entity  ?quality
-FROM <http://purl.obolibrary.org/obo/uberon/merged.owl>
-FROM <http://purl.obolibrary.org/obo/uberon/ext.owl>
-FROM <file://alldata.owl>
-FROM <file://state_groups.owl>
-WHERE
-{
-?character <http://example.org/entity_term> ?entity .
-?entity rdfs:label ?entity_label .
-?character <http://example.org/quality_term> ?quality .
-?quality rdfs:label ?quality_label .
-?state rdf:type ?character .
-?state dc:description ?state_label .
-}
-*/
 
 }

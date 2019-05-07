@@ -1,7 +1,7 @@
 package org.phenoscape.owl
 
 import java.io.File
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import org.phenoscape.scowl._
 import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model.IRI
@@ -25,8 +25,8 @@ object ReverseDevelopsFromRuleGenerator extends OWLTask {
   def generateDevelopsFromRules(ontology: OWLOntology): OWLOntology = {
     val manager = ontology.getOWLOntologyManager
     val newIRI = ontology.getOntologyID.getOntologyIRI.toString + "/reverse_develops_from_rules.owl"
-    val newAxioms = ontology.getClassesInSignature(false) flatMap createRules
-    manager.createOntology(newAxioms.toSet[OWLAxiom], IRI.create(newIRI))
+    val newAxioms = ontology.getClassesInSignature(false).asScala flatMap createRules
+    manager.createOntology(newAxioms.toSet[OWLAxiom].asJava, IRI.create(newIRI))
   }
 
   def createRules(ontClass: OWLClass): Set[OWLSubClassOfAxiom] = {

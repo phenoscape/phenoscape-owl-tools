@@ -1,15 +1,10 @@
 package org.phenoscape.owl.util
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import org.semanticweb.owlapi.apibinding.OWLManager
-import org.semanticweb.owlapi.model.OWLClassAxiom
 import org.semanticweb.owlapi.model.OWLOntology
 import org.semanticweb.owlapi.model.AxiomType
 import org.semanticweb.owlapi.model.OWLEquivalentClassesAxiom
-import java.util.UUID
-import org.semanticweb.owlapi.model.OWLNamedIndividual
-import org.semanticweb.owlapi.model.OWLClass
-import org.semanticweb.owlapi.model.IRI
 import org.semanticweb.owlapi.model.OWLSubClassOfAxiom
 import org.semanticweb.owlapi.model.OWLAxiom
 
@@ -19,8 +14,8 @@ object OntologyUtil {
 
   def ontologyWithoutDisjointAxioms(ontology: OWLOntology): OWLOntology = {
     val manager = OWLManager.createOWLOntologyManager
-    val axioms = filterDisjointAxioms(ontology.getAxioms().toSet)
-    manager.createOntology(axioms)
+    val axioms = filterDisjointAxioms(ontology.getAxioms().asScala.toSet)
+    manager.createOntology(axioms.asJava)
   }
 
   def filterDisjointAxioms(axioms: Set[OWLAxiom]): Set[OWLAxiom] = axioms
@@ -38,11 +33,11 @@ object OntologyUtil {
   def reduceOntologyToHierarchy(ontology: OWLOntology): OWLOntology = {
     val manager = OWLManager.createOWLOntologyManager
     val factory = OWLManager.getOWLDataFactory
-    val axioms = ontology.getAxioms().collect {
+    val axioms = ontology.getAxioms().asScala.collect {
       case subClassOf: OWLSubClassOfAxiom if !subClassOf.getSubClass.isAnonymous && !subClassOf.getSuperClass.isAnonymous => subClassOf
       case equiv: OWLEquivalentClassesAxiom if equiv.getNamedClasses.size > 1 => factory.getOWLEquivalentClassesAxiom(equiv.getNamedClasses)
     }
-    manager.createOntology(axioms.toSet[OWLAxiom])
+    manager.createOntology(axioms.toSet[OWLAxiom].asJava)
   }
 
 }

@@ -5,8 +5,7 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import java.util.Date
 
-import scala.collection.JavaConversions._
-
+import scala.collection.JavaConverters._
 import org.openrdf.model.URI
 import org.openrdf.repository.sail.SailRepositoryConnection
 import org.openrdf.rio.RDFFormat
@@ -41,23 +40,23 @@ class KnowledgeBaseBuilder extends App {
       ontologies(0)
     else {
       val newManager = OWLManager.createOWLOntologyManager
-      newManager.createOntology(ontologies.flatMap(_.getAxioms).toSet)
+      newManager.createOntology(ontologies.flatMap(_.getAxioms().asScala).toSet.asJava)
     }
   }
 
-  def combine(ontology: SourcedAxioms, ontologies: SourcedAxioms*): OWLOntology = OWLManager.createOWLOntologyManager().createOntology(ontology.axioms ++ ontologies.flatMap(_.axioms))
+  def combine(ontology: SourcedAxioms, ontologies: SourcedAxioms*): OWLOntology = OWLManager.createOWLOntologyManager().createOntology((ontology.axioms ++ ontologies.flatMap(_.axioms)).asJava)
 
   def reasoner(ontologies: OWLOntology*): OWLReasoner = {
     val allAxioms = combine(ontologies: _*)
     new ElkReasonerFactory().createReasoner(allAxioms)
   }
 
-  def reasoner(axioms: Set[OWLAxiom]): OWLReasoner = new ElkReasonerFactory().createReasoner(OWLManager.createOWLOntologyManager().createOntology(axioms))
+  def reasoner(axioms: Set[OWLAxiom]): OWLReasoner = new ElkReasonerFactory().createReasoner(OWLManager.createOWLOntologyManager().createOntology(axioms.asJava))
 
   def loadNormalized(location: File): OWLOntology = {
     val ont = globalManager.loadOntologyFromOntologyDocument(location)
-    val definedByAxioms = ont.getClassesInSignature().flatMap(OBOUtil.createDefinedByAnnotation)
-    globalManager.addAxioms(ont, definedByAxioms)
+    val definedByAxioms = ont.getClassesInSignature().asScala.flatMap(OBOUtil.createDefinedByAnnotation)
+    globalManager.addAxioms(ont, definedByAxioms.asJava)
     PropertyNormalizer.normalize(ont)
   }
 
@@ -66,13 +65,13 @@ class KnowledgeBaseBuilder extends App {
     // Even if we are excluding axioms from imports, we want to initially include imports in case property types rely on declarations there
     val ont = manager.loadOntology(iri)
     if (!excludeImports) {
-      val importsAxioms = ont.getImports.flatMap(_.getAxioms)
-      manager.addAxioms(ont, importsAxioms)
+      val importsAxioms = ont.getImports.asScala.flatMap(_.getAxioms().asScala)
+      manager.addAxioms(ont, importsAxioms.asJava)
     }
-    val definedByAxioms = ont.getClassesInSignature(Imports.EXCLUDED).flatMap(OBOUtil.createDefinedByAnnotation)
-    manager.addAxioms(ont, definedByAxioms)
+    val definedByAxioms = ont.getClassesInSignature(Imports.EXCLUDED).asScala.flatMap(OBOUtil.createDefinedByAnnotation)
+    manager.addAxioms(ont, definedByAxioms.asJava)
     PropertyNormalizer.normalize(ont)
-    SourcedAxioms(ont.getAxioms(Imports.EXCLUDED).toSet, ont.getOntologyID)
+    SourcedAxioms(ont.getAxioms(Imports.EXCLUDED).asScala.toSet, ont.getOntologyID)
   }
 
   def write(ontology: OWLOntology, file: File): Unit = {
@@ -103,7 +102,7 @@ class KnowledgeBaseBuilder extends App {
   def addTriples(axioms: Iterable[OWLAxiom], db: SailRepositoryConnection, graph: URI, ontID: OWLOntologyID = new OWLOntologyID()): Unit = {
     val manager = OWLManager.createOWLOntologyManager()
     val ont = manager.createOntology(ontID)
-    manager.addAxioms(ont, axioms.toSet[OWLAxiom])
+    manager.addAxioms(ont, axioms.toSet[OWLAxiom].asJava)
     addTriples(ont, db, graph)
   }
 
@@ -113,6 +112,6 @@ case class SourcedAxioms(axioms: Set[OWLAxiom], ontologyID: OWLOntologyID)
 
 object SourcedAxioms {
 
-  def apply(ont: OWLOntology): SourcedAxioms = SourcedAxioms(ont.getAxioms().toSet, ont.getOntologyID)
+  def apply(ont: OWLOntology): SourcedAxioms = SourcedAxioms(ont.getAxioms().asScala.toSet, ont.getOntologyID)
 
 }

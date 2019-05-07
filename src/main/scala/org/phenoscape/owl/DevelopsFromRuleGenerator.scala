@@ -1,10 +1,7 @@
 package org.phenoscape.owl
 
-import java.io.File
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import org.phenoscape.scowl._
-import org.semanticweb.owlapi.apibinding.OWLManager
-import org.semanticweb.owlapi.model.AddImport
 import org.semanticweb.owlapi.model.IRI
 import org.semanticweb.owlapi.model.OWLClass
 import org.semanticweb.owlapi.model.OWLOntology
@@ -17,8 +14,8 @@ object DevelopsFromRuleGenerator extends OWLTask {
   def generateDevelopsFromRules(ontology: OWLOntology): OWLOntology = {
     val manager = ontology.getOWLOntologyManager
     val newIRI = ontology.getOntologyID.getOntologyIRI.toString + "/develops_from_rules.owl"
-    val rules = ontology.getClassesInSignature(false) map createRule
-    manager.createOntology(rules.toSet[OWLAxiom], IRI.create(newIRI))
+    val rules = ontology.getClassesInSignature(false).asScala map createRule
+    manager.createOntology(rules.toSet[OWLAxiom].asJava, IRI.create(newIRI))
   }
 
   def createRule(ontClass: OWLClass): OWLSubClassOfAxiom =

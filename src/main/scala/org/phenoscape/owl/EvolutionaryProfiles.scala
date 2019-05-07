@@ -1,7 +1,7 @@
 package org.phenoscape.owl
 
 import scala.collection.GenMap
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import scala.language.implicitConversions
 import org.openrdf.model.Statement
 import org.openrdf.model.impl.StatementImpl
@@ -17,9 +17,6 @@ import org.phenoscape.owlet.SPARQLComposer._
 import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model.IRI
 import org.semanticweb.owlapi.model.OWLClass
-import org.semanticweb.owlapi.reasoner.OWLReasoner
-import org.semanticweb.owlapi.model.OWLClassExpression
-import org.phenoscape.scowl._
 import org.apache.jena.query.Query
 import org.semanticweb.owlapi.model.OWLOntology
 import org.semanticweb.owlapi.search.EntitySearcher
@@ -82,12 +79,12 @@ object EvolutionaryProfiles {
 
   def postorder(node: TaxonNode, taxonomy: OWLOntology, startingAssociations: StateAssociations, startingProfiles: StateAssociations): (StateAssociations, StateAssociations) = {
     val children = (for {
-      term <- EntitySearcher.getSubClasses(node, taxonomy)
+      term <- EntitySearcher.getSubClasses(node, taxonomy).asScala
       if !term.isOWLNothing
       if term.isInstanceOf[OWLClass]
       classTerm = term.asInstanceOf[OWLClass]
     } yield TaxonNode(classTerm.getIRI)).toSet
-    val nodeStates = startingAssociations.getOrElse(node, Map.empty)
+    val nodeStates = startingAssociations.getOrElse(node, Map.empty[Character, Set[State]])
     if (children.isEmpty) {
       (Map(node -> nodeStates), Map.empty)
     } else {
@@ -177,4 +174,3 @@ object StateAssociation {
     State(IRI.create(result.getValue("state").stringValue), result.getValue("state_label").stringValue))
 
 }
-

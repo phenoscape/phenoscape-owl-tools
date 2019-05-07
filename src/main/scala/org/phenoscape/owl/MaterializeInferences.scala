@@ -1,8 +1,7 @@
 package org.phenoscape.owl
 
 import java.io.File
-import scala.collection.JavaConversions._
-import scala.collection.mutable.ListBuffer
+import scala.collection.JavaConverters._
 import org.semanticweb.elk.owlapi.ElkReasoner
 import org.semanticweb.elk.owlapi.ElkReasonerFactory
 import org.semanticweb.owlapi.apibinding.OWLManager
@@ -40,9 +39,9 @@ object MaterializeInferences extends OWLTask {
     val reasoner = if (propertiesOnly()) {
       val manager = ontology.getOWLOntologyManager()
       val classes = ontology.getClassesInSignature()
-      val tempOntology = manager.createOntology(ontology.getImportsClosure().flatMap(_.getAxioms()))
-      val entityRemover = new OWLEntityRemover(Set(tempOntology))
-      tempOntology.getClassesInSignature().foreach(entityRemover.visit)
+      val tempOntology = manager.createOntology(ontology.getImportsClosure.asScala.flatMap(_.getAxioms().asScala).toSet.asJava)
+      val entityRemover = new OWLEntityRemover(Set(tempOntology).asJava)
+      tempOntology.getClassesInSignature().asScala.foreach(entityRemover.visit)
       manager.applyChanges(entityRemover.getChanges())
       createReasoner(tempOntology, getReasonerChoice())
     } else {
@@ -54,14 +53,14 @@ object MaterializeInferences extends OWLTask {
 
   def materializeInferences(ontology: OWLOntology, reasoner: OWLReasoner): Unit = {
     reasoner.precomputeInferences(InferenceType.CLASS_HIERARCHY) // this must be called first for ELK
-    val axiomGenerators = ListBuffer[InferredAxiomGenerator[_ <: OWLAxiom]](
+    val axiomGenerators = List[InferredAxiomGenerator[_ <: OWLAxiom]](
       new InferredClassAssertionAxiomGenerator(),
       new InferredEquivalentClassAxiomGenerator(),
       new InferredSubClassAxiomGenerator())
-    if (!reasoner.isInstanceOf[ElkReasoner]) {
-      axiomGenerators.add(new InferredPropertyAssertionGenerator())
-    }
-    val generator = new InferredOntologyGenerator(reasoner, axiomGenerators)
+    val axiomGeneratorsUpdated = if (!reasoner.isInstanceOf[ElkReasoner]) {
+      (new InferredPropertyAssertionGenerator()) :: axiomGenerators
+    } else axiomGenerators
+    val generator = new InferredOntologyGenerator(reasoner, axiomGeneratorsUpdated.asJava)
     generator.fillOntology(ontology.getOWLOntologyManager.getOWLDataFactory, ontology)
   }
 

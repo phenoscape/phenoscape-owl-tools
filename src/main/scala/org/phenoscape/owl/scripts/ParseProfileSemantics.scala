@@ -1,10 +1,9 @@
 package org.phenoscape.owl.scripts
 
-import scala.io.Source
 import org.semanticweb.owlapi.model.OWLAxiom
 import org.semanticweb.owlapi.model.OWLOntology
 import org.semanticweb.owlapi.model.AxiomType
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import org.semanticweb.owlapi.model.OWLClass
 import org.semanticweb.owlapi.model.OWLClassExpression
 import org.phenoscape.kb.ingest.util.ExpressionUtil
@@ -18,13 +17,13 @@ object ParseProfileSemantics {
 
   def tboxWithSemanticsForProfiles(profiles: OWLOntology): Set[OWLAxiom] = {
     for {
-      axiom <- profiles.getAxioms(AxiomType.CLASS_ASSERTION).toSet[OWLClassAssertionAxiom]
+      axiom <- profiles.getAxioms(AxiomType.CLASS_ASSERTION).asScala.toSet[OWLClassAssertionAxiom]
       classAxiom <- axiomsFor(axiom.getClassExpression)
     } yield classAxiom
   }
 
   def axiomsFor(expression: OWLClassExpression): Set[OWLAxiom] = for {
-    owlClass <- expression.getClassesInSignature.toSet[OWLClass]
+    owlClass <- expression.getClassesInSignature.asScala.toSet[OWLClass]
     axiom <- axiomsForNamed(owlClass)
   } yield axiom
 

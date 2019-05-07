@@ -2,7 +2,7 @@ package org.phenoscape.owl.build
 
 import java.io.File
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.io.Source
 import scala.language.postfixOps
@@ -64,20 +64,20 @@ object TBoxForTesting extends KnowledgeBaseBuilder {
 
   step("Querying entities and qualities")
   val coreReasoner = reasoner(Set(uberon, pato, bspo, go, phenoscapeVocab).flatMap(_.axioms))
-  val anatomicalEntities = coreReasoner.getSubClasses(Class(Vocab.ANATOMICAL_ENTITY), false).getFlattened.filterNot(_.isOWLNothing)
-  val qualities = coreReasoner.getSubClasses(Class(Vocab.QUALITY), false).getFlattened.filterNot(_.isOWLNothing)
+  val anatomicalEntities = coreReasoner.getSubClasses(Class(Vocab.ANATOMICAL_ENTITY), false).getFlattened.asScala.filterNot(_.isOWLNothing)
+  val qualities = coreReasoner.getSubClasses(Class(Vocab.QUALITY), false).getFlattened.asScala.filterNot(_.isOWLNothing)
   coreReasoner.dispose()
 
   step("Converting NeXML to OWL")
   val vocabForNeXML = combine(uberon, pato, bspo, go, phenoscapeVocab)
-  val filesToConvert = (FileUtils.listFiles(new File(cwd + "/staging/nexml/completed-phenex-files"), Array("xml"), true) ++
-    FileUtils.listFiles(new File(cwd + "/staging/nexml/fin_limb-incomplete-files"), Array("xml"), true) ++
-    FileUtils.listFiles(new File(cwd + "/staging/nexml/Jackson Dissertation Files"), Array("xml"), true) ++
-    FileUtils.listFiles(new File(cwd + "/staging/nexml/matrix-vs-monograph"), Array("xml"), true)).filterNot(_.getName == "catalog-v001.xml")
+  val filesToConvert = (FileUtils.listFiles(new File(cwd + "/staging/nexml/completed-phenex-files"), Array("xml"), true).asScala ++
+    FileUtils.listFiles(new File(cwd + "/staging/nexml/fin_limb-incomplete-files"), Array("xml"), true).asScala ++
+    FileUtils.listFiles(new File(cwd + "/staging/nexml/Jackson Dissertation Files"), Array("xml"), true).asScala ++
+    FileUtils.listFiles(new File(cwd + "/staging/nexml/matrix-vs-monograph"), Array("xml"), true).asScala).filterNot(_.getName == "catalog-v001.xml")
   val nexmlTBoxAxioms: mutable.Set[OWLAxiom] = mutable.Set()
   for (file <- filesToConvert) {
     val nexOntology = PropertyNormalizer.normalize(PhenexToOWL.convert(file, vocabForNeXML))
-    nexmlTBoxAxioms.addAll(nexOntology.getTBoxAxioms(Imports.EXCLUDED))
+    nexmlTBoxAxioms.asJava.addAll(nexOntology.getTBoxAxioms(Imports.EXCLUDED))
   }
 
   step("Converting ZFIN data")
@@ -93,7 +93,7 @@ object TBoxForTesting extends KnowledgeBaseBuilder {
     Source.fromFile(new File(cwd + "/staging/sources/GeneExpression_laevis.txt"), "utf-8"),
     Source.fromFile(new File(cwd + "/staging/sources/GeneExpression_tropicalis.txt"), "utf-8")))
   val xenbasePhenotypeFiles = FileUtils.listFiles(new File(cwd + "/staging/sources/xenbase-phenotypes"), Array("txt"), true)
-  val xenbasePhenotypeData = PropertyNormalizer.normalize(xenbasePhenotypeFiles.flatMap(f => XenbasePhenotypesToOWL.convertToAxioms(Source.fromFile(f))).toSet)
+  val xenbasePhenotypeData = PropertyNormalizer.normalize(xenbasePhenotypeFiles.asScala.flatMap(f => XenbasePhenotypesToOWL.convertToAxioms(Source.fromFile(f))).toSet)
 
   step("Converting human data")
   val humanPhenotypeData = PropertyNormalizer.normalize(HumanPhenotypesToOWL.convert(Source.fromFile(new File(cwd + "/staging/sources/hp_phenotypes.txt"), "utf-8")))
@@ -120,7 +120,7 @@ object TBoxForTesting extends KnowledgeBaseBuilder {
   val allTBox = uberon.axioms ++ homology.axioms ++ pato.axioms ++ bspo.axioms ++ go.axioms ++ vto.axioms ++ zfa.axioms ++ xao.axioms ++ hp.axioms ++ mp.axioms ++
     caroToUberon.axioms ++ zfaToUberon.axioms ++ xaoToUberon.axioms ++ hasParts ++ hasPartsInheringIns ++ phenotypeOfs ++ presences ++ absences ++ absenceNegationEquivalences ++ developsFromRulesForAbsence ++ tboxFromData ++ phenoscapeVocab.axioms
 
-  println("tbox class count: " + allTBox.flatMap(_.getClassesInSignature).size)
+  println("tbox class count: " + allTBox.flatMap(_.getClassesInSignature.asScala).size)
   println("tbox logical axiom count: " + allTBox.filter(_.isLogicalAxiom).size)
   val tBoxWithoutDisjoints = OntologyUtil.filterDisjointAxioms(allTBox)
 
@@ -128,7 +128,7 @@ object TBoxForTesting extends KnowledgeBaseBuilder {
   //addTriples(inferredAxioms, bigdata, graphURI)
 
   step("Writing tbox axioms for ELK")
-  val tboxOut = OWLManager.createOWLOntologyManager().createOntology(tBoxWithoutDisjoints)
+  val tboxOut = OWLManager.createOWLOntologyManager().createOntology(tBoxWithoutDisjoints.asJava)
   write(tboxOut, new File(cwd + "/staging/kb/tbox-for-pascal.owl"))
 
   step("Done")

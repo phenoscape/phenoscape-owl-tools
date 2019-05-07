@@ -1,7 +1,7 @@
 package org.phenoscape.owl.scripts
 
 import java.io.File
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import scala.collection.immutable.Set
 import org.phenoscape.owl.MaterializeInferences
 import org.phenoscape.owl.PropertyNormalizer
@@ -15,7 +15,6 @@ import org.semanticweb.owlapi.model.IRI
 import org.semanticweb.owlapi.model.OWLAxiom
 import org.semanticweb.owlapi.reasoner.OWLReasoner
 import org.semanticweb.owlapi.model.OWLClass
-import java.io.FileWriter
 import java.io.FileOutputStream
 import java.io.OutputStreamWriter
 
@@ -42,8 +41,8 @@ object GenerateTboxesForSimilarityAnalysis extends App {
   val xaoToUberon = loadFromWebWithImports("http://purl.obolibrary.org/obo/uberon/bridge/uberon-bridge-to-xao.owl")
 
   val uberonPATOReasoner = reasoner(uberon ++ pato)
-  val anatomicalEntities = uberonPATOReasoner.getSubClasses(AnatomicalEntity, false).getFlattened.filterNot(_.isOWLNothing).toSet
-  val qualities = uberonPATOReasoner.getSubClasses(Quality, false).getFlattened.filterNot(_.isOWLNothing).toSet
+  val anatomicalEntities = uberonPATOReasoner.getSubClasses(AnatomicalEntity, false).getFlattened.asScala.filterNot(_.isOWLNothing).toSet
+  val qualities = uberonPATOReasoner.getSubClasses(Quality, false).getFlattened.asScala.filterNot(_.isOWLNothing).toSet
   uberonPATOReasoner.dispose()
 
   val (entityPhenotypes, entityPhenotypeAxioms) = flattenAxioms(anatomicalEntities.map(SimilarityTemplates.entity).unzip[OWLClass, Set[OWLAxiom]])
@@ -51,7 +50,7 @@ object GenerateTboxesForSimilarityAnalysis extends App {
   val (qualityPhenotypes, qualityPhenotypeAxioms) = flattenAxioms(qualities.map(SimilarityTemplates.quality).unzip[OWLClass, Set[OWLAxiom]])
 
   val attributes = loadFromWebWithImports("http://svn.code.sf.net/p/phenoscape/code/trunk/vocab/character_slims.obo")
-  val attributeQualities = attributes.flatMap(_.getClassesInSignature) + HasNumberOf
+  val attributeQualities = attributes.flatMap(_.getClassesInSignature.asScala) + HasNumberOf
   val (entityAttributePhenotypes, entityAttributePhenotypeAxioms) = flattenAxioms((for {
     attribute <- attributeQualities
     entity <- anatomicalEntities
@@ -70,9 +69,9 @@ object GenerateTboxesForSimilarityAnalysis extends App {
       pato ++ bspo ++ go ++ zfa ++ xao ++ hp ++ mp ++
       caroToUberon ++ zfaToUberon ++ xaoToUberon)
 
-  val entitiesOnt = manager.createOntology(mainTbox ++ entityPhenotypeAxioms ++ entityPartsPhenotypeAxioms)
-  val entitiesAndQualitiesOnt = manager.createOntology(mainTbox ++ entityPhenotypeAxioms ++ entityPartsPhenotypeAxioms ++ qualityPhenotypeAxioms)
-  val entitiesAttributesOnt = manager.createOntology(mainTbox ++ entityAttributePhenotypeAxioms ++ entityPartAttributePhenotypeAxioms)
+  val entitiesOnt = manager.createOntology((mainTbox ++ entityPhenotypeAxioms ++ entityPartsPhenotypeAxioms).asJava)
+  val entitiesAndQualitiesOnt = manager.createOntology((mainTbox ++ entityPhenotypeAxioms ++ entityPartsPhenotypeAxioms ++ qualityPhenotypeAxioms).asJava)
+  val entitiesAttributesOnt = manager.createOntology((mainTbox ++ entityAttributePhenotypeAxioms ++ entityPartAttributePhenotypeAxioms).asJava)
 
   val entitiesReasoner = new ElkReasonerFactory().createReasoner(entitiesOnt)
   MaterializeInferences.materializeInferences(entitiesOnt, entitiesReasoner)
@@ -121,14 +120,14 @@ object GenerateTboxesForSimilarityAnalysisUtil {
   def loadFromWebWithImports(iri: String): Set[OWLAxiom] = {
     val manager = OWLManager.createOWLOntologyManager()
     val ont = manager.loadOntology(IRI.create(iri))
-    val importsAxioms = (ont.getImportsClosure - ont).flatMap(_.getAxioms)
-    manager.addAxioms(ont, importsAxioms)
+    val importsAxioms = (ont.getImportsClosure.asScala - ont).flatMap(_.getAxioms().asScala)
+    manager.addAxioms(ont, importsAxioms.asJava)
     PropertyNormalizer.normalize(ont)
-    ont.getAxioms().toSet
+    ont.getAxioms().asScala.toSet
   }
 
   def flattenAxioms[A, B](in: (A, Set[Set[B]])): (A, Set[B]) = (in._1, in._2.flatten)
 
-  def reasoner(axioms: Set[OWLAxiom]): OWLReasoner = new ElkReasonerFactory().createReasoner(OWLManager.createOWLOntologyManager().createOntology(axioms))
+  def reasoner(axioms: Set[OWLAxiom]): OWLReasoner = new ElkReasonerFactory().createReasoner(OWLManager.createOWLOntologyManager().createOntology(axioms.asJava))
 
 }

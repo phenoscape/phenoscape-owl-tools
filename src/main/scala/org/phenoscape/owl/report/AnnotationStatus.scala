@@ -1,6 +1,6 @@
 package org.phenoscape.owl.report
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import scala.collection.mutable.HashMap
 import scala.collection.mutable
 import scala.collection.Map
@@ -31,16 +31,16 @@ object AnnotationStatus {
       publications.add(pub);
       val format = nexml.getChild("characters", nexmlNS).getChild("format", nexmlNS);
       val stateSets = format.getChildren("states", nexmlNS);
-      val stateSetsByID = stateSets.map(states => (states.getAttributeValue("id"), states.getChildren("state", nexmlNS).toIterable)).toMap;
+      val stateSetsByID = stateSets.asScala.map(states => (states.getAttributeValue("id"), states.getChildren("state", nexmlNS).asScala.toIterable)).toMap;
       val characters = format.getChildren("char", nexmlNS);
       var i = 0;
-      for (character <- characters) {
+      for (character <- characters.asScala) {
         allCharacters.add(character);
         val states = AnnotationReport.getStates(character, stateSetsByID);
         val annotated = mutable.Set[Element]();
         for (state <- states) {
-          val phenotypes = state.getDescendants(new ElementFilter("phenotype_character", phenoNS)).iterator().toList;
-          allAnnotations.addAll(phenotypes);
+          val phenotypes = state.getDescendants(new ElementFilter("phenotype_character", phenoNS)).iterator().asScala.toList;
+          allAnnotations.asJava.addAll(phenotypes.asJava);
           if (!phenotypes.isEmpty) {
             annotatedStates.add(state);
             annotated.add(state);

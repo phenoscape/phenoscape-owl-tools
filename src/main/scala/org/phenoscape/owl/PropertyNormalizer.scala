@@ -1,11 +1,9 @@
 package org.phenoscape.owl
 
-import java.io.File
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import org.semanticweb.owlapi.model.IRI
 import org.semanticweb.owlapi.model.OWLOntology
 import org.semanticweb.owlapi.util.OWLEntityRenamer
-import org.semanticweb.owlapi.model.AddImport
 import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model.OWLAxiom
 
@@ -58,7 +56,7 @@ object PropertyNormalizer extends OWLTask {
 
   def normalize(ontology: OWLOntology): OWLOntology = {
     val manager = ontology.getOWLOntologyManager
-    val renamer = new OWLEntityRenamer(manager, Set(ontology))
+    val renamer = new OWLEntityRenamer(manager, Set(ontology).asJava)
     for ((key, value) <- properties) {
       if (key != value) manager.applyChanges(renamer.changeIRI(key, value))
     }
@@ -67,8 +65,8 @@ object PropertyNormalizer extends OWLTask {
 
   def normalize(axioms: Set[OWLAxiom]): Set[OWLAxiom] = {
     val manager = OWLManager.createOWLOntologyManager()
-    val ontology = manager.createOntology(axioms)
-    normalize(ontology).getAxioms().toSet
+    val ontology = manager.createOntology(axioms.asJava)
+    normalize(ontology).getAxioms().asScala.toSet
   }
 
 }

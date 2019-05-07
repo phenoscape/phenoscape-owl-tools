@@ -1,8 +1,7 @@
 package org.phenoscape.owl
 
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import scala.collection.Set
-import scala.collection.mutable
 import org.semanticweb.owlapi.model.OWLOntology
 import java.io.File
 import org.semanticweb.owlapi.model.IRI
@@ -27,19 +26,16 @@ object TaxonomyConverter extends OWLTask {
   def createInstanceOntology(classOntology: OWLOntology): OWLOntology = {
     val manager = classOntology.getOWLOntologyManager();
     val instanceOntology = manager.createOntology(IRI.create("http://example.org/" + UUID.randomUUID().toString()));
-    val allClasses = classOntology.getClassesInSignature(false);
+    val allClasses = classOntology.getClassesInSignature(false).asScala;
     val axioms = allClasses.map(translateTaxonClass(_, classOntology));
-    axioms.foreach(manager.addAxioms(instanceOntology, _));
+    axioms.foreach(axs => manager.addAxioms(instanceOntology, axs.asJava));
     return instanceOntology;
   }
 
   def translateTaxonClass(taxonClass: OWLClass, classOntology: OWLOntology): Set[OWLAxiom] = {
     val manager = classOntology.getOWLOntologyManager();
     val factory = manager.getOWLDataFactory();
-    val axioms = mutable.Set[OWLAxiom]();
-    axioms.add(factory.getOWLClassAssertionAxiom(Taxon, factory.getOWLNamedIndividual(taxonClass.getIRI())));
-    axioms.addAll(onlyClasses(EntitySearcher.getSuperClasses(taxonClass, classOntology)).map(createSubcladeRelationship(taxonClass, _)));
-    return axioms;
+    onlyClasses(EntitySearcher.getSuperClasses(taxonClass, classOntology).asScala).map(createSubcladeRelationship(taxonClass, _)).toSet[OWLAxiom] + factory.getOWLClassAssertionAxiom(Taxon, factory.getOWLNamedIndividual(taxonClass.getIRI()));
   }
 
   def createSubcladeRelationship(subclade: OWLClass, superclade: OWLClass): OWLObjectPropertyAssertionAxiom = {

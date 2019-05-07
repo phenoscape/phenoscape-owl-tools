@@ -330,15 +330,15 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     bgp(
       t('taxon, Vocab.exhibits_state / Vocab.describes_phenotype / (rdfsSubClassOf*) / implies_presence_of_some, 'entity),
       t('entity, OWLRDFVocabulary.RDFS_IS_DEFINED_BY.getIRI, IRI.create("http://purl.obolibrary.org/obo/uberon.owl"))),
-      subClassOf('taxon, Class(Vocab.CHORDATA)),
-      subClassOf('entity, Class(Vocab.ANATOMICAL_ENTITY)))
+    subClassOf('taxon, Class(Vocab.CHORDATA)),
+    subClassOf('entity, Class(Vocab.ANATOMICAL_ENTITY)))
 
   val absencesQuery = construct(t('taxon, Vocab.has_absence_of, 'entity)) from "http://kb.phenoscape.org/" where (
     bgp(
       t('taxon, Vocab.exhibits_state / Vocab.describes_phenotype / (rdfsSubClassOf*) / ABSENCE_OF, 'entity),
       t('entity, OWLRDFVocabulary.RDFS_IS_DEFINED_BY.getIRI, IRI.create("http://purl.obolibrary.org/obo/uberon.owl"))),
-      subClassOf('taxon, Class(Vocab.CHORDATA)),
-      subClassOf('entity, Class(Vocab.ANATOMICAL_ENTITY)))
+    subClassOf('taxon, Class(Vocab.CHORDATA)),
+    subClassOf('entity, Class(Vocab.ANATOMICAL_ENTITY)))
 
   step("Building gene profiles")
   bigdata.begin()
