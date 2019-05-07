@@ -316,7 +316,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
 
     step("Building evolutionary profiles using ancestral states reconstruction")
     val vtoOnt = OWLManager.createOWLOntologyManager().createOntology(vto.axioms.asJava)
-    bigdata.add(EvolutionaryProfiles.computePhenotypeProfiles(TaxonNode(CHORDATA), vtoOnt, bigdata).asJava, graphURI)
+//    bigdata.add(EvolutionaryProfiles.computePhenotypeProfiles(TaxonNode(CHORDATA), vtoOnt, bigdata).asJava, graphURI)
 
     bigdata.commit()
 
