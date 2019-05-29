@@ -42,6 +42,8 @@ libraryDependencies ++= {
     "org.apache.directory.studio" %  "org.apache.commons.codec" % "1.8",
     "com.github.pathikrit"        %% "better-files"             % "3.4.0",
     "com.lihaoyi"                 %% "utest"                    % "0.6.3" % Test,
-    "org.phenoscape"              %% "sparql-interpolator"      % "1.0"
+    "org.phenoscape"              %% "sparql-interpolator"      % "1.0",
+    "io.monix"                    %% "monix"                    % "3.0.0-RC2"
+
   )
 }

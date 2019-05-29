@@ -1,16 +1,24 @@
 package org.phenoscape.owl.sim
 
-import java.io.File
-import java.io.PrintWriter
+import java.io.{File, FileOutputStream, PrintWriter}
+
+import monix.eval.Task
+import monix.reactive.Observable
+import org.apache.jena.datatypes.TypeMapper
+import org.apache.jena.rdf.model.{AnonId, ResourceFactory, Statement => JenaStatement}
+import org.apache.jena.riot.RDFFormat
+import org.apache.jena.riot.system.StreamRDFWriter
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 import scala.collection.parallel._
-import org.openrdf.model.Statement
+import org.openrdf.model.{BNode, Literal, Statement, URI}
 import org.openrdf.model.impl.NumericLiteralImpl
 import org.openrdf.model.impl.StatementImpl
 import org.openrdf.model.impl.URIImpl
 import org.openrdf.model.vocabulary.RDF
+import org.apache.jena.graph.Triple
+import org.apache.jena.rdf.model.impl.ResourceImpl
 import org.phenoscape.kb.ingest.util.OntUtil
 import org.phenoscape.owl.Vocab
 import org.semanticweb.elk.owlapi.ElkReasonerFactory
@@ -21,6 +29,7 @@ import org.semanticweb.owlapi.model.OWLOntology
 import org.semanticweb.owlapi.reasoner.{Node => ReasonerNode}
 import org.semanticweb.owlapi.reasoner.OWLReasoner
 
+import scala.concurrent.duration.Duration
 import scala.util.hashing.MurmurHash3
 
 class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
@@ -89,6 +98,26 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
     corpusProfile <- individualsInCorpus.toParArray
     triple <- groupWiseSimilarity(inputProfile, corpusProfile).toTriples
   } yield triple).toSet.seq
+
+  def computeAllSimilarityToCorpusDirectOutput(inputs: Set[OWLNamedIndividual], outfile: File): Unit = {
+    import monix.execution.Scheduler.Implicits.global
+    val outputStream = new FileOutputStream(outfile)
+    val rdfWriter = StreamRDFWriter.getWriterStream(outputStream, RDFFormat.TURTLE_FLAT)
+    rdfWriter.start()
+    val comparisons = for {
+      inputProfile <- Observable.fromIterable(inputs)
+      corpusProfile <- Observable.fromIterable(individualsInCorpus)
+    } yield (inputProfile, corpusProfile)
+    val processed = comparisons.mapParallelUnordered(Runtime.getRuntime.availableProcessors) { case (inputProfile, corpusProfile) =>
+      Task(groupWiseSimilarity(inputProfile, corpusProfile).toTriples)
+    }
+    processed.foreachL { triples =>
+      //FIXME wasted conversions here
+      triples.foreach(triple => rdfWriter.triple(sesameTripleToJena(triple).asTriple))
+    }.runSyncUnsafe(Duration.Inf)
+    rdfWriter.finish()
+    outputStream.close()
+  }
 
   def computeAllSimilarityToCorpusJ(inputs: Set[OWLNamedIndividual]): Map[(OWLNamedIndividual, OWLNamedIndividual), Double] = (for {
     inputProfile <- inputs.toParArray
@@ -275,6 +304,22 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
       val termURL = new URIImpl(term.getIRI.toString)
       new StatementImpl(termURL, has_ic, new NumericLiteralImpl(ic))
     }).toSet
+  }
+
+  private def sesameTripleToJena(triple: Statement): JenaStatement = {
+    val subject = triple.getSubject match {
+      case bnode: BNode => new ResourceImpl(new AnonId(bnode.getID))
+      case uri: URI     => ResourceFactory.createResource(uri.stringValue)
+    }
+    val predicate = ResourceFactory.createProperty(triple.getPredicate.stringValue)
+    val obj = triple.getObject match {
+      case bnode: BNode                                    => new ResourceImpl(new AnonId(bnode.getID))
+      case uri: URI                                        => ResourceFactory.createResource(uri.stringValue)
+      case literal: Literal if literal.getLanguage != null => ResourceFactory.createLangLiteral(literal.getLabel, literal.getLanguage)
+      case literal: Literal if literal.getDatatype != null => ResourceFactory.createTypedLiteral(literal.getLabel, TypeMapper.getInstance.getSafeTypeByName(literal.getDatatype.stringValue))
+      case literal: Literal                                => ResourceFactory.createStringLiteral(literal.getLabel)
+    }
+    ResourceFactory.createStatement(subject, predicate, obj)
   }
 
 }
