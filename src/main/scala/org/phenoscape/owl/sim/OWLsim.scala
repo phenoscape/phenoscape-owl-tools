@@ -291,15 +291,11 @@ object Node {
 
 }
 
-case class PairScore(queryAnnotation: Node, corpusAnnotation: Node, maxSubsumer: Node, maxSubsumerIC: Double)
+final case class PairScore(queryAnnotation: Node, corpusAnnotation: Node, maxSubsumer: Node, maxSubsumerIC: Double)
 
-case class GroupWiseSimilarity(queryIndividual: OWLNamedIndividual, corpusIndividual: OWLNamedIndividual, score: Double, pairs: Set[PairScore]) {
+final case class GroupWiseSimilarity(queryIndividual: OWLNamedIndividual, corpusIndividual: OWLNamedIndividual, score: Double, pairs: Set[PairScore]) {
 
-  private val combined_score = new URIImpl(Vocab.combined_score.getIRI.toString)
-  private val has_subsumer = new URIImpl(Vocab.has_subsumer.getIRI.toString)
-  private val for_query_profile = new URIImpl(Vocab.for_query_profile.getIRI.toString)
-  private val for_corpus_profile = new URIImpl(Vocab.for_corpus_profile.getIRI.toString)
-  private val FoundAsMICA = new URIImpl(Vocab.FoundAsMICA.getIRI.toString)
+  import GroupWiseSimilarity._
 
   def toTriples: Set[Statement] = {
     val self = new URIImpl(OntUtil.nextIRI.toString)
@@ -321,7 +317,17 @@ case class GroupWiseSimilarity(queryIndividual: OWLNamedIndividual, corpusIndivi
 
 }
 
-case class SimpleSimilarity(i: OWLNamedIndividual, j: OWLNamedIndividual, score: Double) {
+object GroupWiseSimilarity {
+
+  val combined_score = new URIImpl(Vocab.combined_score.getIRI.toString)
+  val has_subsumer = new URIImpl(Vocab.has_subsumer.getIRI.toString)
+  val for_query_profile = new URIImpl(Vocab.for_query_profile.getIRI.toString)
+  val for_corpus_profile = new URIImpl(Vocab.for_corpus_profile.getIRI.toString)
+  val FoundAsMICA = new URIImpl(Vocab.FoundAsMICA.getIRI.toString)
+
+}
+
+final case class SimpleSimilarity(i: OWLNamedIndividual, j: OWLNamedIndividual, score: Double) {
 
   override def toString() = s"${i.getIRI.toString}\t${j.getIRI.toString}\t${score}"
 
