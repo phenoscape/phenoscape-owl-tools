@@ -1,16 +1,14 @@
 package org.phenoscape.owl.build
 
-import java.io.BufferedOutputStream
 import java.io.File
-import java.io.FileOutputStream
 import java.util.Date
-import scala.collection.JavaConverters._
-import org.openrdf.rio.RDFFormat
-import org.openrdf.rio.Rio
-import org.phenoscape.owl.sim.OWLsim
+
 import org.phenoscape.kb.ingest.util.OntUtil
+import org.phenoscape.owl.sim.OWLsim
 import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model.OWLNamedIndividual
+
+import scala.collection.JavaConverters._
 
 object RunPairwiseOWLSim extends App {
 
@@ -41,14 +39,6 @@ object RunPairwiseOWLSim extends App {
   val startIndex = (taskNum - 1) * groupSize
   val group = orderedProfiles.drop(startIndex).take(groupSize)
   println("Computing similarity matrix")
-  val similarityMatrix = owlSim.computeAllSimilarityToCorpus(group.toSet)
-  println("Writing results to file")
-  val triplesOutput = new BufferedOutputStream(new FileOutputStream(new File(outfile)))
-  val writer = Rio.createWriter(RDFFormat.TURTLE, triplesOutput)
-  writer.startRDF()
-  similarityMatrix.foreach(writer.handleStatement)
-  writer.endRDF()
-  triplesOutput.close()
+  owlSim.computeAllSimilarityToCorpusDirectOutput(group.toSet, new File(outfile))
   println("Done: " + new Date())
-
 }
