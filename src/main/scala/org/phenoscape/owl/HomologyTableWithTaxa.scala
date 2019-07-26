@@ -1,31 +1,23 @@
 package org.phenoscape.owl
 
-import java.io.File
-import java.util.UUID
+import java.io.{File, FileOutputStream}
+
+import org.apache.commons.codec.digest.DigestUtils
+import org.apache.commons.lang3.StringUtils
+import org.phenoscape.kb.ingest.util.{OBOUtil, PostCompositionParser}
+import org.phenoscape.owl.Vocab._
+import org.phenoscape.scowl._
+import org.semanticweb.owlapi.apibinding.OWLManager
+import org.semanticweb.owlapi.formats.FunctionalSyntaxDocumentFormat
+import org.semanticweb.owlapi.model.{AddOntologyAnnotation, IRI, OWLAxiom, OWLOntology}
+import org.semanticweb.owlapi.vocab.DublinCoreVocabulary
 
 import scala.collection.JavaConverters._
 import scala.io.Source
-import org.phenoscape.kb.ingest.util.OBOUtil
-import org.phenoscape.scowl._
-import org.semanticweb.owlapi.apibinding.OWLManager
-import org.semanticweb.owlapi.model.AddImport
-import org.semanticweb.owlapi.model.AddOntologyAnnotation
-import org.semanticweb.owlapi.model.IRI
-import org.semanticweb.owlapi.model.OWLAxiom
-import org.semanticweb.owlapi.model.OWLOntology
-import org.semanticweb.owlapi.vocab.DublinCoreVocabulary
-
-import Vocab._
-import org.phenoscape.kb.ingest.util.PostCompositionParser
-import org.semanticweb.owlapi.model.OWLClassExpression
-import org.semanticweb.owlapi.model.OWLNamedIndividual
-import org.semanticweb.owlapi.model.OWLIndividual
-import org.apache.commons.codec.digest.DigestUtils
-import org.apache.commons.lang3.StringUtils
 
 /**
-  * This corresponds to the REA homology model in the Phenoscape homology paper.
-  */
+ * This corresponds to the REA homology model in the Phenoscape homology paper.
+ */
 object HomologyTableWithTaxa extends App {
 
   val factory = OWLManager.getOWLDataFactory
@@ -45,7 +37,7 @@ object HomologyTableWithTaxa extends App {
   def convertFile(file: Source): OWLOntology = {
     val axioms = (file.getLines.drop(1).flatMap(processEntry)).toSet.asJava
     val ontology = manager.createOntology(axioms, IRI.create("http://purl.org/phenoscape/demo/phenoscape_homology.owl"))
-    manager.applyChange(new AddOntologyAnnotation(ontology, factory.getOWLAnnotation(description, factory.getOWLLiteral("Homology Assertions using the REAHM model"))))
+    manager.applyChange(new AddOntologyAnnotation(ontology, factory.getOWLAnnotation(description, factory.getOWLLiteral("Homology Assertions using the REA model"))))
     ontology
   }
 
@@ -75,23 +67,23 @@ object HomologyTableWithTaxa extends App {
         val evidence = Individual(s"$uniquePrefix#evidence")
         val pub = factory.getOWLLiteral(items(13).trim)
         if (!negated) {
-          axioms += ((structure1 and (in_taxon some taxon1)) SubClassOf (property some (structure2 and (in_taxon some taxon2)))) Annotation (axiom_has_evidence, evidence)
-          axioms += ((structure2 and (in_taxon some taxon2)) SubClassOf (property some (structure1 and (in_taxon some taxon1)))) Annotation (axiom_has_evidence, evidence)
+          axioms += ((structure1 and (in_taxon some taxon1)) SubClassOf (property some (structure2 and (in_taxon some taxon2)))) Annotation(axiom_has_evidence, evidence)
+          axioms += ((structure2 and (in_taxon some taxon2)) SubClassOf (property some (structure1 and (in_taxon some taxon1)))) Annotation(axiom_has_evidence, evidence)
         }
         val association = Individual(uniquePrefix)
         axioms += association Type Association
-        axioms += association Fact (has_evidence, evidence)
-        axioms += association Fact (IsNegated, negated)
+        axioms += association Fact(has_evidence, evidence)
+        axioms += association Fact(IsNegated, negated)
         val structure1Ind = Individual(s"$uniquePrefix#structure1")
         val structure2Ind = Individual(s"$uniquePrefix#structure2")
         axioms += structure1Ind Type (structure1 and (in_taxon some taxon1))
         axioms += structure2Ind Type (structure2 and (in_taxon some taxon2))
-        axioms += association Fact (HasSubject, structure1Ind)
-        axioms += association Fact (HasObject, structure2Ind)
-        axioms += association Fact (HasPredicate, Individual(property.getIRI))
+        axioms += association Fact(HasSubject, structure1Ind)
+        axioms += association Fact(HasObject, structure2Ind)
+        axioms += association Fact(HasPredicate, Individual(property.getIRI))
         axioms += evidence Type evidenceCode
-        axioms += evidence Annotation (source, pub)
-      case None =>
+        axioms += evidence Annotation(source, pub)
+      case None             =>
         if (!negated) {
           axioms += ((structure1 and (in_taxon some taxon1)) SubClassOf (property some (structure2 and (in_taxon some taxon2))))
           axioms += ((structure2 and (in_taxon some taxon2)) SubClassOf (property some (structure1 and (in_taxon some taxon1))))
@@ -101,6 +93,6 @@ object HomologyTableWithTaxa extends App {
   }
 
   val output = convertFile(input)
-  manager.saveOntology(output, IRI.create(new File(args(1))))
+  manager.saveOntology(output, new FunctionalSyntaxDocumentFormat(), new FileOutputStream(new File(args(1))))
 
 }
