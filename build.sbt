@@ -10,7 +10,7 @@ mainClass in Compile := Some("org.phenoscape.owl.build.Command")
 
 scalaVersion := "2.12.8"
 
-crossScalaVersions := Seq("2.11.8", "2.12.8")
+crossScalaVersions := Seq("2.12.8")
 
 scalacOptions := Seq("-unchecked", "-deprecation", "-feature", "-encoding", "utf8")
 
@@ -35,13 +35,13 @@ libraryDependencies ++= {
     "org.semanticweb.elk"         %  "elk-owlapi"               % "0.4.3",
     "com.blazegraph"              %  "bigdata-core"             % "2.1.2",
     "org.openrdf.sesame"          %  "sesame-rio"               % "2.7.12",
-    "org.phenoscape"              %% "scowl"                    % "1.3",
+    "org.phenoscape"              %% "scowl"                    % "1.3.4",
     "org.phenoscape"              %% "owlet"                    % "1.6",
-    "org.phenoscape"              %% "phenoscape-kb-ingest"     % "1.6.1",
+    "org.phenoscape"              %% "phenoscape-kb-ingest"     % "1.6.2",
     "log4j"                       %  "log4j"                    % "1.2.17",
     "org.apache.directory.studio" %  "org.apache.commons.codec" % "1.8",
     "com.github.pathikrit"        %% "better-files"             % "3.4.0",
-    "com.lihaoyi"                 %% "utest"                    % "0.6.3" % Test,
+    "com.lihaoyi"                 %% "utest"                    % "0.6.9" % Test,
     "org.phenoscape"              %% "sparql-interpolator"      % "1.0",
     "io.monix"                    %% "monix"                    % "3.0.0-RC2"
 

@@ -1,27 +1,23 @@
 package org.phenoscape.owl
 
-import java.io.File
+import java.io.{File, FileOutputStream}
+
+import org.apache.commons.codec.digest.DigestUtils
+import org.apache.commons.lang3.StringUtils
+import org.phenoscape.kb.ingest.util.{OBOUtil, PostCompositionParser}
+import org.phenoscape.owl.Vocab._
+import org.phenoscape.scowl._
+import org.semanticweb.owlapi.apibinding.OWLManager
+import org.semanticweb.owlapi.formats.FunctionalSyntaxDocumentFormat
+import org.semanticweb.owlapi.model.{AddOntologyAnnotation, IRI, OWLAxiom, OWLOntology}
+import org.semanticweb.owlapi.vocab.DublinCoreVocabulary
 
 import scala.collection.JavaConverters._
 import scala.io.Source
 
-import org.apache.commons.codec.digest.DigestUtils
-import org.apache.commons.lang3.StringUtils
-import org.phenoscape.kb.ingest.util.OBOUtil
-import org.phenoscape.kb.ingest.util.PostCompositionParser
-import org.phenoscape.scowl._
-import org.semanticweb.owlapi.apibinding.OWLManager
-import org.semanticweb.owlapi.model.AddOntologyAnnotation
-import org.semanticweb.owlapi.model.IRI
-import org.semanticweb.owlapi.model.OWLAxiom
-import org.semanticweb.owlapi.model.OWLOntology
-import org.semanticweb.owlapi.vocab.DublinCoreVocabulary
-
-import Vocab._
-
 /**
-  * This corresponds to the AVA homology model in the Phenoscape homology paper.
-  */
+ * This corresponds to the AVA homology model in the Phenoscape homology paper.
+ */
 object HomologyTableToOWLVAHM extends App {
 
   val factory = OWLManager.getOWLDataFactory
@@ -40,7 +36,7 @@ object HomologyTableToOWLVAHM extends App {
   def convertFile(file: Source): OWLOntology = {
     val axioms = (file.getLines.drop(1).flatMap(processEntry)).toSet.asJava
     val ontology = manager.createOntology(axioms, IRI.create("http://purl.org/phenoscape/demo/phenoscape_homology.owl"))
-    manager.applyChange(new AddOntologyAnnotation(ontology, factory.getOWLAnnotation(description, factory.getOWLLiteral("Homology Assertions using the VAHM model"))))
+    manager.applyChange(new AddOntologyAnnotation(ontology, factory.getOWLAnnotation(description, factory.getOWLLiteral("Homology Assertions using the AVA model"))))
     manager.addAxiom(ontology, HistoricalHomologyMemberof InverseOf HasHistoricalHomologyMember)
     manager.addAxiom(ontology, SerialHomologyMemberOf InverseOf HasSerialHomologyMember)
     manager.addAxiom(ontology, InHistoricalHomologyRelationshipWith SubPropertyChain (HistoricalHomologyMemberof o HasHistoricalHomologyMember))
@@ -81,14 +77,14 @@ object HomologyTableToOWLVAHM extends App {
         val evidence = Individual(s"$uniquePrefix#evidence")
         val pub = factory.getOWLLiteral(items(13).trim)
         axioms += evidence Type evidenceCode
-        axioms += evidence Annotation (source, pub)
-        axioms += ancestor Fact (has_evidence, evidence)
+        axioms += evidence Annotation(source, pub)
+        axioms += ancestor Fact(has_evidence, evidence)
       }
     }
     axioms
   }
 
   val output = convertFile(input)
-  manager.saveOntology(output, IRI.create(new File(args(1))))
+  manager.saveOntology(output, new FunctionalSyntaxDocumentFormat(), new FileOutputStream(new File(args(1))))
 
 }
