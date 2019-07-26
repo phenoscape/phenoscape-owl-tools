@@ -10,7 +10,7 @@ mainClass in Compile := Some("org.phenoscape.owl.build.Command")
 
 scalaVersion := "2.12.8"
 
-crossScalaVersions := Seq("2.11.8", "2.12.8")
+crossScalaVersions := Seq("2.12.8")
 
 scalacOptions := Seq("-unchecked", "-deprecation", "-feature", "-encoding", "utf8")
 
