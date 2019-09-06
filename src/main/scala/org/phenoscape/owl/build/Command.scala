@@ -39,6 +39,8 @@ output-evolutionary-profiles
 
 Consult the source code for required parameters.
       """)
+
+      System.exit(1)
   }
 
 }
