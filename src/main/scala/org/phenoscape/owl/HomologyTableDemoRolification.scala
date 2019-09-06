@@ -1,21 +1,19 @@
 package org.phenoscape.owl
 
-import java.io.File
-import scala.collection.JavaConverters._
-import scala.io.Source
-import org.phenoscape.kb.ingest.util.OBOUtil
-import org.phenoscape.scowl._
-import org.semanticweb.owlapi.apibinding.OWLManager
-import org.semanticweb.owlapi.model.AddOntologyAnnotation
-import org.semanticweb.owlapi.model.IRI
-import org.semanticweb.owlapi.model.OWLAxiom
-import org.semanticweb.owlapi.model.OWLOntology
-import org.semanticweb.owlapi.vocab.DublinCoreVocabulary
+import java.io.{File, FileOutputStream}
 
-import Vocab._
-import org.phenoscape.kb.ingest.util.PostCompositionParser
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.lang3.StringUtils
+import org.phenoscape.kb.ingest.util.{OBOUtil, PostCompositionParser}
+import org.phenoscape.owl.Vocab._
+import org.phenoscape.scowl._
+import org.semanticweb.owlapi.apibinding.OWLManager
+import org.semanticweb.owlapi.formats.FunctionalSyntaxDocumentFormat
+import org.semanticweb.owlapi.model.{AddOntologyAnnotation, IRI, OWLAxiom, OWLOntology}
+import org.semanticweb.owlapi.vocab.DublinCoreVocabulary
+
+import scala.collection.JavaConverters._
+import scala.io.Source
 
 object HomologyTableDemoRolification extends App {
 
@@ -63,13 +61,13 @@ object HomologyTableDemoRolification extends App {
         val evidence = Individual(s"$uniquePrefix#evidence")
         val pub = factory.getOWLLiteral(items(13).trim)
         if (!negated) {
-          axioms += ((structure1 and (in_taxon some taxon1)) SubClassOf (role1.Self)) Annotation (axiom_has_evidence, evidence)
-          axioms += ((structure2 and (in_taxon some taxon2)) SubClassOf (role2.Self)) Annotation (axiom_has_evidence, evidence)
-          axioms += (property SubPropertyChain (role1 o factory.getOWLTopObjectProperty o role2)) Annotation (axiom_has_evidence, evidence)
+          axioms += ((structure1 and (in_taxon some taxon1)) SubClassOf (role1.Self)) Annotation(axiom_has_evidence, evidence)
+          axioms += ((structure2 and (in_taxon some taxon2)) SubClassOf (role2.Self)) Annotation(axiom_has_evidence, evidence)
+          axioms += (property SubPropertyChain (role1 o factory.getOWLTopObjectProperty o role2)) Annotation(axiom_has_evidence, evidence)
         }
         axioms += evidence Type evidenceCode
-        axioms += evidence Annotation (source, pub)
-      case None =>
+        axioms += evidence Annotation(source, pub)
+      case None             =>
         if (!negated) {
           axioms += ((structure1 and (in_taxon some taxon1)) SubClassOf (role1.Self))
           axioms += ((structure2 and (in_taxon some taxon2)) SubClassOf (role2.Self))
@@ -80,6 +78,6 @@ object HomologyTableDemoRolification extends App {
   }
 
   val output = convertFile(input)
-  manager.saveOntology(output, IRI.create(new File(args(1))))
+  manager.saveOntology(output, new FunctionalSyntaxDocumentFormat(), new FileOutputStream(new File(args(1))))
 
 }
