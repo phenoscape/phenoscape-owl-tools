@@ -20,8 +20,9 @@ object Command extends App {
     case "convert-nexml" => ConvertNeXML.main(commandArgs)
     case "assert-negation-hierarchy" => NegationHierarchyAsserter.main(commandArgs)
     case "output-evolutionary-profiles" => EvolutionaryProfiles.main(commandArgs)
-    case _ => println(
-      """
+    case _ => {
+      println(
+        """
 Valid commands are:
 
 build-kb
@@ -41,6 +42,7 @@ Consult the source code for required parameters.
       """)
 
       System.exit(1)
+    }
   }
 
 }
