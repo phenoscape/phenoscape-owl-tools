@@ -19,6 +19,7 @@ object Command extends App {
     case "convert-nexml"                => ConvertNeXML.main(commandArgs)
     case "assert-negation-hierarchy"    => NegationHierarchyAsserter.main(commandArgs)
     case "output-evolutionary-profiles" => EvolutionaryProfiles.main(commandArgs)
+
     case "homology-table-to-owl"        =>
       val homologyArgs = commandArgs.drop(1)
       commandArgs(0).toLowerCase match {
@@ -26,7 +27,7 @@ object Command extends App {
         case "ava"          => HomologyTableToOWLVAHM.main(homologyArgs)
         case "rolification" => HomologyTableDemoRolification.main(homologyArgs)
       }
-    case _                              => println(
+    case _                              => { println(
       """
 Valid commands are:
 
@@ -46,6 +47,9 @@ homology-table-to-owl
 
 Consult the source code for required parameters.
       """)
+
+      System.exit(1)
+    }
   }
 
 }
