@@ -17,6 +17,8 @@ object Vocab {
   val dcDescription = DublinCoreVocabulary.DESCRIPTION.getIRI
   val has_part = ObjectProperty("http://purl.obolibrary.org/obo/BFO_0000051")
   val part_of = ObjectProperty("http://purl.obolibrary.org/obo/BFO_0000050")
+  val reflexive_part_of = ObjectProperty("http://purl.org/phenoscape/vocab.owl#reflexive_part_of")
+  val reflexive_develops_from = ObjectProperty("http://purl.org/phenoscape/vocab.owl#reflexive_develops_from")
   val bearer_of = ObjectProperty("http://purl.obolibrary.org/obo/BFO_0000053")
   val inheres_in = ObjectProperty("http://purl.obolibrary.org/obo/BFO_0000052")
   val inheres_in_part_of = ObjectProperty("http://purl.obolibrary.org/obo/RO_0002314")
