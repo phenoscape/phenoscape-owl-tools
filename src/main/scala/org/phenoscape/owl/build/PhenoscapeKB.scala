@@ -105,9 +105,9 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     addTriples(phenoscapeVocab, bigdata, graphURI)
     val attributes = loadFromWeb(IRI.create("http://svn.code.sf.net/p/phenoscape/code/trunk/vocab/character_slims.obo"), false)
     addTriples(attributes, bigdata, graphURI)
-    val uberon = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/uberon/ext.owl"), true)
+    val uberon = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/uberon/uberon-base.owl"), false)
     addTriples(uberon, bigdata, graphURI)
-    val cl = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/cl.owl"), true)
+    val cl = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/cl/cl-base.owl"), false)
     addTriples(cl, bigdata, graphURI)
     val homology = loadFromWeb(IRI.create("http://purl.org/phenoscape/demo/phenoscape_homology.owl"), true)
     addTriples(homology, bigdata, graphURI)
@@ -117,7 +117,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     addTriples(pato, bigdata, graphURI)
     val bspo = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/bspo.owl"), true)
     addTriples(bspo, bigdata, graphURI)
-    val go = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/go.owl"), true)
+    val go = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/go/go-base.owl"), false)
     addTriples(go, bigdata, graphURI)
     val taxrank = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/taxrank.owl"), true)
     addTriples(taxrank, bigdata, graphURI)
@@ -129,9 +129,9 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     addTriples(zfa, bigdata, graphURI)
     val xao = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/xao.owl"), true)
     addTriples(xao, bigdata, graphURI)
-    val hp = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/hp.owl"), true)
+    val hp = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/hp/hp-base.owl"), false)
     addTriples(hp, bigdata, graphURI)
-    val mp = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/mp.owl"), true)
+    val mp = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/mp/mp-base.owl"), false)
     addTriples(mp, bigdata, graphURI)
     val ro = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/ro.owl"), false) //.axioms.filter(_.isAnnotationAxiom)
     addTriples(ro, bigdata, graphURI)
@@ -250,11 +250,13 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     } yield axiom
     addTriples(subsumers, bigdata, graphURI)
 
-    val allTBox = ro.axioms ++ uberon.axioms ++ homology.axioms ++ pato.axioms ++ bspo.axioms ++ vto.axioms ++ vtoToNCBI.axioms ++ zfa.axioms ++ xao.axioms ++ hp.axioms ++ mp.axioms ++
+    //exclude XAO
+    val allTBox = ro.axioms ++ uberon.axioms ++ homology.axioms ++ pato.axioms ++ bspo.axioms ++ vto.axioms ++ vtoToNCBI.axioms ++ zfa.axioms ++ hp.axioms ++ mp.axioms ++
       caroToUberon.axioms ++ zfaToUberon.axioms ++ xaoToUberon.axioms ++ mgiToEMAPA.axioms ++ emapaToUberon.axioms ++ eco.axioms ++
       parts ++ hasParts ++ hasPartsInheringIns ++ phenotypeOfs ++ presences ++ absences ++ absenceNegationEquivalences ++ developsFromRulesForAbsence ++ subsumers ++ tboxFromData ++ phenoscapeVocab.axioms
 
-    val coreTBox = ro.axioms ++ uberon.axioms ++ homology.axioms ++ pato.axioms ++ bspo.axioms ++ vto.axioms ++ vtoToNCBI.axioms ++ zfa.axioms ++ xao.axioms ++ hp.axioms ++ mp.axioms ++
+    //exclude XAO
+    val coreTBox = ro.axioms ++ uberon.axioms ++ homology.axioms ++ pato.axioms ++ bspo.axioms ++ vto.axioms ++ vtoToNCBI.axioms ++ zfa.axioms ++ hp.axioms ++ mp.axioms ++
       caroToUberon.axioms ++ zfaToUberon.axioms ++ xaoToUberon.axioms ++ mgiToEMAPA.axioms ++ emapaToUberon.axioms ++ eco.axioms ++
       developsFromRulesForAbsence ++ tboxFromData ++ phenoscapeVocab.axioms
     println("tbox class count: " + allTBox.flatMap(_.getClassesInSignature.asScala).size)
