@@ -1,7 +1,7 @@
 package org.phenoscape.owl.build
 
 import java.io.BufferedOutputStream
-import java.io.{ File => JFile }
+import java.io.{File => JFile}
 import java.io.FileOutputStream
 import java.io.FileReader
 import java.util.Properties
@@ -153,8 +153,8 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
 
     step("Querying entities and qualities")
     val coreReasoner = reasoner(Set(uberon, cl, pato, bspo, phenoscapeVocab).flatMap(_.axioms))
-    val anatomicalEntities = coreReasoner.getSubClasses(Class(Vocab.ANATOMICAL_ENTITY), false).getFlattened.asScala.filterNot(_.isOWLNothing) + Class(Vocab.ANATOMICAL_ENTITY)
-    val qualities = coreReasoner.getSubClasses(Class(Vocab.QUALITY), false).getFlattened.asScala.filterNot(_.isOWLNothing) + Class(Vocab.QUALITY)
+    val anatomicalEntities = (coreReasoner.getSubClasses(Class(Vocab.ANATOMICAL_ENTITY), false).getFlattened.asScala.filterNot(_.isOWLNothing) + Class(Vocab.ANATOMICAL_ENTITY)).toSet
+    val qualities = (coreReasoner.getSubClasses(Class(Vocab.QUALITY), false).getFlattened.asScala.filterNot(_.isOWLNothing) + Class(Vocab.QUALITY)).toSet
     coreReasoner.dispose()
 
     step("Converting NeXML to OWL")
@@ -244,11 +244,17 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     val attributeQualities = attributes.axioms.flatMap(_.getClassesInSignature.asScala) + HasNumberOf
     val subsumers = for {
       entity <- anatomicalEntities
-      (partsTerm, entityPartsAxioms) = SimilarityTemplates.partsOfEntity(entity)
-      (developsFromTerm, developsFromAxioms) = SimilarityTemplates.developsFromEntity(entity)
+      (_, entityPartsAxioms) = SimilarityTemplates.partsOfEntity(entity)
+      (_, developsFromAxioms) = SimilarityTemplates.developsFromEntity(entity)
       axiom <- (entityPartsAxioms ++ developsFromAxioms)
     } yield axiom
-    addTriples(subsumers, bigdata, graphURI)
+    val subsumersByQuality = for {
+      entity <- anatomicalEntities
+      quality <- attributeQualities
+      (_, axioms) = SimilarityTemplates.partsOfEntityWithQuality(entity, quality)
+      axiom <- axioms
+    } yield axiom
+    addTriples(subsumers ++ subsumersByQuality, bigdata, graphURI)
 
     //exclude XAO
     val allTBox = ro.axioms ++ uberon.axioms ++ homology.axioms ++ pato.axioms ++ bspo.axioms ++ vto.axioms ++ vtoToNCBI.axioms ++ zfa.axioms ++ hp.axioms ++ mp.axioms ++
@@ -328,19 +334,19 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
 
   implicit val fullReasoner = loadOntologiesAndCreateReasoner()
 
-  val presencesQuery = construct(t('taxon, Vocab.has_presence_of, 'entity)) from "http://kb.phenoscape.org/" where (
+  val presencesQuery = construct(t('taxon, Vocab.has_presence_of, 'entity)) from "http://kb.phenoscape.org/" where(
     bgp(
-      t('taxon, Vocab.exhibits_state / Vocab.describes_phenotype / (rdfsSubClassOf*) / implies_presence_of_some, 'entity),
+      t('taxon, Vocab.exhibits_state / Vocab.describes_phenotype / (rdfsSubClassOf *) / implies_presence_of_some, 'entity),
       t('entity, OWLRDFVocabulary.RDFS_IS_DEFINED_BY.getIRI, IRI.create("http://purl.obolibrary.org/obo/uberon.owl"))),
-      subClassOf('taxon, Class(Vocab.CHORDATA)),
-      subClassOf('entity, Class(Vocab.ANATOMICAL_ENTITY)))
+    subClassOf('taxon, Class(Vocab.CHORDATA)),
+    subClassOf('entity, Class(Vocab.ANATOMICAL_ENTITY)))
 
-  val absencesQuery = construct(t('taxon, Vocab.has_absence_of, 'entity)) from "http://kb.phenoscape.org/" where (
+  val absencesQuery = construct(t('taxon, Vocab.has_absence_of, 'entity)) from "http://kb.phenoscape.org/" where(
     bgp(
-      t('taxon, Vocab.exhibits_state / Vocab.describes_phenotype / (rdfsSubClassOf*) / ABSENCE_OF, 'entity),
+      t('taxon, Vocab.exhibits_state / Vocab.describes_phenotype / (rdfsSubClassOf *) / ABSENCE_OF, 'entity),
       t('entity, OWLRDFVocabulary.RDFS_IS_DEFINED_BY.getIRI, IRI.create("http://purl.obolibrary.org/obo/uberon.owl"))),
-      subClassOf('taxon, Class(Vocab.CHORDATA)),
-      subClassOf('entity, Class(Vocab.ANATOMICAL_ENTITY)))
+    subClassOf('taxon, Class(Vocab.CHORDATA)),
+    subClassOf('entity, Class(Vocab.ANATOMICAL_ENTITY)))
 
   step("Building gene profiles")
   bigdata.begin()
@@ -369,7 +375,8 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
   bigdata.commit()
 
   step("Exporting all triples to turtle file")
-  val triplesQuery = bigdata.prepareGraphQuery(QueryLanguage.SPARQL, """
+  val triplesQuery = bigdata.prepareGraphQuery(QueryLanguage.SPARQL,
+    """
   CONSTRUCT {
    ?s ?p ?o .
   }
@@ -383,7 +390,8 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
   triplesOutput.close()
 
   step("Exporting phenotypic profiles for semantic similarity")
-  val profilesQuery = bigdata.prepareGraphQuery(QueryLanguage.SPARQL, """
+  val profilesQuery = bigdata.prepareGraphQuery(QueryLanguage.SPARQL,
+    """
 PREFIX rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX owl:  <http://www.w3.org/2002/07/owl#>
