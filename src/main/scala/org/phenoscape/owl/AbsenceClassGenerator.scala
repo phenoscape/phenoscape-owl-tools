@@ -27,17 +27,10 @@ object AbsenceClassGenerator extends OWLTask {
 
   def createAbsenceClass(ontClass: OWLClass): Set[OWLAxiom] = {
     val classIRI = ontClass.getIRI
-    val absenceClass = Class(getAbsenceIRI(classIRI))
-    val notHasPartClass = Class(NegationClassGenerator.getNegationIRI(NamedRestrictionGenerator.getRestrictionIRI(has_part.getIRI, classIRI)))
+    val notImpliesPresenceOfClass = Class(NegationClassGenerator.getNegationIRI(NamedRestrictionGenerator.getRestrictionIRI(IMPLIES_PRESENCE_OF.getIRI, classIRI)))
     Set(
-      factory.getOWLDeclarationAxiom(absenceClass),
-      absenceClass EquivalentTo (has_part some (LacksAllPartsOfType and (towards value Individual(classIRI)))),
-      absenceClass EquivalentTo (has_part some (inheres_in some notHasPartClass)),
-      absenceClass Annotation (absenceOf, ontClass))
-  }
-
-  def getAbsenceIRI(classIRI: IRI): IRI = {
-    return IRI.create("http://purl.org/phenoscape/lacks/" + classIRI.toString)
+      notImpliesPresenceOfClass EquivalentTo (has_part some (LacksAllPartsOfType and (towards value Individual(classIRI)))),
+      notImpliesPresenceOfClass Annotation(absenceOf, ontClass))
   }
 
   def getAbsenceOntologyIRI(ontology: OWLOntology): IRI = {
@@ -45,11 +38,11 @@ object AbsenceClassGenerator extends OWLTask {
   }
 
   def generateAllAbsenceAxiomsForEntity(ontClass: OWLClass): Set[OWLAxiom] = {
-    val hasPartAxioms = NamedRestrictionGenerator.createRestriction(has_part, ontClass)
-    val namedHasPartClass = Class(NamedRestrictionGenerator.getRestrictionIRI(has_part.getIRI, ontClass.getIRI()))
-    hasPartAxioms ++
+    val presenceAxioms = NamedRestrictionGenerator.createRestriction(IMPLIES_PRESENCE_OF, ontClass)
+    val namedPresenceClass = Class(NamedRestrictionGenerator.getRestrictionIRI(IMPLIES_PRESENCE_OF.getIRI, ontClass.getIRI))
+    presenceAxioms ++
       createAbsenceClass(ontClass) ++
-      NegationClassGenerator.createNegationClassAxioms(namedHasPartClass)
+      NegationClassGenerator.createNegationClassAxioms(namedPresenceClass)
   }
 
 }

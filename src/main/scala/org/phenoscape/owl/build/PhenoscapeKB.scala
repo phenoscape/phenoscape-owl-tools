@@ -234,11 +234,11 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     val phenotypeOfs = anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(phenotype_of, _))
     val absences = anatomicalEntities.flatMap(AbsenceClassGenerator.createAbsenceClass)
     addTriples(absences, bigdata, graphURI)
-    val namedHasPartClasses = anatomicalEntities.map(_.getIRI).map(NamedRestrictionGenerator.getRestrictionIRI(has_part.getIRI, _)).map(Class(_))
-    val absenceNegationEquivalences = namedHasPartClasses.flatMap(NegationClassGenerator.createNegationClassAxioms)
+    val namedImpliesPresenceOfClasses = anatomicalEntities.map(_.getIRI).map(NamedRestrictionGenerator.getRestrictionIRI(IMPLIES_PRESENCE_OF.getIRI, _)).map(Class(_))
+    val absenceNegationEquivalences = namedImpliesPresenceOfClasses.flatMap(NegationClassGenerator.createNegationClassAxioms)
     addTriples(absenceNegationEquivalences, bigdata, graphURI)
-    val developsFromRulesForAbsence = anatomicalEntities.flatMap(ReverseDevelopsFromRuleGenerator.createRules).toSet[OWLAxiom]
-    addTriples(developsFromRulesForAbsence, bigdata, graphURI)
+    //val developsFromRulesForAbsence = anatomicalEntities.flatMap(ReverseDevelopsFromRuleGenerator.createRules).toSet[OWLAxiom]
+    //addTriples(developsFromRulesForAbsence, bigdata, graphURI)
 
     step("Generating additional semantic similarity subsumers")
     val attributeQualities = attributes.axioms.flatMap(_.getClassesInSignature.asScala) + HasNumberOf
@@ -259,12 +259,12 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     //exclude XAO
     val allTBox = ro.axioms ++ uberon.axioms ++ homology.axioms ++ pato.axioms ++ bspo.axioms ++ vto.axioms ++ vtoToNCBI.axioms ++ zfa.axioms ++ hp.axioms ++ mp.axioms ++
       caroToUberon.axioms ++ zfaToUberon.axioms ++ xaoToUberon.axioms ++ mgiToEMAPA.axioms ++ emapaToUberon.axioms ++ eco.axioms ++
-      parts ++ hasParts ++ hasPartsInheringIns ++ phenotypeOfs ++ presences ++ absences ++ absenceNegationEquivalences ++ developsFromRulesForAbsence ++ subsumers ++ tboxFromData ++ phenoscapeVocab.axioms
+      parts ++ hasParts ++ hasPartsInheringIns ++ phenotypeOfs ++ presences ++ absences ++ absenceNegationEquivalences ++ subsumers ++ tboxFromData ++ phenoscapeVocab.axioms
 
     //exclude XAO
     val coreTBox = ro.axioms ++ uberon.axioms ++ homology.axioms ++ pato.axioms ++ bspo.axioms ++ vto.axioms ++ vtoToNCBI.axioms ++ zfa.axioms ++ hp.axioms ++ mp.axioms ++
       caroToUberon.axioms ++ zfaToUberon.axioms ++ xaoToUberon.axioms ++ mgiToEMAPA.axioms ++ emapaToUberon.axioms ++ eco.axioms ++
-      developsFromRulesForAbsence ++ tboxFromData ++ phenoscapeVocab.axioms
+      tboxFromData ++ phenoscapeVocab.axioms
     println("tbox class count: " + allTBox.flatMap(_.getClassesInSignature.asScala).size)
     println("tbox logical axiom count: " + allTBox.filter(_.isLogicalAxiom).size)
     val tBoxWithoutDisjoints = OntologyUtil.filterDisjointAxioms(allTBox)
