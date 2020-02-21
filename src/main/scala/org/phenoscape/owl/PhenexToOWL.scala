@@ -247,7 +247,7 @@ object PhenexToOWL extends OWLTask {
       annotations += factory.getOWLAnnotation(quality_term, quality.getIRI)
       ((quality, qualityLabel), axioms)
     })
-    val qualityLabel = qualityAndLabelOption.map(_._2).getOrElse("")
+    var qualityLabel = qualityAndLabelOption.map(_._2).getOrElse("")
     val (relatedEntityAndLabelOption, relatedEntityAxioms) = optionWithSet(for {
       qualityElement <- qualityElementOption
       relatedEntityElement <- Option(qualityElement.getChild("related_entity", phenoNS))
@@ -259,12 +259,14 @@ object PhenexToOWL extends OWLTask {
         axioms ++ AbsenceClassGenerator.generateAllAbsenceAxiomsForEntity(relatedEntity))
     })
     val relatedEntityLabel = relatedEntityAndLabelOption.map(_._2).map(re => s" $re").getOrElse("")
-    val phenotypeLabel = s"$entityLabel $qualityLabel$relatedEntityLabel"
     val eqPhenotypeOption = (entityAndLabelOption.map(_._1), qualityAndLabelOption.map(_._1), relatedEntityAndLabelOption.map(_._1)) match {
       case (None, None, _)                                                => None
-      case (Some(entity), None, None)                                     => Option(has_part some (Present and (inheres_in some entity)))
+      case (Some(entity), None, None)                                     =>
+        qualityLabel = "present"
+        Option(has_part some (Present and (inheres_in some entity)))
       case (Some(entity), None, Some(_))                                  =>
         logger.warn("Related entity with no quality. Shouldn't be possible.")
+        qualityLabel = "present"
         Option(has_part some (Present and (inheres_in some entity)))
       case (Some(entity), Some(Absent), None)                             => Option(
         (has_part some (LacksAllPartsOfType and (inheres_in some MultiCellularOrganism) and (towards value Individual(entity.getIRI))))
@@ -280,6 +282,7 @@ object PhenexToOWL extends OWLTask {
       case (Some(entity), Some(quality), Some(relatedEntity))             => Option(has_part some (quality and (inheres_in some entity) and (towards some relatedEntity)))
       //TODO comparisons, etc.
     }
+    val phenotypeLabel = s"$entityLabel $qualityLabel$relatedEntityLabel"
     val (phenotypeClass, phenotypeAxioms) = optionWithSet(eqPhenotypeOption.map(ExpressionUtil.nameForExpressionWithAxioms))
     annotations += factory.getOWLAnnotation(RDFSLabel, factory.getOWLLiteral(phenotypeLabel))
     val annotationAxioms = phenotypeClass.map(term => annotations.map(factory.getOWLAnnotationAssertionAxiom(term.getIRI, _))).toSet.flatten
