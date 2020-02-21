@@ -36,6 +36,7 @@ object PhenexToOWL extends OWLTask {
   val nexmlNS = Namespace.getNamespace("http://www.nexml.org/2009")
   val phenoNS = Namespace.getNamespace("http://www.bioontologies.org/obd/schema/pheno")
   val rdfsNS = Namespace.getNamespace("http://www.w3.org/2000/01/rdf-schema#")
+  val ProvisionalPrefix = "http://data.bioontology.org/provisional_classes"
   val rdfsLabel = factory.getRDFSLabel
   val rdfsComment = factory.getRDFSComment
   val dcDescription = factory.getOWLAnnotationProperty(DublinCoreVocabulary.DESCRIPTION.getIRI)
@@ -144,7 +145,7 @@ object PhenexToOWL extends OWLTask {
   }
 
   def taxonForOTU(otu: Element): Option[OWLNamedIndividual] =
-    getResourceMetaValues(otu, "taxonID", dwcNS).headOption.map(Individual)
+    getResourceMetaValues(otu, "taxonID", dwcNS).headOption.filter(_.toString.startsWith(ProvisionalPrefix)).map(Individual)
 
   def translateSpecimens(otu: Element, owlOTU: OWLNamedIndividual): Set[OWLAxiom] = {
     val axioms = for {
@@ -212,7 +213,9 @@ object PhenexToOWL extends OWLTask {
       owlState Annotation(dcDescription, stateDescription))
     val stateComments = for {comment <- getLiteralMetaValues(state, "comment", rdfsNS)}
       yield owlState Annotation(rdfsComment, comment)
-    val phenotypeAxioms = translatePhenotypes(state, owlState, labelRenderer)
+    val possiblePhenotypeAxioms = translatePhenotypes(state, owlState, labelRenderer)
+    val phenotypeAxioms = if (possiblePhenotypeAxioms.exists(_.getSignature.asScala.exists(_.getIRI.toString.startsWith(ProvisionalPrefix)))) Set.empty
+    else possiblePhenotypeAxioms
     (stateAxioms ++ stateComments ++ phenotypeAxioms, stateID -> owlState)
   }
 
