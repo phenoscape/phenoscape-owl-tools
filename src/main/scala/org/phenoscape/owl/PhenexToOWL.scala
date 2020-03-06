@@ -145,7 +145,7 @@ object PhenexToOWL extends OWLTask {
   }
 
   def taxonForOTU(otu: Element): Option[OWLNamedIndividual] =
-    getResourceMetaValues(otu, "taxonID", dwcNS).headOption.filter(_.toString.startsWith(ProvisionalPrefix)).map(Individual)
+    getResourceMetaValues(otu, "taxonID", dwcNS).headOption.filterNot(_.toString.startsWith(ProvisionalPrefix)).map(Individual)
 
   def translateSpecimens(otu: Element, owlOTU: OWLNamedIndividual): Set[OWLAxiom] = {
     val axioms = for {
