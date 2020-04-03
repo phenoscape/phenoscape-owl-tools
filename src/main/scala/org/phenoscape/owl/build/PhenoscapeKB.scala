@@ -232,6 +232,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     val hasPartsInheringIns = anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(has_part_inhering_in, _))
     addTriples(hasPartsInheringIns, bigdata, graphURI)
     val phenotypeOfs = anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(phenotype_of, _))
+    val phenotypeOfPartOfs = anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(phenotype_of_part_of, _))
     val absences = anatomicalEntities.flatMap(AbsenceClassGenerator.createAbsenceClass)
     addTriples(absences, bigdata, graphURI)
     val namedHasPartClasses = anatomicalEntities.map(_.getIRI).map(NamedRestrictionGenerator.getRestrictionIRI(has_part.getIRI, _)).map(Class(_))
@@ -252,7 +253,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
 
     val allTBox = ro.axioms ++ uberon.axioms ++ homology.axioms ++ pato.axioms ++ bspo.axioms ++ vto.axioms ++ vtoToNCBI.axioms ++ zfa.axioms ++ xao.axioms ++ hp.axioms ++ mp.axioms ++
       caroToUberon.axioms ++ zfaToUberon.axioms ++ xaoToUberon.axioms ++ mgiToEMAPA.axioms ++ emapaToUberon.axioms ++ eco.axioms ++
-      parts ++ hasParts ++ hasPartsInheringIns ++ phenotypeOfs ++ presences ++ absences ++ absenceNegationEquivalences ++ developsFromRulesForAbsence ++ subsumers ++ tboxFromData ++ phenoscapeVocab.axioms
+      parts ++ hasParts ++ hasPartsInheringIns ++ phenotypeOfs ++ phenotypeOfPartOfs ++ presences ++ absences ++ absenceNegationEquivalences ++ developsFromRulesForAbsence ++ subsumers ++ tboxFromData ++ phenoscapeVocab.axioms
 
     val coreTBox = ro.axioms ++ uberon.axioms ++ homology.axioms ++ pato.axioms ++ bspo.axioms ++ vto.axioms ++ vtoToNCBI.axioms ++ zfa.axioms ++ xao.axioms ++ hp.axioms ++ mp.axioms ++
       caroToUberon.axioms ++ zfaToUberon.axioms ++ xaoToUberon.axioms ++ mgiToEMAPA.axioms ++ emapaToUberon.axioms ++ eco.axioms ++
