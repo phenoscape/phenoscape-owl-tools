@@ -101,7 +101,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
   def loadOntologiesAndCreateReasoner(): OWLReasoner = {
     bigdata.begin()
     step("Loading ontologies")
-    val phenoscapeVocab = loadFromWeb(IRI.create("https://raw.githubusercontent.com/phenoscape/phenoscape-ontologies/master/phenoscape-kb-vocab/vocab.owl"), false)
+    val phenoscapeVocab = loadFromWeb(IRI.create("http://purl.org/phenoscape/vocab.owl"), false)
     addTriples(phenoscapeVocab, bigdata, graphURI)
     val attributes = loadFromWeb(IRI.create("http://svn.code.sf.net/p/phenoscape/code/trunk/vocab/character_slims.obo"), false)
     addTriples(attributes, bigdata, graphURI)
