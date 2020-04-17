@@ -116,34 +116,6 @@ def reg_m(scores, sizes):
 		X = sm.add_constant(np.column_stack((ele, X)))
 	results = sm.OLS(scores, X).fit()
 	return results
-
-
-def plot_residuals(corpus_profile_sizes, query_profile_sizes, scores, corpus_coeff, query_coeff, constant):
-	query_axis = []
-	corpus_axis = []
-	residuals = []
-	count = 0
-	mean = np.mean(scores)
-
-	for i in range(0, len(scores)):
-		query_size = query_profile_sizes[i]
-		corpus_size = corpus_profile_sizes[i]
-		actualscore = scores[i]
-		corpus_axis.append(corpus_size)
-		query_axis.append(query_size)
-		predictedscore = constant + (corpus_coeff * corpus_size) + (query_coeff * query_size)	
-		residual = actualscore - predictedscore
-		residuals.append(residual)
-		
-	plt.scatter(np.array(query_axis), np.array(residuals))
-	plt.xlabel('Log(Query Profile Size)')
-	plt.ylabel('Residual')
-	plt.savefig('ResidualPlot_QuerySizes.png')
-
-	plt.scatter(np.array(corpus_axis), np.array(residuals))
-	plt.xlabel('Log(Corpus Profile Size)')
-	plt.ylabel('Residual')
-	plt.savefig('ResidualPlot_CorpusSizes.png')
 	
 
 if __name__=='__main__':
@@ -151,7 +123,6 @@ if __name__=='__main__':
 	import os
 	from statsmodels.stats.outliers_influence import OLSInfluence
 	import math
-	import matplotlib.pyplot as plt
 	import numpy as np
 	import statsmodels.api as sm
 	import statsmodels.stats.api as sms
