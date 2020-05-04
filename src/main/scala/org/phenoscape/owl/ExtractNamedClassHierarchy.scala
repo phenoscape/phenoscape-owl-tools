@@ -16,7 +16,10 @@ object ExtractNamedClassHierarchy extends OWLTask {
       if !axiom.getSubClass.isAnonymous
       if !axiom.getSuperClass.isAnonymous
     } yield axiom
-    manager.createOntology(namedClassAxioms.toSet[OWLAxiom].asJava, IRI.create("http://example.org/" + UUID.randomUUID.toString))
+    manager.createOntology(
+      namedClassAxioms.toSet[OWLAxiom].asJava,
+      IRI.create("http://example.org/" + UUID.randomUUID.toString)
+    )
   }
 
 }

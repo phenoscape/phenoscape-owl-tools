@@ -34,9 +34,12 @@ object ExpressionsUtil {
 
   def expressionForName(named: OWLClass): Validation[String, OWLClassExpression] = {
     val parameters = URLEncodedUtils.parse(URI.create(named.getIRI.toString), "UTF-8")
-    parameters.asScala.collectFirst({
-      case pair if pair.getName == "value" => pair.getValue
-    }).map(ManchesterSyntaxClassExpressionParser.parse).getOrElse(Validation.failure("Invalid expression URI"))
+    parameters.asScala
+      .collectFirst({
+        case pair if pair.getName == "value" => pair.getValue
+      })
+      .map(ManchesterSyntaxClassExpressionParser.parse)
+      .getOrElse(Validation.failure("Invalid expression URI"))
   }
 
   def instantiateClassAssertion(individual: OWLIndividual, aClass: OWLClassExpression): Set[OWLAxiom] = {
@@ -61,22 +64,31 @@ object ExpressionsUtil {
   }
 
   def annotationsFor(obj: OWLEntity, property: OWLAnnotationProperty, ont: OWLOntology): Iterable[String] =
-    EntitySearcher.getAnnotations(obj, ont, property).asScala.map(_.getValue).collect(
-      { case literal: OWLLiteral => literal.getLiteral.toString })
+    EntitySearcher
+      .getAnnotations(obj, ont, property)
+      .asScala
+      .map(_.getValue)
+      .collect({ case literal: OWLLiteral => literal.getLiteral.toString })
 
-  def labelFor(obj: OWLEntity, ont: OWLOntology): Option[String] = annotationsFor(obj, factory.getRDFSLabel, ont).headOption
+  def labelFor(obj: OWLEntity, ont: OWLOntology): Option[String] =
+    annotationsFor(obj, factory.getRDFSLabel, ont).headOption
 
-  def labelFor(obj: OWLEntity, onts: Iterable[OWLOntology]): Option[String] = (onts flatMap (labelFor(obj, _))).headOption
+  def labelFor(obj: OWLEntity, onts: Iterable[OWLOntology]): Option[String] =
+    (onts flatMap (labelFor(obj, _))).headOption
 
   private class OntologyProvider(ont: OWLOntology) extends OWLOntologySetProvider {
-    val onts = Set(ont).asJava
+    val onts                     = Set(ont).asJava
     override def getOntologies() = onts
   }
 
   def createEntityRenderer(property: OWLAnnotationProperty, ont: OWLOntology): OWLObject => String = {
-    val shortFormProvider = new AnnotationValueShortFormProvider(List(property).asJava, Map.empty[OWLAnnotationProperty, java.util.List[String]].asJava, new OntologyProvider(ont))
+    val shortFormProvider = new AnnotationValueShortFormProvider(
+      List(property).asJava,
+      Map.empty[OWLAnnotationProperty, java.util.List[String]].asJava,
+      new OntologyProvider(ont)
+    )
     entity => {
-      val writer = new StringWriter()
+      val writer   = new StringWriter()
       val renderer = new ManchesterOWLSyntaxObjectRenderer(writer, shortFormProvider)
       entity.accept(renderer)
       writer.close()
@@ -84,29 +96,37 @@ object ExpressionsUtil {
     }
   }
 
-  def permute(expression: OWLClassExpression)(implicit reasoner: OWLReasoner): Set[OWLClassExpression] = expression match {
-    case namedClass: OWLClass                    => (reasoner.getSuperClasses(namedClass, true).getFlattened.asScala.toSet + namedClass).toSet[OWLClassExpression]
-    case someValuesFrom: OWLObjectSomeValuesFrom => permute(someValuesFrom)
-    case intersection: OWLObjectIntersectionOf   => permute(intersection)
-    case _                                       => Set(expression)
-  }
+  def permute(expression: OWLClassExpression)(implicit reasoner: OWLReasoner): Set[OWLClassExpression] =
+    expression match {
+      case namedClass: OWLClass =>
+        (reasoner.getSuperClasses(namedClass, true).getFlattened.asScala.toSet + namedClass).toSet[OWLClassExpression]
+      case someValuesFrom: OWLObjectSomeValuesFrom => permute(someValuesFrom)
+      case intersection: OWLObjectIntersectionOf   => permute(intersection)
+      case _                                       => Set(expression)
+    }
 
   def permute(expression: OWLObjectSomeValuesFrom)(implicit reasoner: OWLReasoner): Set[OWLObjectSomeValuesFrom] = {
     val property = expression.getProperty
-    reasoner.getSuperClasses(expression.getFiller, true).getFlattened.asScala.toSet[OWLClass].map(property some _) + expression
+    reasoner
+      .getSuperClasses(expression.getFiller, true)
+      .getFlattened
+      .asScala
+      .toSet[OWLClass]
+      .map(property some _) + expression
   }
 
   def permute(expression: OWLObjectIntersectionOf)(implicit reasoner: OWLReasoner): Set[OWLObjectIntersectionOf] = {
     val permutedOperands = expression.getOperands.asScala.toSet[OWLClassExpression].map(permute)
-    val combinations = allCombinations(permutedOperands)
+    val combinations     = allCombinations(permutedOperands)
     combinations.map(set => factory.getOWLObjectIntersectionOf(set.asJava)) + expression
   }
 
   def allCombinations[T](sets: Set[Set[T]]): Set[Set[T]] = {
-    def combine[T](combinations: Set[Set[T]], itemsToCombine: Set[T]): Set[Set[T]] = for {
-      combination <- combinations
-      item <- itemsToCombine
-    } yield combination + item
+    def combine[T](combinations: Set[Set[T]], itemsToCombine: Set[T]): Set[Set[T]] =
+      for {
+        combination <- combinations
+        item        <- itemsToCombine
+      } yield combination + item
     sets.foldLeft(Set[Set[T]]())(combine)
   }
 

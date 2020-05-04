@@ -33,28 +33,29 @@ class KnowledgeBaseBuilder extends App {
 
   def getManager: OWLOntologyManager = globalManager
 
-  def iri(string: String): IRI = { IRI.create(string) }
+  def iri(string: String): IRI = IRI.create(string)
 
-  def combine(ontologies: OWLOntology*): OWLOntology = {
+  def combine(ontologies: OWLOntology*): OWLOntology =
     if (ontologies.size == 1)
       ontologies(0)
     else {
       val newManager = OWLManager.createOWLOntologyManager
       newManager.createOntology(ontologies.flatMap(_.getAxioms().asScala).toSet.asJava)
     }
-  }
 
-  def combine(ontology: SourcedAxioms, ontologies: SourcedAxioms*): OWLOntology = OWLManager.createOWLOntologyManager().createOntology((ontology.axioms ++ ontologies.flatMap(_.axioms)).asJava)
+  def combine(ontology: SourcedAxioms, ontologies: SourcedAxioms*): OWLOntology =
+    OWLManager.createOWLOntologyManager().createOntology((ontology.axioms ++ ontologies.flatMap(_.axioms)).asJava)
 
   def reasoner(ontologies: OWLOntology*): OWLReasoner = {
     val allAxioms = combine(ontologies: _*)
     new ElkReasonerFactory().createReasoner(allAxioms)
   }
 
-  def reasoner(axioms: Set[OWLAxiom]): OWLReasoner = new ElkReasonerFactory().createReasoner(OWLManager.createOWLOntologyManager().createOntology(axioms.asJava))
+  def reasoner(axioms: Set[OWLAxiom]): OWLReasoner =
+    new ElkReasonerFactory().createReasoner(OWLManager.createOWLOntologyManager().createOntology(axioms.asJava))
 
   def loadNormalized(location: File): OWLOntology = {
-    val ont = globalManager.loadOntologyFromOntologyDocument(location)
+    val ont             = globalManager.loadOntologyFromOntologyDocument(location)
     val definedByAxioms = ont.getClassesInSignature().asScala.flatMap(OBOUtil.createDefinedByAnnotation)
     globalManager.addAxioms(ont, definedByAxioms.asJava)
     PropertyNormalizer.normalize(ont)
@@ -79,14 +80,13 @@ class KnowledgeBaseBuilder extends App {
     ontManager.saveOntology(ontology, new RDFXMLDocumentFormat(), new FileDocumentTarget(file))
   }
 
-  def step(message: String): Unit = {
+  def step(message: String): Unit =
     println(new Date() + ": " + message)
-  }
 
   def isTboxAxiom(axiom: OWLAxiom): Boolean = axiom.isOfType(AxiomType.TBoxAxiomTypes)
 
   def addTriples(ontology: OWLOntology, db: SailRepositoryConnection, graph: URI): Unit = {
-    val manager = ontology.getOWLOntologyManager
+    val manager   = ontology.getOWLOntologyManager
     val outStream = new ByteArrayOutputStream()
     manager.saveOntology(ontology, new RioRDFXMLDocumentFormat(), outStream)
     outStream.close()
@@ -95,13 +95,17 @@ class KnowledgeBaseBuilder extends App {
     inStream.close()
   }
 
-  def addTriples(axioms: SourcedAxioms, db: SailRepositoryConnection, graph: URI): Unit = {
+  def addTriples(axioms: SourcedAxioms, db: SailRepositoryConnection, graph: URI): Unit =
     addTriples(axioms.axioms, db, graph, axioms.ontologyID)
-  }
 
-  def addTriples(axioms: Iterable[OWLAxiom], db: SailRepositoryConnection, graph: URI, ontID: OWLOntologyID = new OWLOntologyID()): Unit = {
+  def addTriples(
+    axioms: Iterable[OWLAxiom],
+    db: SailRepositoryConnection,
+    graph: URI,
+    ontID: OWLOntologyID = new OWLOntologyID()
+  ): Unit = {
     val manager = OWLManager.createOWLOntologyManager()
-    val ont = manager.createOntology(ontID)
+    val ont     = manager.createOntology(ontID)
     manager.addAxioms(ont, axioms.toSet[OWLAxiom].asJava)
     addTriples(ont, db, graph)
   }

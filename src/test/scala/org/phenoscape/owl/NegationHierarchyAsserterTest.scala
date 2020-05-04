@@ -6,14 +6,13 @@ import utest._
 
 import scala.collection.JavaConverters._
 
-
 object NegationHierarchyAsserterTest extends TestSuite {
 
   val tests = Tests {
 
-    val base = "http://owl.phenoscape.org/NegationHierarchyAsserterTest"
-    val manager = OWLManager.createOWLOntologyManager()
-    val input = getClass().getClassLoader().getResourceAsStream("NegationHierarchyAsserterTest.ofn")
+    val base     = "http://owl.phenoscape.org/NegationHierarchyAsserterTest"
+    val manager  = OWLManager.createOWLOntologyManager()
+    val input    = getClass().getClassLoader().getResourceAsStream("NegationHierarchyAsserterTest.ofn")
     val ontology = manager.loadOntologyFromOntologyDocument(input)
     input.close()
 
@@ -46,7 +45,10 @@ object NegationHierarchyAsserterTest extends TestSuite {
 
     'afterAxioms - {
 
-      manager.addAxioms(ontology, NegationHierarchyAsserter.assertNegationHierarchy(ontology.getAxioms().asScala.toSet).asJava)
+      manager.addAxioms(
+        ontology,
+        NegationHierarchyAsserter.assertNegationHierarchy(ontology.getAxioms().asScala.toSet).asJava
+      )
 
       'test7 - {
         assert(ontology.containsAxiom(Class(s"$base#NotA") SubClassOf Class(s"$base#NotB")))

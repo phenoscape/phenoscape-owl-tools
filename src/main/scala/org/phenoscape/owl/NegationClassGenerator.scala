@@ -17,23 +17,19 @@ object NegationClassGenerator extends OWLTask {
     val factory = OWLManager.getOWLDataFactory
     for {
       ontClass <- classes
-      axiom <- createNegationClassAxioms(ontClass)
+      axiom    <- createNegationClassAxioms(ontClass)
     } yield axiom
   }
 
   def createNegationClassAxioms(ontClass: OWLClass): Set[OWLAxiom] = {
     val negation = Class(getNegationIRI(ontClass.getIRI))
-    Set(
-      negation EquivalentTo not(ontClass),
-      negation Annotation (negates, ontClass.getIRI))
+    Set(negation EquivalentTo not(ontClass), negation Annotation (negates, ontClass.getIRI))
   }
 
-  def getNegationIRI(classIRI: IRI): IRI = {
+  def getNegationIRI(classIRI: IRI): IRI =
     return IRI.create("http://phenoscape.org/not/" + classIRI.toString)
-  }
 
-  def getNegationOntologyIRI(ontology: OWLOntology): IRI = {
+  def getNegationOntologyIRI(ontology: OWLOntology): IRI =
     return IRI.create("http://phenoscape.org/not/" + ontology.getOntologyID.getOntologyIRI.toString)
-  }
 
 }

@@ -14,33 +14,40 @@ import org.semanticweb.owlapi.search.EntitySearcher
 
 class SubsumerGenerator(ont: OWLOntology, reasonerFactory: OWLReasonerFactory) {
 
-  val reasoner = reasonerFactory.createReasoner(ont)
-  val manager = ont.getOWLOntologyManager
+  val reasoner                       = reasonerFactory.createReasoner(ont)
+  val manager                        = ont.getOWLOntologyManager
   val expressionMakers: Set[EQMaker] = Set(new EQMaker(Class(Vocab.ANATOMICAL_ENTITY), Class(Vocab.QUALITY)))
 
   case class EQMaker(rootEntity: OWLClass, rootQuality: OWLClass) {
 
-    val namedClass: OWLClass = Class(s"http://example.org/basic_eq?entity=${rootEntity.getIRI.toString}&quality=${rootQuality.getIRI.toString}")
+    val namedClass: OWLClass = Class(
+      s"http://example.org/basic_eq?entity=${rootEntity.getIRI.toString}&quality=${rootQuality.getIRI.toString}"
+    )
 
     val axiom: OWLEquivalentClassesAxiom = {
       namedClass EquivalentTo (rootQuality and (inheres_in some rootEntity))
     }
 
-    def next: scala.collection.Set[EQMaker] = for {
-      //FIXME not combining roots with subclasses
-      //entity <- reasoner.getSubClasses(rootEntity, true).getFlattened.asScala
-      entity <- EntitySearcher.getSubClasses(rootEntity, ont).asScala.toSet + rootEntity
-      if !entity.isAnonymous
-      quality <- EntitySearcher.getSubClasses(rootQuality, ont).asScala.toSet + rootQuality
-      if !quality.isAnonymous
-      //quality <- reasoner.getSubClasses(rootQuality, true).getFlattened.asScala
-      if !(entity == rootEntity && quality == rootQuality)
-    } yield new EQMaker(entity.asOWLClass, quality.asOWLClass)
+    def next: scala.collection.Set[EQMaker] =
+      for {
+        //FIXME not combining roots with subclasses
+        //entity <- reasoner.getSubClasses(rootEntity, true).getFlattened.asScala
+        entity <- EntitySearcher.getSubClasses(rootEntity, ont).asScala.toSet + rootEntity
+        if !entity.isAnonymous
+        quality <- EntitySearcher.getSubClasses(rootQuality, ont).asScala.toSet + rootQuality
+        if !quality.isAnonymous
+        //quality <- reasoner.getSubClasses(rootQuality, true).getFlattened.asScala
+        if !(entity == rootEntity && quality == rootQuality)
+      } yield new EQMaker(entity.asOWLClass, quality.asOWLClass)
 
   }
 
   @tailrec
-  private def generateSubsumers(makers: Set[EQMaker], accumulatedAxioms: Set[OWLAxiom] = Set(), tested: Set[EQMaker] = Set()): Set[OWLAxiom] = {
+  private def generateSubsumers(
+    makers: Set[EQMaker],
+    accumulatedAxioms: Set[OWLAxiom] = Set(),
+    tested: Set[EQMaker] = Set()
+  ): Set[OWLAxiom] = {
     println(s"Accumulated ${accumulatedAxioms.size}")
     println(s"Working with ${makers.size} makers")
     println("Removing already tested EQs")
@@ -68,8 +75,7 @@ class SubsumerGenerator(ont: OWLOntology, reasonerFactory: OWLReasonerFactory) {
     else generateSubsumers(nextGeneration.seq, allNewAxioms, tested ++ testMakers)
   }
 
-  def go: Set[OWLAxiom] = {
+  def go: Set[OWLAxiom] =
     generateSubsumers(expressionMakers).toSet
-  }
 
 }
