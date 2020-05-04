@@ -11,6 +11,6 @@ import org.semanticweb.owlapi.model.OWLNamedIndividual
 class OWLTask {
 
   lazy val logger = Logger.getLogger(this.getClass)
-  val factory     = OWLManager.getOWLDataFactory
+  val factory = OWLManager.getOWLDataFactory
 
 }

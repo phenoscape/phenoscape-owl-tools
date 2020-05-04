@@ -77,7 +77,7 @@ object ExpressionsUtil {
     (onts flatMap (labelFor(obj, _))).headOption
 
   private class OntologyProvider(ont: OWLOntology) extends OWLOntologySetProvider {
-    val onts                     = Set(ont).asJava
+    val onts = Set(ont).asJava
     override def getOntologies() = onts
   }
 
@@ -88,7 +88,7 @@ object ExpressionsUtil {
       new OntologyProvider(ont)
     )
     entity => {
-      val writer   = new StringWriter()
+      val writer = new StringWriter()
       val renderer = new ManchesterOWLSyntaxObjectRenderer(writer, shortFormProvider)
       entity.accept(renderer)
       writer.close()
@@ -101,8 +101,8 @@ object ExpressionsUtil {
       case namedClass: OWLClass =>
         (reasoner.getSuperClasses(namedClass, true).getFlattened.asScala.toSet + namedClass).toSet[OWLClassExpression]
       case someValuesFrom: OWLObjectSomeValuesFrom => permute(someValuesFrom)
-      case intersection: OWLObjectIntersectionOf   => permute(intersection)
-      case _                                       => Set(expression)
+      case intersection: OWLObjectIntersectionOf => permute(intersection)
+      case _ => Set(expression)
     }
 
   def permute(expression: OWLObjectSomeValuesFrom)(implicit reasoner: OWLReasoner): Set[OWLObjectSomeValuesFrom] = {
@@ -117,7 +117,7 @@ object ExpressionsUtil {
 
   def permute(expression: OWLObjectIntersectionOf)(implicit reasoner: OWLReasoner): Set[OWLObjectIntersectionOf] = {
     val permutedOperands = expression.getOperands.asScala.toSet[OWLClassExpression].map(permute)
-    val combinations     = allCombinations(permutedOperands)
+    val combinations = allCombinations(permutedOperands)
     combinations.map(set => factory.getOWLObjectIntersectionOf(set.asJava)) + expression
   }
 
@@ -125,7 +125,7 @@ object ExpressionsUtil {
     def combine[T](combinations: Set[Set[T]], itemsToCombine: Set[T]): Set[Set[T]] =
       for {
         combination <- combinations
-        item        <- itemsToCombine
+        item <- itemsToCombine
       } yield combination + item
     sets.foldLeft(Set[Set[T]]())(combine)
   }

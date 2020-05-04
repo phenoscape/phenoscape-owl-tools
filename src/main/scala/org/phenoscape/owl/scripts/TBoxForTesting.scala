@@ -33,34 +33,34 @@ import org.semanticweb.owlapi.vocab.OWLRDFVocabulary
 
 object TBoxForTesting extends KnowledgeBaseBuilder {
 
-  val cwd     = "/hpchome/nescent/jpb15/Phenoscape-KB"
+  val cwd = "/hpchome/nescent/jpb15/Phenoscape-KB"
   val STAGING = new File(cwd + "/staging")
-  val KB      = new File(cwd + "/staging/kb")
-  val NEXML   = new File(cwd + "/staging/nexml")
+  val KB = new File(cwd + "/staging/kb")
+  val NEXML = new File(cwd + "/staging/nexml")
 
-  val manager                  = getManager
-  val rdfsSubClassOf           = ObjectProperty(OWLRDFVocabulary.RDFS_SUBCLASS_OF.getIRI)
+  val manager = getManager
+  val rdfsSubClassOf = ObjectProperty(OWLRDFVocabulary.RDFS_SUBCLASS_OF.getIRI)
   val implies_presence_of_some = NamedRestrictionGenerator.getClassRelationIRI(Vocab.IMPLIES_PRESENCE_OF.getIRI)
 
   step("Loading ontologies")
-  val hp              = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/hp.owl"), false)
+  val hp = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/hp.owl"), false)
   val phenoscapeVocab = loadFromWeb(IRI.create("http://purl.org/phenoscape/vocab.owl"), false)
   val attributes =
     loadFromWeb(IRI.create("http://svn.code.sf.net/p/phenoscape/code/trunk/vocab/character_slims.obo"), false)
-  val uberon   = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/uberon/ext.owl"), false)
+  val uberon = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/uberon/ext.owl"), false)
   val homology = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/uberon/homology.owl"), false)
-  val pato     = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/pato.owl"), false)
-  val bspo     = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/bspo.owl"), false)
-  val go       = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/go.owl"), false)
-  val taxrank  = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/taxrank.owl"), false)
-  val vto      = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/vto.owl"), false)
+  val pato = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/pato.owl"), false)
+  val bspo = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/bspo.owl"), false)
+  val go = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/go.owl"), false)
+  val taxrank = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/taxrank.owl"), false)
+  val vto = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/vto.owl"), false)
   val collections = loadFromWeb(
     IRI.create("http://svn.code.sf.net/p/phenoscape/code/trunk/vocab/fish_collection_abbreviation.obo"),
     false
   )
   val zfa = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/zfa.owl"), false)
   val xao = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/xao.owl"), false)
-  val mp  = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/mp.owl"), false)
+  val mp = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/mp.owl"), false)
 
   val caroToUberon =
     loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/uberon/bridge/uberon-bridge-to-caro.owl"), false)
@@ -133,12 +133,12 @@ object TBoxForTesting extends KnowledgeBaseBuilder {
     humanPhenotypeData.filter(isTboxAxiom) ++
     nexmlTBoxAxioms
 
-  val hasParts  = (anatomicalEntities ++ qualities).flatMap(NamedRestrictionGenerator.createRestriction(has_part, _))
+  val hasParts = (anatomicalEntities ++ qualities).flatMap(NamedRestrictionGenerator.createRestriction(has_part, _))
   val presences = anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(Vocab.IMPLIES_PRESENCE_OF, _))
   val hasPartsInheringIns =
     anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(has_part_inhering_in, _))
   val phenotypeOfs = anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(phenotype_of, _))
-  val absences     = anatomicalEntities.flatMap(AbsenceClassGenerator.createAbsenceClass)
+  val absences = anatomicalEntities.flatMap(AbsenceClassGenerator.createAbsenceClass)
   val namedHasPartClasses =
     anatomicalEntities.map(_.getIRI).map(NamedRestrictionGenerator.getRestrictionIRI(has_part.getIRI, _)).map(Class(_))
   val absenceNegationEquivalences = namedHasPartClasses.flatMap(NegationClassGenerator.createNegationClassAxioms)

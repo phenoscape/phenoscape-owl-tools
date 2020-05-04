@@ -67,19 +67,19 @@ import org.openrdf.model.vocabulary.DCTERMS
 
 object PhenoscapeKB extends KnowledgeBaseBuilder {
 
-  val targetDir          = File(args(0))
+  val targetDir = File(args(0))
   val BIGDATA_PROPERTIES = new JFile(args(1))
 
   BasicConfigurator.configure()
   Logger.getRootLogger().setLevel(Level.ERROR)
 
-  val manager                  = getManager
-  val rdfsSubClassOf           = ObjectProperty(OWLRDFVocabulary.RDFS_SUBCLASS_OF.getIRI)
+  val manager = getManager
+  val rdfsSubClassOf = ObjectProperty(OWLRDFVocabulary.RDFS_SUBCLASS_OF.getIRI)
   val implies_presence_of_some = NamedRestrictionGenerator.getClassRelationIRI(Vocab.IMPLIES_PRESENCE_OF.getIRI)
 
-  val SOURCES         = targetDir / "sources"
-  val NEXML           = SOURCES / "nexml"
-  val KB              = targetDir / "kb"
+  val SOURCES = targetDir / "sources"
+  val NEXML = SOURCES / "nexml"
+  val KB = targetDir / "kb"
   val BIGDATA_JOURNAL = targetDir / "blazegraph.jnl"
   KB.createIfNotExists(true, true)
 
@@ -87,12 +87,12 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
   val bigdataProperties = new Properties()
   bigdataProperties.load(new FileReader(BIGDATA_PROPERTIES))
   bigdataProperties.setProperty(Options.FILE, BIGDATA_JOURNAL.pathAsString)
-  val sail       = new BigdataSail(bigdataProperties)
+  val sail = new BigdataSail(bigdataProperties)
   val repository = new BigdataSailRepository(sail)
   repository.initialize()
-  val baseURI      = ""
-  val graphURI     = new URIImpl("http://kb.phenoscape.org/")
-  val bigdata      = repository.getUnisolatedConnection()
+  val baseURI = ""
+  val graphURI = new URIImpl("http://kb.phenoscape.org/")
+  val bigdata = repository.getUnisolatedConnection()
   val valueFactory = bigdata.getValueFactory
   bigdata.begin()
   bigdata.add(graphURI, DCTERMS.CREATED, valueFactory.createLiteral(new Date()), graphURI)
@@ -297,7 +297,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     val attributeQualities = attributes.axioms.flatMap(_.getClassesInSignature.asScala) + HasNumberOf
     val subsumers = for {
       entity <- anatomicalEntities
-      (partsTerm, entityPartsAxioms)         = SimilarityTemplates.partsOfEntity(entity)
+      (partsTerm, entityPartsAxioms) = SimilarityTemplates.partsOfEntity(entity)
       (developsFromTerm, developsFromAxioms) = SimilarityTemplates.developsFromEntity(entity)
       axiom <- (entityPartsAxioms ++ developsFromAxioms)
     } yield axiom
@@ -312,7 +312,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
       developsFromRulesForAbsence ++ tboxFromData ++ phenoscapeVocab.axioms
     println("tbox class count: " + allTBox.flatMap(_.getClassesInSignature.asScala).size)
     println("tbox logical axiom count: " + allTBox.filter(_.isLogicalAxiom).size)
-    val tBoxWithoutDisjoints     = OntologyUtil.filterDisjointAxioms(allTBox)
+    val tBoxWithoutDisjoints = OntologyUtil.filterDisjointAxioms(allTBox)
     val coreTBoxWithoutDisjoints = OntologyUtil.filterDisjointAxioms(coreTBox)
 
     step("Check satisfiability with disjoints")
@@ -326,7 +326,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     disjointReasoner.dispose()
 
     step("Materializing tbox classification")
-    val tboxReasoner   = reasoner(tBoxWithoutDisjoints)
+    val tboxReasoner = reasoner(tBoxWithoutDisjoints)
     val inferredAxioms = manager.createOntology()
     MaterializeInferences.materializeInferences(inferredAxioms, tboxReasoner)
     tboxReasoner.dispose()
@@ -409,13 +409,13 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
   System.gc()
 
   step("Exporting presence assertions")
-  val presencesFile   = (KB / "presences.ttl").toJava
+  val presencesFile = (KB / "presences.ttl").toJava
   val presencesOutput = new BufferedOutputStream(new FileOutputStream(presencesFile))
   bigdata.prepareGraphQuery(QueryLanguage.SPARQL, presencesQuery.toString).evaluate(new TurtleWriter(presencesOutput))
   presencesOutput.close()
 
   step("Exporting absence assertions")
-  val absencesFile   = (KB / "absences.ttl").toJava
+  val absencesFile = (KB / "absences.ttl").toJava
   val absencesOutput = new BufferedOutputStream(new FileOutputStream(absencesFile))
   bigdata.prepareGraphQuery(QueryLanguage.SPARQL, absencesQuery.toString).evaluate(new TurtleWriter(absencesOutput))
   absencesOutput.close()
@@ -427,7 +427,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
   bigdata.commit()
 
   step("Exporting all triples to turtle file")
-  val triplesQuery  = bigdata.prepareGraphQuery(QueryLanguage.SPARQL, """
+  val triplesQuery = bigdata.prepareGraphQuery(QueryLanguage.SPARQL, """
   CONSTRUCT {
    ?s ?p ?o .
   }

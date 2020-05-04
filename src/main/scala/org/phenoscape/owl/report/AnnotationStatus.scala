@@ -12,33 +12,33 @@ import org.jdom2.filter.ElementFilter
 
 object AnnotationStatus {
 
-  val nexmlNS                      = Namespace.getNamespace("http://www.nexml.org/2009");
-  val phenoNS                      = Namespace.getNamespace("http://www.bioontologies.org/obd/schema/pheno");
-  val publications                 = mutable.Set[String]();
-  val allCharacters                = mutable.Set[Element]();
-  val completedCharacters          = mutable.Set[Element]();
+  val nexmlNS = Namespace.getNamespace("http://www.nexml.org/2009");
+  val phenoNS = Namespace.getNamespace("http://www.bioontologies.org/obd/schema/pheno");
+  val publications = mutable.Set[String]();
+  val allCharacters = mutable.Set[Element]();
+  val completedCharacters = mutable.Set[Element]();
   val partiallyAnnotatedCharacters = mutable.Set[Element]();
-  val unannotatedCharacters        = mutable.Set[Element]();
-  val annotatedStates              = mutable.Set[Element]();
-  val allAnnotations               = mutable.Set[Element]();
+  val unannotatedCharacters = mutable.Set[Element]();
+  val annotatedStates = mutable.Set[Element]();
+  val allAnnotations = mutable.Set[Element]();
 
   def main(args: Array[String]): Unit = {
     val builder = new SAXBuilder();
     for (arg <- args) {
-      val file  = new File(arg);
+      val file = new File(arg);
       val nexml = builder.build(file).getRootElement();
-      val pub   = file.getName();
+      val pub = file.getName();
       publications.add(pub);
-      val format    = nexml.getChild("characters", nexmlNS).getChild("format", nexmlNS);
+      val format = nexml.getChild("characters", nexmlNS).getChild("format", nexmlNS);
       val stateSets = format.getChildren("states", nexmlNS);
       val stateSetsByID = stateSets.asScala
         .map(states => (states.getAttributeValue("id"), states.getChildren("state", nexmlNS).asScala.toIterable))
         .toMap;
       val characters = format.getChildren("char", nexmlNS);
-      var i          = 0;
+      var i = 0;
       for (character <- characters.asScala) {
         allCharacters.add(character);
-        val states    = AnnotationReport.getStates(character, stateSetsByID);
+        val states = AnnotationReport.getStates(character, stateSetsByID);
         val annotated = mutable.Set[Element]();
         for (state <- states) {
           val phenotypes =

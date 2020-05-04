@@ -14,7 +14,7 @@ object OntologyUtil {
 
   def ontologyWithoutDisjointAxioms(ontology: OWLOntology): OWLOntology = {
     val manager = OWLManager.createOWLOntologyManager
-    val axioms  = filterDisjointAxioms(ontology.getAxioms().asScala.toSet)
+    val axioms = filterDisjointAxioms(ontology.getAxioms().asScala.toSet)
     manager.createOntology(axioms.asJava)
   }
 
@@ -31,7 +31,7 @@ object OntologyUtil {
 
   def optionWithSet[T, S](in: Option[(T, Set[S])]): (Option[T], Set[S]) = in match {
     case Some((thing, set)) => (Option(thing), set)
-    case None               => (None, Set.empty)
+    case None => (None, Set.empty)
   }
 
   def reduceOntologyToHierarchy(ontology: OWLOntology): OWLOntology = {

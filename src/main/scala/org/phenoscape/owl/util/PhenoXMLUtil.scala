@@ -63,9 +63,9 @@ object PhenoXMLUtil {
   }
 
   def classFromTyperef(typeref: Element): OWLClassExpression = {
-    val genusID    = typeref.getAttributeValue("about")
+    val genusID = typeref.getAttributeValue("about")
     val qualifiers = typeref.getChildren("qualifier", phenoNS)
-    val genus      = factory.getOWLClass(OBOUtil.iriForTermID(genusID))
+    val genus = factory.getOWLClass(OBOUtil.iriForTermID(genusID))
     if (qualifiers.isEmpty()) {
       return genus
     } else {
@@ -77,8 +77,8 @@ object PhenoXMLUtil {
 
   def restrictionFromQualifier(qualifier: Element): OWLObjectSomeValuesFrom = {
     val propertyIRI = OBOUtil.iriForTermID(qualifier.getAttributeValue("relation"))
-    val property    = factory.getOWLObjectProperty(propertyIRI)
-    val filler      = classFromTyperef(qualifier.getChild("holds_in_relation_to", phenoNS).getChild("typeref", phenoNS))
+    val property = factory.getOWLObjectProperty(propertyIRI)
+    val filler = classFromTyperef(qualifier.getChild("holds_in_relation_to", phenoNS).getChild("typeref", phenoNS))
     return factory.getOWLObjectSomeValuesFrom(property, filler)
   }
 

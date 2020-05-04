@@ -16,15 +16,15 @@ object ReverseDevelopsFromRuleGenerator extends OWLTask {
   //FIXME rename to reverse absence rules
 
   def main(args: Array[String]): Unit = {
-    val manager              = OWLManager.createOWLOntologyManager
-    val ontology             = manager.loadOntologyFromOntologyDocument(new File(args(0)))
+    val manager = OWLManager.createOWLOntologyManager
+    val ontology = manager.loadOntologyFromOntologyDocument(new File(args(0)))
     val developsFromOntology = generateDevelopsFromRules(ontology)
     manager.saveOntology(developsFromOntology, IRI.create(new File(args(1))))
   }
 
   def generateDevelopsFromRules(ontology: OWLOntology): OWLOntology = {
-    val manager   = ontology.getOWLOntologyManager
-    val newIRI    = ontology.getOntologyID.getOntologyIRI.toString + "/reverse_develops_from_rules.owl"
+    val manager = ontology.getOWLOntologyManager
+    val newIRI = ontology.getOntologyID.getOntologyIRI.toString + "/reverse_develops_from_rules.owl"
     val newAxioms = ontology.getClassesInSignature(false).asScala flatMap createRules
     manager.createOntology(newAxioms.toSet[OWLAxiom].asJava, IRI.create(newIRI))
   }
