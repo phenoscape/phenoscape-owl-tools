@@ -18,31 +18,51 @@ object TaxonomyConverter extends OWLTask {
 
   def main(args: Array[String]): Unit = {
     val manager = OWLManager.createOWLOntologyManager();
-    val classOntology = manager.loadOntologyFromOntologyDocument(new File(args(0)));
+    val classOntology =
+      manager.loadOntologyFromOntologyDocument(new File(args(0)));
     val instanceOntology = createInstanceOntology(classOntology);
     manager.saveOntology(instanceOntology, IRI.create(new File(args(1))));
   }
 
   def createInstanceOntology(classOntology: OWLOntology): OWLOntology = {
     val manager = classOntology.getOWLOntologyManager();
-    val instanceOntology = manager.createOntology(IRI.create("http://example.org/" + UUID.randomUUID().toString()));
+    val instanceOntology = manager.createOntology(
+      IRI.create("http://example.org/" + UUID.randomUUID().toString())
+    );
     val allClasses = classOntology.getClassesInSignature(false).asScala;
     val axioms = allClasses.map(translateTaxonClass(_, classOntology));
     axioms.foreach(axs => manager.addAxioms(instanceOntology, axs.asJava));
     return instanceOntology;
   }
 
-  def translateTaxonClass(taxonClass: OWLClass, classOntology: OWLOntology): Set[OWLAxiom] = {
+  def translateTaxonClass(
+      taxonClass: OWLClass,
+      classOntology: OWLOntology
+  ): Set[OWLAxiom] = {
     val manager = classOntology.getOWLOntologyManager();
     val factory = manager.getOWLDataFactory();
-    onlyClasses(EntitySearcher.getSuperClasses(taxonClass, classOntology).asScala).map(createSubcladeRelationship(taxonClass, _)).toSet[OWLAxiom] + factory.getOWLClassAssertionAxiom(Taxon, factory.getOWLNamedIndividual(taxonClass.getIRI()));
+    onlyClasses(
+      EntitySearcher.getSuperClasses(taxonClass, classOntology).asScala
+    ).map(createSubcladeRelationship(taxonClass, _)).toSet[OWLAxiom] + factory
+      .getOWLClassAssertionAxiom(
+        Taxon,
+        factory.getOWLNamedIndividual(taxonClass.getIRI())
+      );
   }
 
-  def createSubcladeRelationship(subclade: OWLClass, superclade: OWLClass): OWLObjectPropertyAssertionAxiom = {
+  def createSubcladeRelationship(
+      subclade: OWLClass,
+      superclade: OWLClass
+  ): OWLObjectPropertyAssertionAxiom = {
     val factory = OWLManager.getOWLDataFactory();
     val subcladeIndividual = factory.getOWLNamedIndividual(subclade.getIRI());
-    val supercladeIndividual = factory.getOWLNamedIndividual(superclade.getIRI());
-    return factory.getOWLObjectPropertyAssertionAxiom(subclade_of, subcladeIndividual, supercladeIndividual);
+    val supercladeIndividual =
+      factory.getOWLNamedIndividual(superclade.getIRI());
+    return factory.getOWLObjectPropertyAssertionAxiom(
+      subclade_of,
+      subcladeIndividual,
+      supercladeIndividual
+    );
   }
 
   def onlyClasses(classes: Iterable[OWLClassExpression]): Iterable[OWLClass] = {

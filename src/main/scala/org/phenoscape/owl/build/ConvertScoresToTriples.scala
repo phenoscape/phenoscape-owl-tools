@@ -33,7 +33,9 @@ object ConvertScoresToTriples extends App {
 
 object ConvertScoresToTriplesUtil {
 
-  private val has_expect_score = new URIImpl(Vocab.has_expect_score.getIRI.toString)
+  private val has_expect_score = new URIImpl(
+    Vocab.has_expect_score.getIRI.toString
+  )
 
   def lineToTriple(line: String): Statement = {
     val items = line.split("\t", -1)

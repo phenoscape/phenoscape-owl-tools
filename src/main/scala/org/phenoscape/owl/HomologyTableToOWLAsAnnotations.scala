@@ -18,11 +18,15 @@ import Vocab._
 object HomologyTableToOWLAsAnnotations extends OWLTask {
 
   val manager = OWLManager.createOWLOntologyManager
-  val source = factory.getOWLAnnotationProperty(DublinCoreVocabulary.SOURCE.getIRI)
-  val description = factory.getOWLAnnotationProperty(DublinCoreVocabulary.DESCRIPTION.getIRI)
+  val source =
+    factory.getOWLAnnotationProperty(DublinCoreVocabulary.SOURCE.getIRI)
+  val description =
+    factory.getOWLAnnotationProperty(DublinCoreVocabulary.DESCRIPTION.getIRI)
   val aboutStructure = ObjectProperty("http://example.org/about_structure")
   val homologyAnnotation = Class("http://example.org/HomologyAnnotation")
-  val negativeHomologyAnnotation = Class("http://example.org/NegativeHomologyAnnotation")
+  val negativeHomologyAnnotation = Class(
+    "http://example.org/NegativeHomologyAnnotation"
+  )
 
   def main(args: Array[String]): Unit = {
     val input = Source.fromFile(args(0), "utf-8")
@@ -32,20 +36,51 @@ object HomologyTableToOWLAsAnnotations extends OWLTask {
 
   def convertFile(file: Source): OWLOntology = {
     val axioms = (file.getLines.drop(1) flatMap processEntry).toSet.asJava
-    val ontology = manager.createOntology(axioms, IRI.create("http://purl.obolibrary.org/obo/uberon/homology_annotations.owl"))
-    manager.applyChange(new AddOntologyAnnotation(ontology, factory.getOWLAnnotation(description, factory.getOWLLiteral("Homology Assertions"))))
-    manager.applyChange(new AddImport(ontology, factory.getOWLImportsDeclaration(IRI.create("http://purl.obolibrary.org/obo/uberon/ext.owl"))))
-    manager.applyChange(new AddImport(ontology, factory.getOWLImportsDeclaration(IRI.create("http://purl.obolibrary.org/obo/eco.owl"))))
+    val ontology = manager.createOntology(
+      axioms,
+      IRI.create(
+        "http://purl.obolibrary.org/obo/uberon/homology_annotations.owl"
+      )
+    )
+    manager.applyChange(
+      new AddOntologyAnnotation(
+        ontology,
+        factory.getOWLAnnotation(
+          description,
+          factory.getOWLLiteral("Homology Assertions")
+        )
+      )
+    )
+    manager.applyChange(
+      new AddImport(
+        ontology,
+        factory.getOWLImportsDeclaration(
+          IRI.create("http://purl.obolibrary.org/obo/uberon/ext.owl")
+        )
+      )
+    )
+    manager.applyChange(
+      new AddImport(
+        ontology,
+        factory.getOWLImportsDeclaration(
+          IRI.create("http://purl.obolibrary.org/obo/eco.owl")
+        )
+      )
+    )
     ontology
   }
 
   def processEntry(line: String): Set[OWLAxiom] = {
     val items = line.split("\t", -1)
-    val annotation = Individual("http://example.org/" + UUID.randomUUID().toString)
+    val annotation = Individual(
+      "http://example.org/" + UUID.randomUUID().toString
+    )
     val structure1 = Individual(IRI.create(items(1).trim))
     val structure2 = Individual(IRI.create(items(6).trim))
     val evidenceCode = Class(OBOUtil.iriForTermID(items(10).trim))
-    val evidence = Individual("http://example.org/" + UUID.randomUUID().toString)
+    val evidence = Individual(
+      "http://example.org/" + UUID.randomUUID().toString
+    )
     val pub = factory.getOWLLiteral(items(11).trim)
     Set(
       if (items(4).trim == "hom to") {
@@ -57,7 +92,8 @@ object HomologyTableToOWLAsAnnotations extends OWLTask {
       annotation Fact (aboutStructure, structure2),
       annotation Fact (has_evidence, evidence),
       evidence Type evidenceCode,
-      evidence Annotation (source, pub))
+      evidence Annotation (source, pub)
+    )
   }
 
 }

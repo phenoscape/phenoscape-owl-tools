@@ -17,8 +17,13 @@ object ConvertNeXML extends App {
   val manager = OWLManager.createOWLOntologyManager()
   val ontology = manager.loadOntology(IRI.create(new File(ontologyPath)))
 
-  val nexmlOnt = PropertyNormalizer.normalize(PhenexToOWL.convert(new File(nexmlFile), ontology))
-  manager.saveOntology(nexmlOnt, new FunctionalSyntaxDocumentFormat(), new FileOutputStream(new File(outputFile)))
-
+  val nexmlOnt = PropertyNormalizer.normalize(
+    PhenexToOWL.convert(new File(nexmlFile), ontology)
+  )
+  manager.saveOntology(
+    nexmlOnt,
+    new FunctionalSyntaxDocumentFormat(),
+    new FileOutputStream(new File(outputFile))
+  )
 
 }

@@ -8,21 +8,22 @@ import java.io.FileOutputStream
 import scala.collection.JavaConverters._
 import org.semanticweb.owlapi.model.parameters.Imports
 
-
 object NegationHierarchyAsserter {
 
   val factory = OWLManager.getOWLDataFactory
   val Negates = factory.getOWLAnnotationProperty(Vocab.NEGATES)
 
-
   def main(args: Array[String]): Unit = {
 
     val manager: OWLOntologyManager = OWLManager.createOWLOntologyManager()
-    val inputOntology: OWLOntology = manager.loadOntologyFromOntologyDocument(new File(args(0)))
-    val axioms: Set[OWLAxiom] = inputOntology.getAxioms(Imports.INCLUDED).asScala.toSet
+    val inputOntology: OWLOntology =
+      manager.loadOntologyFromOntologyDocument(new File(args(0)))
+    val axioms: Set[OWLAxiom] =
+      inputOntology.getAxioms(Imports.INCLUDED).asScala.toSet
     val negationAxioms: Set[OWLAxiom] = assertNegationHierarchy(axioms)
-    val negationOntology: OWLOntology = manager.createOntology(negationAxioms.asJava)
-    manager.saveOntology(negationOntology, new FileOutputStream(args(1)))     //  negation axioms file
+    val negationOntology: OWLOntology =
+      manager.createOntology(negationAxioms.asJava)
+    manager.saveOntology(negationOntology, new FileOutputStream(args(1))) //  negation axioms file
   }
 
   def assertNegationHierarchy(axioms: Set[OWLAxiom]): Set[OWLAxiom] = {
@@ -30,7 +31,9 @@ object NegationHierarchyAsserter {
     val classTuples = for {
       EquivalentClasses(_, expr) <- axioms
       //  extract named classes and expressions
-      namedClasses: Set[OWLClass] = expr.collect { case owlClass: OWLClass => owlClass }
+      namedClasses: Set[OWLClass] = expr.collect {
+        case owlClass: OWLClass => owlClass
+      }
       namedClass: OWLClass <- namedClasses
       expression: OWLClassExpression <- expr
     } yield (expression, namedClass)
@@ -42,7 +45,9 @@ object NegationHierarchyAsserter {
       EquivalentClasses(_, expr) <- axioms
       expressions = expr.collect { case ObjectComplementOf(negated) => negated }
       if expressions.nonEmpty
-      namedNegationClasses = expr.collect { case owlClass: OWLClass => owlClass }
+      namedNegationClasses = expr.collect {
+        case owlClass: OWLClass => owlClass
+      }
       expression <- expressions
       expressionAsNamed = Set(expression).collect { case n: OWLClass => n }
       namedClass <- classMap.getOrElse(expression, Set.empty) ++ expressionAsNamed
@@ -63,7 +68,7 @@ object NegationHierarchyAsserter {
     } yield Class(negater) SubClassOf Class(superClassOfOntClassIRI)
 
     val equivalentClassAxioms = for {
-      equivAxiom@EquivalentClasses(_, _) <- axioms
+      equivAxiom @ EquivalentClasses(_, _) <- axioms
       classes = equivAxiom.getNamedClasses.asScala
       if classes.size > 1
     } yield {
@@ -74,9 +79,10 @@ object NegationHierarchyAsserter {
   }
 
   def buildIndex[A, B](pairs: Iterable[(A, B)]): Map[A, Set[B]] =
-    pairs.foldLeft(emptyIndex[A, B]) { case (index, (a, b)) => index.updated(a, index(a) + b) }
+    pairs.foldLeft(emptyIndex[A, B]) {
+      case (index, (a, b)) => index.updated(a, index(a) + b)
+    }
 
   def emptyIndex[A, B]: Map[A, Set[B]] = Map.empty.withDefaultValue(Set.empty)
-
 
 }

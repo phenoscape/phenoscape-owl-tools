@@ -19,6 +19,8 @@ object DevelopsFromRuleGenerator extends OWLTask {
   }
 
   def createRule(ontClass: OWLClass): OWLSubClassOfAxiom =
-    (not(has_part some ontClass)) SubClassOf (not(has_part some (DEVELOPS_FROM some ontClass)))
+    (not(has_part some ontClass)) SubClassOf (not(
+      has_part some (DEVELOPS_FROM some ontClass)
+    ))
 
 }

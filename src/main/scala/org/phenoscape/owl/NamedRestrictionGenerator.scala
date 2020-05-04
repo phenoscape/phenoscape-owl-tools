@@ -22,7 +22,10 @@ object NamedRestrictionGenerator extends OWLTask {
     manager.saveOntology(restrictionsOntology, IRI.create(new File(args(2))))
   }
 
-  def generateRestrictions(ontology: OWLOntology, property: OWLObjectProperty): OWLOntology = {
+  def generateRestrictions(
+      ontology: OWLOntology,
+      property: OWLObjectProperty
+  ): OWLOntology = {
     val newIRI = property.getIRI.toString + "_some_" + ontology.getOntologyID.getOntologyIRI.toString
     val newAxioms = for {
       ontClass <- ontology.getClassesInSignature(false).asScala
@@ -31,17 +34,26 @@ object NamedRestrictionGenerator extends OWLTask {
     manager.createOntology(newAxioms.asJava, IRI.create(newIRI))
   }
 
-  def createRestriction(property: OWLObjectProperty, ontClass: OWLClass): Set[OWLAxiom] = {
-    val annotationProperty = factory.getOWLAnnotationProperty(getClassRelationIRI(property.getIRI))
-    val (namedRestriction, axioms) = ExpressionUtil.nameForExpressionWithAxioms(property some ontClass)
-    val annotation = namedRestriction Annotation (annotationProperty, ontClass.getIRI())
+  def createRestriction(
+      property: OWLObjectProperty,
+      ontClass: OWLClass
+  ): Set[OWLAxiom] = {
+    val annotationProperty =
+      factory.getOWLAnnotationProperty(getClassRelationIRI(property.getIRI))
+    val (namedRestriction, axioms) =
+      ExpressionUtil.nameForExpressionWithAxioms(property some ontClass)
+    val annotation = namedRestriction Annotation (annotationProperty, ontClass
+      .getIRI())
     axioms + (namedRestriction Annotation (annotationProperty, ontClass.getIRI))
   }
 
   def getRestrictionIRI(propertyIRI: IRI, classIRI: IRI): IRI = {
-    ExpressionUtil.nameForExpression(ObjectProperty(propertyIRI) some Class(classIRI)).getIRI
+    ExpressionUtil
+      .nameForExpression(ObjectProperty(propertyIRI) some Class(classIRI))
+      .getIRI
   }
 
-  def getClassRelationIRI(propertyIRI: IRI): IRI = IRI.create(propertyIRI.toString + "_some")
+  def getClassRelationIRI(propertyIRI: IRI): IRI =
+    IRI.create(propertyIRI.toString + "_some")
 
 }

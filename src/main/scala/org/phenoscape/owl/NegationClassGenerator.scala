@@ -25,7 +25,8 @@ object NegationClassGenerator extends OWLTask {
     val negation = Class(getNegationIRI(ontClass.getIRI))
     Set(
       negation EquivalentTo not(ontClass),
-      negation Annotation (negates, ontClass.getIRI))
+      negation Annotation (negates, ontClass.getIRI)
+    )
   }
 
   def getNegationIRI(classIRI: IRI): IRI = {
@@ -33,7 +34,9 @@ object NegationClassGenerator extends OWLTask {
   }
 
   def getNegationOntologyIRI(ontology: OWLOntology): IRI = {
-    return IRI.create("http://phenoscape.org/not/" + ontology.getOntologyID.getOntologyIRI.toString)
+    return IRI.create(
+      "http://phenoscape.org/not/" + ontology.getOntologyID.getOntologyIRI.toString
+    )
   }
 
 }

@@ -12,7 +12,9 @@ class BuilderIRIMapper(folder: File) extends OWLOntologyIRIMapper {
     if (iri.getScheme == "file")
       iri
     else
-      IRI.create(new File(folder, URLEncoder.encode(iri.toURI.toString, "UTF-8")))
+      IRI.create(
+        new File(folder, URLEncoder.encode(iri.toURI.toString, "UTF-8"))
+      )
   }
 
 }

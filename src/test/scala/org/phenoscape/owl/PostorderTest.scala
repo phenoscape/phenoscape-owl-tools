@@ -8,7 +8,6 @@ import org.phenoscape.owl.{Vocab => _}
 import org.phenoscape.scowl._
 import org.semanticweb.owlapi.vocab.OWLRDFVocabulary
 
-
 object PostorderTest extends KnowledgeBaseBuilder {
 
   val inFile = args(0)
@@ -35,12 +34,11 @@ object PostorderTest extends KnowledgeBaseBuilder {
 //  step("Reasoning with tbox")
 //  val tboxReasoner = reasoner(tbox)
 
-
   step("Testing postorder part of ancestral states reconstruction")
-  val result = EvolutionaryProfiles.computePhenotypeProfiles(TaxonNode(CHORDATA), inFile)
+  val result =
+    EvolutionaryProfiles.computePhenotypeProfiles(TaxonNode(CHORDATA), inFile)
   println("Size of profile data: " + result.size)
   result.take(100).foreach(println)
-
 
   step("Done")
 

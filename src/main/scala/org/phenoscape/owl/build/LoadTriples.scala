@@ -16,12 +16,16 @@ object LoadTriples extends App {
   val graphURI = args(3)
   val bigdataProperties = new Properties()
   bigdataProperties.load(new FileReader(bigdataPropertiesFile))
-  bigdataProperties.setProperty(Options.FILE, bigdataJournalFile.getAbsolutePath)
+  bigdataProperties.setProperty(
+    Options.FILE,
+    bigdataJournalFile.getAbsolutePath
+  )
   val sail = new BigdataSail(bigdataProperties)
   val tripleStore = sail.getDatabase
   val loader = new DataLoader(tripleStore)
   val baseURI = ""
-  val stats = loader.loadFiles(inputFolder, baseURI, RDFFormat.TURTLE, graphURI, null)
+  val stats =
+    loader.loadFiles(inputFolder, baseURI, RDFFormat.TURTLE, graphURI, null)
   println(stats)
   loader.endSource()
   tripleStore.commit()

@@ -7,7 +7,8 @@ object Conversions {
 
   implicit class BetterFileOps(val self: File) extends AnyVal {
 
-    def toSource(encoding: String): Source = Source.fromFile(self.toJava, encoding)
+    def toSource(encoding: String): Source =
+      Source.fromFile(self.toJava, encoding)
 
   }
 

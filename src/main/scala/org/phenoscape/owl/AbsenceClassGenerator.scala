@@ -28,12 +28,19 @@ object AbsenceClassGenerator extends OWLTask {
   def createAbsenceClass(ontClass: OWLClass): Set[OWLAxiom] = {
     val classIRI = ontClass.getIRI
     val absenceClass = Class(getAbsenceIRI(classIRI))
-    val notHasPartClass = Class(NegationClassGenerator.getNegationIRI(NamedRestrictionGenerator.getRestrictionIRI(has_part.getIRI, classIRI)))
+    val notHasPartClass = Class(
+      NegationClassGenerator.getNegationIRI(
+        NamedRestrictionGenerator.getRestrictionIRI(has_part.getIRI, classIRI)
+      )
+    )
     Set(
       factory.getOWLDeclarationAxiom(absenceClass),
-      absenceClass EquivalentTo (has_part some (LacksAllPartsOfType and (towards value Individual(classIRI)))),
+      absenceClass EquivalentTo (has_part some (LacksAllPartsOfType and (towards value Individual(
+        classIRI
+      )))),
       absenceClass EquivalentTo (has_part some (inheres_in some notHasPartClass)),
-      absenceClass Annotation (absenceOf, ontClass))
+      absenceClass Annotation (absenceOf, ontClass)
+    )
   }
 
   def getAbsenceIRI(classIRI: IRI): IRI = {
@@ -41,12 +48,18 @@ object AbsenceClassGenerator extends OWLTask {
   }
 
   def getAbsenceOntologyIRI(ontology: OWLOntology): IRI = {
-    return IRI.create("http://phenoscape.org/not_has_part/" + ontology.getOntologyID.getOntologyIRI.toString)
+    return IRI.create(
+      "http://phenoscape.org/not_has_part/" + ontology.getOntologyID.getOntologyIRI.toString
+    )
   }
 
   def generateAllAbsenceAxiomsForEntity(ontClass: OWLClass): Set[OWLAxiom] = {
-    val hasPartAxioms = NamedRestrictionGenerator.createRestriction(has_part, ontClass)
-    val namedHasPartClass = Class(NamedRestrictionGenerator.getRestrictionIRI(has_part.getIRI, ontClass.getIRI()))
+    val hasPartAxioms =
+      NamedRestrictionGenerator.createRestriction(has_part, ontClass)
+    val namedHasPartClass = Class(
+      NamedRestrictionGenerator
+        .getRestrictionIRI(has_part.getIRI, ontClass.getIRI())
+    )
     hasPartAxioms ++
       createAbsenceClass(ontClass) ++
       NegationClassGenerator.createNegationClassAxioms(namedHasPartClass)

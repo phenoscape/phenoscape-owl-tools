@@ -25,14 +25,17 @@ object ReverseDevelopsFromRuleGenerator extends OWLTask {
   def generateDevelopsFromRules(ontology: OWLOntology): OWLOntology = {
     val manager = ontology.getOWLOntologyManager
     val newIRI = ontology.getOntologyID.getOntologyIRI.toString + "/reverse_develops_from_rules.owl"
-    val newAxioms = ontology.getClassesInSignature(false).asScala flatMap createRules
+    val newAxioms = ontology
+      .getClassesInSignature(false)
+      .asScala flatMap createRules
     manager.createOntology(newAxioms.toSet[OWLAxiom].asJava, IRI.create(newIRI))
   }
 
   def createRules(ontClass: OWLClass): Set[OWLSubClassOfAxiom] = {
     Set(
       (has_part some (DEVELOPS_FROM some ontClass)) SubClassOf (has_part some ontClass),
-      (has_part some (part_of some ontClass)) SubClassOf (has_part some ontClass))
+      (has_part some (part_of some ontClass)) SubClassOf (has_part some ontClass)
+    )
   }
 
 }

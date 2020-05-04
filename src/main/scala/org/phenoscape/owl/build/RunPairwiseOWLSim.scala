@@ -22,13 +22,17 @@ object RunPairwiseOWLSim extends App {
   val manager = OWLManager.createOWLOntologyManager()
   val ontology = manager.loadOntologyFromOntologyDocument(ontfile)
   val profiles = manager.loadOntologyFromOntologyDocument(profilesFile)
-  val combined = manager.createOntology((ontology.getAxioms().asScala ++ profiles.getAxioms().asScala).asJava, OntUtil.nextIRI)
+  val combined = manager.createOntology(
+    (ontology.getAxioms().asScala ++ profiles.getAxioms().asScala).asJava,
+    OntUtil.nextIRI
+  )
   println("Creating OWLSim")
-  def isTaxon(ind: OWLNamedIndividual): Boolean = ind.getIRI.toString.contains("VTO_")
-  val inCorpusFunc = if (corpus == "taxa") {
-    ind: OWLNamedIndividual => ind.getIRI.toString.contains("VTO_")
-  } else if (corpus == "genes") {
-    ind: OWLNamedIndividual => !ind.getIRI.toString.contains("VTO_")
+  def isTaxon(ind: OWLNamedIndividual): Boolean =
+    ind.getIRI.toString.contains("VTO_")
+  val inCorpusFunc = if (corpus == "taxa") { ind: OWLNamedIndividual =>
+    ind.getIRI.toString.contains("VTO_")
+  } else if (corpus == "genes") { ind: OWLNamedIndividual =>
+    !ind.getIRI.toString.contains("VTO_")
   } else throw new RuntimeException("Invalid corpus name.")
   val owlSim = new OWLsim(combined, inCorpusFunc)
   println("Done creating OWLSim")
@@ -39,6 +43,9 @@ object RunPairwiseOWLSim extends App {
   val startIndex = (taskNum - 1) * groupSize
   val group = orderedProfiles.drop(startIndex).take(groupSize)
   println("Computing similarity matrix")
-  owlSim.computeAllSimilarityToCorpusDirectOutput(group.toSet, new File(outfile))
+  owlSim.computeAllSimilarityToCorpusDirectOutput(
+    group.toSet,
+    new File(outfile)
+  )
   println("Done: " + new Date())
 }
