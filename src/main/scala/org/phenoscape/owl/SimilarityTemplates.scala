@@ -11,16 +11,24 @@ import org.semanticweb.owlapi.model.OWLAxiom
 
 object SimilarityTemplates {
 
-  def entity(entity: OWLClass): (OWLClass, Set[OWLAxiom]) = ExpressionUtil.nameForExpressionWithAxioms(phenotype_of some entity)
+  def entity(entity: OWLClass): (OWLClass, Set[OWLAxiom]) =
+    ExpressionUtil.nameForExpressionWithAxioms(phenotype_of some entity)
 
-  def partsOfEntity(entity: OWLClass): (OWLClass, Set[OWLAxiom]) = ExpressionUtil.nameForExpressionWithAxioms(phenotype_of some (entity or (part_of some entity)))
+  def partsOfEntity(entity: OWLClass): (OWLClass, Set[OWLAxiom]) =
+    ExpressionUtil.nameForExpressionWithAxioms(phenotype_of some (entity or (part_of some entity)))
 
-  def developsFromEntity(entity: OWLClass): (OWLClass, Set[OWLAxiom]) = ExpressionUtil.nameForExpressionWithAxioms(phenotype_of some (entity or (DEVELOPS_FROM some entity)))
+  def developsFromEntity(entity: OWLClass): (OWLClass, Set[OWLAxiom]) =
+    ExpressionUtil.nameForExpressionWithAxioms(phenotype_of some (entity or (DEVELOPS_FROM some entity)))
 
-  def entityWithQuality(entity: OWLClass, quality: OWLClass): (OWLClass, Set[OWLAxiom]) = ExpressionUtil.nameForExpressionWithAxioms((has_part some quality) and (phenotype_of some entity))
+  def entityWithQuality(entity: OWLClass, quality: OWLClass): (OWLClass, Set[OWLAxiom]) =
+    ExpressionUtil.nameForExpressionWithAxioms((has_part some quality) and (phenotype_of some entity))
 
-  def partsOfEntityWithQuality(entity: OWLClass, quality: OWLClass): (OWLClass, Set[OWLAxiom]) = ExpressionUtil.nameForExpressionWithAxioms((has_part some quality) and (phenotype_of some (entity or (part_of some entity))))
+  def partsOfEntityWithQuality(entity: OWLClass, quality: OWLClass): (OWLClass, Set[OWLAxiom]) =
+    ExpressionUtil.nameForExpressionWithAxioms(
+      (has_part some quality) and (phenotype_of some (entity or (part_of some entity)))
+    )
 
-  def quality(quality: OWLClass): (OWLClass, Set[OWLAxiom]) = ExpressionUtil.nameForExpressionWithAxioms(has_part some quality)
+  def quality(quality: OWLClass): (OWLClass, Set[OWLAxiom]) =
+    ExpressionUtil.nameForExpressionWithAxioms(has_part some quality)
 
 }

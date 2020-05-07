@@ -20,5 +20,4 @@ object ConvertNeXML extends App {
   val nexmlOnt = PropertyNormalizer.normalize(PhenexToOWL.convert(new File(nexmlFile), ontology))
   manager.saveOntology(nexmlOnt, new FunctionalSyntaxDocumentFormat(), new FileOutputStream(new File(outputFile)))
 
-
 }

@@ -31,10 +31,23 @@ object HomologyTableToOWLWithAncestralStructure extends OWLTask {
 
   def convertFile(file: Source): OWLOntology = {
     val axioms = (file.getLines.drop(1) flatMap processEntry).toSet.asJava
-    val ontology = manager.createOntology(axioms, IRI.create("http://purl.obolibrary.org/obo/uberon/homology_with_ancestors.owl"))
-    manager.applyChange(new AddOntologyAnnotation(ontology, factory.getOWLAnnotation(description, factory.getOWLLiteral("Homology Assertions"))))
-    manager.applyChange(new AddImport(ontology, factory.getOWLImportsDeclaration(IRI.create("http://purl.obolibrary.org/obo/uberon/ext.owl"))))
-    manager.applyChange(new AddImport(ontology, factory.getOWLImportsDeclaration(IRI.create("http://purl.obolibrary.org/obo/eco.owl"))))
+    val ontology =
+      manager.createOntology(axioms, IRI.create("http://purl.obolibrary.org/obo/uberon/homology_with_ancestors.owl"))
+    manager.applyChange(
+      new AddOntologyAnnotation(
+        ontology,
+        factory.getOWLAnnotation(description, factory.getOWLLiteral("Homology Assertions"))
+      )
+    )
+    manager.applyChange(
+      new AddImport(
+        ontology,
+        factory.getOWLImportsDeclaration(IRI.create("http://purl.obolibrary.org/obo/uberon/ext.owl"))
+      )
+    )
+    manager.applyChange(
+      new AddImport(ontology, factory.getOWLImportsDeclaration(IRI.create("http://purl.obolibrary.org/obo/eco.owl")))
+    )
     ontology
   }
 
@@ -54,12 +67,12 @@ object HomologyTableToOWLWithAncestralStructure extends OWLTask {
         ancestralStructure Type (HAS_DERIVED_BY_DESCENDANT some structure1),
         ancestralStructure Type (HAS_DERIVED_BY_DESCENDANT some structure2),
         evidence Type evidenceCode,
-        evidence Annotation (source, pub))
-    } else {
+        evidence Annotation (source, pub)
+      )
+    } else
       //FIXME
       // not including negative homology assertions
       Set()
-    }
   }
 
 }

@@ -32,10 +32,23 @@ object HomologyTableToOWLAsAnnotations extends OWLTask {
 
   def convertFile(file: Source): OWLOntology = {
     val axioms = (file.getLines.drop(1) flatMap processEntry).toSet.asJava
-    val ontology = manager.createOntology(axioms, IRI.create("http://purl.obolibrary.org/obo/uberon/homology_annotations.owl"))
-    manager.applyChange(new AddOntologyAnnotation(ontology, factory.getOWLAnnotation(description, factory.getOWLLiteral("Homology Assertions"))))
-    manager.applyChange(new AddImport(ontology, factory.getOWLImportsDeclaration(IRI.create("http://purl.obolibrary.org/obo/uberon/ext.owl"))))
-    manager.applyChange(new AddImport(ontology, factory.getOWLImportsDeclaration(IRI.create("http://purl.obolibrary.org/obo/eco.owl"))))
+    val ontology =
+      manager.createOntology(axioms, IRI.create("http://purl.obolibrary.org/obo/uberon/homology_annotations.owl"))
+    manager.applyChange(
+      new AddOntologyAnnotation(
+        ontology,
+        factory.getOWLAnnotation(description, factory.getOWLLiteral("Homology Assertions"))
+      )
+    )
+    manager.applyChange(
+      new AddImport(
+        ontology,
+        factory.getOWLImportsDeclaration(IRI.create("http://purl.obolibrary.org/obo/uberon/ext.owl"))
+      )
+    )
+    manager.applyChange(
+      new AddImport(ontology, factory.getOWLImportsDeclaration(IRI.create("http://purl.obolibrary.org/obo/eco.owl")))
+    )
     ontology
   }
 
@@ -48,16 +61,16 @@ object HomologyTableToOWLAsAnnotations extends OWLTask {
     val evidence = Individual("http://example.org/" + UUID.randomUUID().toString)
     val pub = factory.getOWLLiteral(items(11).trim)
     Set(
-      if (items(4).trim == "hom to") {
+      if (items(4).trim == "hom to")
         annotation Type homologyAnnotation
-      } else {
-        annotation Type negativeHomologyAnnotation
-      },
+      else
+        annotation Type negativeHomologyAnnotation,
       annotation Fact (aboutStructure, structure1),
       annotation Fact (aboutStructure, structure2),
       annotation Fact (has_evidence, evidence),
       evidence Type evidenceCode,
-      evidence Annotation (source, pub))
+      evidence Annotation (source, pub)
+    )
   }
 
 }

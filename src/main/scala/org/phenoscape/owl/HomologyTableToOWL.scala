@@ -31,9 +31,21 @@ object HomologyTableToOWL extends OWLTask {
   def convertFile(file: Source): OWLOntology = {
     val axioms = (file.getLines.drop(1) flatMap processEntry).toSet.asJava
     val ontology = manager.createOntology(axioms, IRI.create("http://purl.obolibrary.org/obo/uberon/homology.owl"))
-    manager.applyChange(new AddOntologyAnnotation(ontology, factory.getOWLAnnotation(description, factory.getOWLLiteral("Homology Assertions"))))
-    manager.applyChange(new AddImport(ontology, factory.getOWLImportsDeclaration(IRI.create("http://purl.obolibrary.org/obo/uberon/ext.owl"))))
-    manager.applyChange(new AddImport(ontology, factory.getOWLImportsDeclaration(IRI.create("http://purl.obolibrary.org/obo/eco.owl"))))
+    manager.applyChange(
+      new AddOntologyAnnotation(
+        ontology,
+        factory.getOWLAnnotation(description, factory.getOWLLiteral("Homology Assertions"))
+      )
+    )
+    manager.applyChange(
+      new AddImport(
+        ontology,
+        factory.getOWLImportsDeclaration(IRI.create("http://purl.obolibrary.org/obo/uberon/ext.owl"))
+      )
+    )
+    manager.applyChange(
+      new AddImport(ontology, factory.getOWLImportsDeclaration(IRI.create("http://purl.obolibrary.org/obo/eco.owl")))
+    )
     ontology
   }
 
@@ -49,13 +61,13 @@ object HomologyTableToOWL extends OWLTask {
         (structure1 SubClassOf (HOMOLOGOUS_TO some structure2)) Annotation (axiom_has_evidence, evidence),
         (structure2 SubClassOf (HOMOLOGOUS_TO some structure1)) Annotation (axiom_has_evidence, evidence),
         evidence Type evidenceCode,
-        evidence Annotation (source, pub))
-    } else {
+        evidence Annotation (source, pub)
+      )
+    } else
       //FIXME
       // including negative homology assertions will create inconsistency
       // since the same structures are asserted both ways
       Set()
-    }
   }
 
 }

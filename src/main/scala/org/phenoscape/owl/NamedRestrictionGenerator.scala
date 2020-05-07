@@ -38,9 +38,8 @@ object NamedRestrictionGenerator extends OWLTask {
     axioms + (namedRestriction Annotation (annotationProperty, ontClass.getIRI))
   }
 
-  def getRestrictionIRI(propertyIRI: IRI, classIRI: IRI): IRI = {
+  def getRestrictionIRI(propertyIRI: IRI, classIRI: IRI): IRI =
     ExpressionUtil.nameForExpression(ObjectProperty(propertyIRI) some Class(classIRI)).getIRI
-  }
 
   def getClassRelationIRI(propertyIRI: IRI): IRI = IRI.create(propertyIRI.toString + "_some")
 

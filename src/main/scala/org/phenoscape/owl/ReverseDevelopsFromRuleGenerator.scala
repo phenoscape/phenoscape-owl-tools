@@ -29,10 +29,10 @@ object ReverseDevelopsFromRuleGenerator extends OWLTask {
     manager.createOntology(newAxioms.toSet[OWLAxiom].asJava, IRI.create(newIRI))
   }
 
-  def createRules(ontClass: OWLClass): Set[OWLSubClassOfAxiom] = {
+  def createRules(ontClass: OWLClass): Set[OWLSubClassOfAxiom] =
     Set(
       (has_part some (DEVELOPS_FROM some ontClass)) SubClassOf (has_part some ontClass),
-      (has_part some (part_of some ontClass)) SubClassOf (has_part some ontClass))
-  }
+      (has_part some (part_of some ontClass)) SubClassOf (has_part some ontClass)
+    )
 
 }

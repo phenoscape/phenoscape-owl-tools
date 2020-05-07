@@ -35,7 +35,9 @@ object TaxonomyConverter extends OWLTask {
   def translateTaxonClass(taxonClass: OWLClass, classOntology: OWLOntology): Set[OWLAxiom] = {
     val manager = classOntology.getOWLOntologyManager();
     val factory = manager.getOWLDataFactory();
-    onlyClasses(EntitySearcher.getSuperClasses(taxonClass, classOntology).asScala).map(createSubcladeRelationship(taxonClass, _)).toSet[OWLAxiom] + factory.getOWLClassAssertionAxiom(Taxon, factory.getOWLNamedIndividual(taxonClass.getIRI()));
+    onlyClasses(EntitySearcher.getSuperClasses(taxonClass, classOntology).asScala)
+      .map(createSubcladeRelationship(taxonClass, _))
+      .toSet[OWLAxiom] + factory.getOWLClassAssertionAxiom(Taxon, factory.getOWLNamedIndividual(taxonClass.getIRI()));
   }
 
   def createSubcladeRelationship(subclade: OWLClass, superclade: OWLClass): OWLObjectPropertyAssertionAxiom = {
@@ -45,8 +47,7 @@ object TaxonomyConverter extends OWLTask {
     return factory.getOWLObjectPropertyAssertionAxiom(subclade_of, subcladeIndividual, supercladeIndividual);
   }
 
-  def onlyClasses(classes: Iterable[OWLClassExpression]): Iterable[OWLClass] = {
+  def onlyClasses(classes: Iterable[OWLClassExpression]): Iterable[OWLClass] =
     classes.filter(!_.isAnonymous()).map(_.asOWLClass());
-  }
 
 }

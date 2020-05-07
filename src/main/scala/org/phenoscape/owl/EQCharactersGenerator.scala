@@ -29,9 +29,8 @@ object EQCharactersGenerator {
     axioms.toSet
   }
 
-  def composeEntityAndQuality(entity: OWLClass, quality: OWLClass): Set[OWLAxiom] = {
+  def composeEntityAndQuality(entity: OWLClass, quality: OWLClass): Set[OWLAxiom] =
     annotateComposedEntityAndQuality(entity, quality).toSet + composeEntityAndQualityInvolves(entity, quality)
-  }
 
   def composeEntityAndQualityInvolves(entity: OWLClass, quality: OWLClass): OWLEquivalentClassesAxiom = {
     val composition = Class(compositionIRI(entity, quality))
@@ -40,13 +39,10 @@ object EQCharactersGenerator {
 
   def annotateComposedEntityAndQuality(entity: OWLClass, quality: OWLClass): Set[OWLAnnotationAssertionAxiom] = {
     val subject = compositionIRI(entity, quality)
-    Set(
-      subject Annotation (entityTerm, entity),
-      subject Annotation (qualityTerm, quality))
+    Set(subject Annotation (entityTerm, entity), subject Annotation (qualityTerm, quality))
   }
 
-  def compositionIRI(entity: OWLClass, quality: OWLClass): IRI = {
+  def compositionIRI(entity: OWLClass, quality: OWLClass): IRI =
     IRI.create(s"http://example.org/involves?entity=${entity.getIRI}&quality=${quality.getIRI}")
-  }
 
 }

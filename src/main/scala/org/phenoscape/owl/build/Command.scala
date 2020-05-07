@@ -20,15 +20,16 @@ object Command extends App {
     case "assert-negation-hierarchy"    => NegationHierarchyAsserter.main(commandArgs)
     case "output-evolutionary-profiles" => EvolutionaryProfiles.main(commandArgs)
 
-    case "homology-table-to-owl"        =>
+    case "homology-table-to-owl" =>
       val homologyArgs = commandArgs.drop(1)
       commandArgs(0).toLowerCase match {
         case "rea"          => HomologyTableWithTaxa.main(homologyArgs)
         case "ava"          => HomologyTableToOWLVAHM.main(homologyArgs)
         case "rolification" => HomologyTableDemoRolification.main(homologyArgs)
       }
-    case _                              => { println(
-      """
+    case _                       =>
+      println(
+        """
 Valid commands are:
 
 build-kb
@@ -46,10 +47,10 @@ output-evolutionary-profiles
 homology-table-to-owl
 
 Consult the source code for required parameters.
-      """)
+      """
+      )
 
       System.exit(1)
-    }
   }
 
 }

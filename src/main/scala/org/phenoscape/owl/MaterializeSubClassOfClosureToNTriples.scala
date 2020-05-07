@@ -15,9 +15,8 @@ object MaterializeSubClassOfClosureToNTriples extends OWLTask {
 
   def main(args: Array[String]): Unit = {
     val targetFile = new File(System.getProperty("org.phenoscape.owl.MaterializeSubClassOfClosure.target"));
-    if (!targetFile.exists()) {
+    if (!targetFile.exists())
       targetFile.createNewFile();
-    }
     val source = manager.loadOntologyFromOntologyDocument(new File(args(0)));
     println(manager.getOntologies().asScala.map(_.getAxiomCount()).reduce(_ + _));
     val reasoner = new ElkReasonerFactory().createReasoner(source);
@@ -33,17 +32,26 @@ object MaterializeSubClassOfClosureToNTriples extends OWLTask {
     println("Total classes: " + classCount);
     var progress = 0;
     for (ontClass <- allClasses) {
-      writer.append(String.format("<%s> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <%s> .", ontClass.getIRI(), ontClass.getIRI()));
+      writer.append(
+        String
+          .format("<%s> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <%s> .", ontClass.getIRI(), ontClass.getIRI())
+      );
       writer.newLine();
-      val superClasses = reasoner.getSuperClasses(ontClass, false).getFlattened().asScala.filterNot(_ == factory.getOWLThing());
+      val superClasses =
+        reasoner.getSuperClasses(ontClass, false).getFlattened().asScala.filterNot(_ == factory.getOWLThing());
       for (superClass <- superClasses) {
-        writer.append(String.format("<%s> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <%s> .", ontClass.getIRI(), superClass.getIRI()));
+        writer.append(
+          String.format(
+            "<%s> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <%s> .",
+            ontClass.getIRI(),
+            superClass.getIRI()
+          )
+        );
         writer.newLine();
       }
       progress += 1;
-      if ((progress % 1000) == 0) {
+      if ((progress % 1000) == 0)
         println(progress.floatValue() / classCount * 100 + "%");
-      }
     }
     writer.close();
   }

@@ -47,9 +47,10 @@ object EQCreator {
     val qualities = patoReasoner.getSubClasses(qualityRoot, false).getFlattened();
     patoReasoner.dispose();
     println(new Date() + ": building");
-    for (entity <- anatomicalEntities.asScala; quality <- qualities.asScala) {
-      manager.addAxiom(eqs, createEQ(entity, quality));
-    }
+    for {
+      entity <- anatomicalEntities.asScala
+      quality <- qualities.asScala
+    } manager.addAxiom(eqs, createEQ(entity, quality));
     println(new Date() + ": saving EQs");
     val outputStream = new GZIPOutputStream(new BufferedOutputStream(new FileOutputStream(new File(args(0) + ".gz"))));
     manager.saveOntology(eqs, outputStream);
@@ -64,12 +65,19 @@ object EQCreator {
     println(new Date() + ": starting axiom generation");
     val allClasses = eqs.getClassesInSignature(true).asScala;
     for (owlClass <- allClasses) {
-      val newAxioms = eqReasoner.getSuperClasses(owlClass, true).getFlattened().asScala.map(owlClass SubClassOf _).filterNot(eqs.containsAxiom(_, true));
+      val newAxioms = eqReasoner
+        .getSuperClasses(owlClass, true)
+        .getFlattened()
+        .asScala
+        .map(owlClass SubClassOf _)
+        .filterNot(eqs.containsAxiom(_, true));
       manager.addAxioms(hierarchy, newAxioms.asJava);
     }
     println(new Date() + ": done axiom generation");
     println(new Date() + ": saving hierarchy");
-    val hierarchyOutputStream = new GZIPOutputStream(new BufferedOutputStream(new FileOutputStream(new File(args(1) + ".gz"))));
+    val hierarchyOutputStream = new GZIPOutputStream(
+      new BufferedOutputStream(new FileOutputStream(new File(args(1) + ".gz")))
+    );
     manager.saveOntology(hierarchy, hierarchyOutputStream);
     hierarchyOutputStream.close();
     println(new Date() + ": done saving");

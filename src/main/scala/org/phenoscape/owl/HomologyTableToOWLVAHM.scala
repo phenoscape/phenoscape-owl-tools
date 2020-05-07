@@ -16,8 +16,8 @@ import scala.collection.JavaConverters._
 import scala.io.Source
 
 /**
- * This corresponds to the AVA homology model in the Phenoscape homology paper.
- */
+  * This corresponds to the AVA homology model in the Phenoscape homology paper.
+  */
 object HomologyTableToOWLVAHM extends App {
 
   val factory = OWLManager.getOWLDataFactory
@@ -36,10 +36,18 @@ object HomologyTableToOWLVAHM extends App {
   def convertFile(file: Source): OWLOntology = {
     val axioms = (file.getLines.drop(1).flatMap(processEntry)).toSet.asJava
     val ontology = manager.createOntology(axioms, IRI.create("http://purl.org/phenoscape/demo/phenoscape_homology.owl"))
-    manager.applyChange(new AddOntologyAnnotation(ontology, factory.getOWLAnnotation(description, factory.getOWLLiteral("Homology Assertions using the AVA model"))))
+    manager.applyChange(
+      new AddOntologyAnnotation(
+        ontology,
+        factory.getOWLAnnotation(description, factory.getOWLLiteral("Homology Assertions using the AVA model"))
+      )
+    )
     manager.addAxiom(ontology, HistoricalHomologyMemberof InverseOf HasHistoricalHomologyMember)
     manager.addAxiom(ontology, SerialHomologyMemberOf InverseOf HasSerialHomologyMember)
-    manager.addAxiom(ontology, InHistoricalHomologyRelationshipWith SubPropertyChain (HistoricalHomologyMemberof o HasHistoricalHomologyMember))
+    manager.addAxiom(
+      ontology,
+      InHistoricalHomologyRelationshipWith SubPropertyChain (HistoricalHomologyMemberof o HasHistoricalHomologyMember)
+    )
     manager.addAxiom(ontology, SeriallyHomologousTo SubPropertyChain (SerialHomologyMemberOf o HasSerialHomologyMember))
     ontology
   }
@@ -56,12 +64,14 @@ object HomologyTableToOWLVAHM extends App {
       case "not ser hom to" => (SerialHomologyMemberOf, HasSerialHomologyMember, true)
     }
     val structure1Text = items(1).trim
-    val structure1 = if (structure1Text.contains("^")) PostCompositionParser.parseExpression(structure1Text).get
-    else Class(IRI.create(structure1Text))
+    val structure1 =
+      if (structure1Text.contains("^")) PostCompositionParser.parseExpression(structure1Text).get
+      else Class(IRI.create(structure1Text))
     val taxon1 = Class(IRI.create(items(3).trim))
     val structure2Text = items(6).trim
-    val structure2 = if (structure2Text.contains("^")) PostCompositionParser.parseExpression(structure2Text).get
-    else Class(IRI.create(structure2Text))
+    val structure2 =
+      if (structure2Text.contains("^")) PostCompositionParser.parseExpression(structure2Text).get
+      else Class(IRI.create(structure2Text))
     val taxon2 = Class(IRI.create(items(8).trim))
     val ancestor = Individual(s"$uniquePrefix#ancestor")
     var axioms = Set.empty[OWLAxiom]
@@ -77,8 +87,8 @@ object HomologyTableToOWLVAHM extends App {
         val evidence = Individual(s"$uniquePrefix#evidence")
         val pub = factory.getOWLLiteral(items(13).trim)
         axioms += evidence Type evidenceCode
-        axioms += evidence Annotation(source, pub)
-        axioms += ancestor Fact(has_evidence, evidence)
+        axioms += evidence Annotation (source, pub)
+        axioms += ancestor Fact (has_evidence, evidence)
       }
     }
     axioms

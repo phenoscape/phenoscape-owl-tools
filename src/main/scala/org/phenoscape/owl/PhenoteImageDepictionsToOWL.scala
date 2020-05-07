@@ -30,19 +30,32 @@ object PhenoteImageDepictionsToOWL extends OWLTask {
       val items = line.split("\t", -1);
       val image = factory.getOWLNamedIndividual(IRI.create(imageIRIPrefix + items(imageURLIndex).trim()));
       val depictedStructure = factory.getOWLClass(OBOUtil.iriForTermID(items(depictedStructureIndex).trim()));
-      val locatorOption = Option(StringUtils.stripToNull(items(locatorIndex))).map(id => factory.getOWLClass(OBOUtil.iriForTermID(id)));
+      val locatorOption =
+        Option(StringUtils.stripToNull(items(locatorIndex))).map(id => factory.getOWLClass(OBOUtil.iriForTermID(id)));
       val taxon = factory.getOWLClass(OBOUtil.iriForTermID(items(taxonIndex).trim()));
       val descriptionOption = Option(StringUtils.stripToNull(items(descriptionIndex))).map(factory.getOWLLiteral(_));
       manager.addAxiom(depictionsOntology, factory.getOWLDeclarationAxiom(image));
       manager.addAxiom(depictionsOntology, factory.getOWLClassAssertionAxiom(imageClass, image));
       val depictedClass = locatorOption match {
-        case Some(locator) => factory.getOWLObjectIntersectionOf(depictedStructure, factory.getOWLObjectSomeValuesFrom(part_of, locator), factory.getOWLObjectSomeValuesFrom(part_of, taxon));
-        case None => factory.getOWLObjectIntersectionOf(depictedStructure, factory.getOWLObjectSomeValuesFrom(part_of, taxon));
+        case Some(locator) =>
+          factory.getOWLObjectIntersectionOf(
+            depictedStructure,
+            factory.getOWLObjectSomeValuesFrom(part_of, locator),
+            factory.getOWLObjectSomeValuesFrom(part_of, taxon)
+          );
+        case None          =>
+          factory.getOWLObjectIntersectionOf(depictedStructure, factory.getOWLObjectSomeValuesFrom(part_of, taxon));
       }
-      manager.addAxiom(depictionsOntology, factory.getOWLClassAssertionAxiom(factory.getOWLObjectSomeValuesFrom(DEPICTS, depictedClass), image));
-      descriptionOption.foreach(description => {
-        manager.addAxiom(depictionsOntology, factory.getOWLAnnotationAssertionAxiom(hasDescription, image.getIRI(), description));
-      });
+      manager.addAxiom(
+        depictionsOntology,
+        factory.getOWLClassAssertionAxiom(factory.getOWLObjectSomeValuesFrom(DEPICTS, depictedClass), image)
+      );
+      descriptionOption.foreach { description =>
+        manager.addAxiom(
+          depictionsOntology,
+          factory.getOWLAnnotationAssertionAxiom(hasDescription, image.getIRI(), description)
+        );
+      };
     }
     manager.saveOntology(depictionsOntology, IRI.create(targetFile));
   }

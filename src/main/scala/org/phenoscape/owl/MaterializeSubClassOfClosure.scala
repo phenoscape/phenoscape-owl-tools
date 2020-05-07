@@ -29,9 +29,8 @@ object MaterializeSubClassOfClosure extends OWLTask {
     System.exit(0)
   }
 
-  def materialize(source: OWLOntology): OWLOntology = {
+  def materialize(source: OWLOntology): OWLOntology =
     oldMethod(source)
-  }
 
   def oldMethod(source: OWLOntology): OWLOntology = {
     val reasoner = new ElkReasonerFactory().createReasoner(source)
@@ -55,20 +54,25 @@ object MaterializeSubClassOfClosure extends OWLTask {
     return target
   }
 
-  def createSubClassOfAxioms(owlClass: OWLClass, superClasses: Set[OWLClass], reasoner: OWLReasoner, doneClasses: mutable.Set[OWLClass]): Set[OWLAxiom] = {
+  def createSubClassOfAxioms(
+    owlClass: OWLClass,
+    superClasses: Set[OWLClass],
+    reasoner: OWLReasoner,
+    doneClasses: mutable.Set[OWLClass]
+  ): Set[OWLAxiom] = {
     val axioms = mutable.Set[OWLAxiom]()
     val firstTime = doneClasses.add(owlClass)
-    if (!firstTime) {
+    if (!firstTime)
       axioms
-    } else {
+    else {
       val newSuperClasses = mutable.Set[OWLClass]()
       newSuperClasses.asJava.addAll(superClasses.asJava)
       newSuperClasses.add(owlClass)
       val directSubClasses = reasoner.getSubClasses(owlClass, true).getFlattened()
-      for (subclass <- directSubClasses.asScala) {
+      for (subclass <- directSubClasses.asScala)
         axioms.asJava.addAll(newSuperClasses.map(factory.getOWLSubClassOfAxiom(subclass, _)).asJava)
-      }
-      val recursiveAxioms: Set[OWLAxiom] = directSubClasses.asScala.map(createSubClassOfAxioms(_, newSuperClasses, reasoner, doneClasses)).flatten
+      val recursiveAxioms: Set[OWLAxiom] =
+        directSubClasses.asScala.map(createSubClassOfAxioms(_, newSuperClasses, reasoner, doneClasses)).flatten
       axioms.asJava.addAll(recursiveAxioms.asJava)
       axioms
     }

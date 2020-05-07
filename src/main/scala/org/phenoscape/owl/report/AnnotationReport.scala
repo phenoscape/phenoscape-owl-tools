@@ -41,12 +41,15 @@ object AnnotationReport {
   val phenoNS = Namespace.getNamespace("http://www.bioontologies.org/obd/schema/pheno");
   val factory = OWLManager.getOWLDataFactory();
   val manager = OWLManager.createOWLOntologyManager();
-  val header = "File\tCharacter Number\tCharacter Label\tState Symbol\tState Label\tEntity ID\tEntity Label\tQuality ID\tQuality Label\tRelated Entity ID\tRelated Entity Label";
+
+  val header =
+    "File\tCharacter Number\tCharacter Label\tState Symbol\tState Label\tEntity ID\tEntity Label\tQuality ID\tQuality Label\tRelated Entity ID\tRelated Entity Label";
   val prefixManager = new DefaultPrefixManager();
   prefixManager.setPrefix("UBERON:", "http://purl.obolibrary.org/obo/UBERON_");
   prefixManager.setPrefix("BSPO:", "http://purl.obolibrary.org/obo/BSPO_");
   prefixManager.setPrefix("PATO:", "http://purl.obolibrary.org/obo/PATO_");
   prefixManager.setPrefix("GO:", "http://purl.obolibrary.org/obo/GO_");
+
   val idRenderer = new ObjectRenderer {
 
     def render(obj: OWLObject): String = {
@@ -58,11 +61,19 @@ object AnnotationReport {
     }
 
   }
+
   val labelRenderer = new ObjectRenderer {
 
     def render(obj: OWLObject): String = {
       val writer = new StringWriter()
-      val renderer = new ManchesterOWLSyntaxObjectRenderer(writer, new AnnotationValueShortFormProvider(List(factory.getRDFSLabel).asJava, mutable.Map.empty[OWLAnnotationProperty, java.util.List[String]].asJava, manager))
+      val renderer = new ManchesterOWLSyntaxObjectRenderer(
+        writer,
+        new AnnotationValueShortFormProvider(
+          List(factory.getRDFSLabel).asJava,
+          mutable.Map.empty[OWLAnnotationProperty, java.util.List[String]].asJava,
+          manager
+        )
+      )
       obj.accept(renderer)
       writer.close()
       writer.toString
@@ -83,7 +94,9 @@ object AnnotationReport {
       val pub = file.getName();
       val format = nexml.getChild("characters", nexmlNS).getChild("format", nexmlNS);
       val stateSets = format.getChildren("states", nexmlNS);
-      val stateSetsByID = stateSets.asScala.map(states => (states.getAttributeValue("id"), states.getChildren("state", nexmlNS).asScala.toIterable)).toMap;
+      val stateSetsByID = stateSets.asScala
+        .map(states => (states.getAttributeValue("id"), states.getChildren("state", nexmlNS).asScala.toIterable))
+        .toMap;
       val characters = format.getChildren("char", nexmlNS);
       var i = 0;
       for (character <- characters.asScala) {
@@ -103,27 +116,24 @@ object AnnotationReport {
               writer.write(getID(phenotype.entity));
               writer.write("\t");
               writer.write(getLabel(phenotype.entity));
-            } else {
+            } else
               writer.write("\t");
-            }
             writer.write("\t");
             if (phenotype.quality != null) {
               properties.asJava.addAll(phenotype.quality.getObjectPropertiesInSignature());
               writer.write(getID(phenotype.quality));
               writer.write("\t");
               writer.write(getLabel(phenotype.quality));
-            } else {
+            } else
               writer.write("\t");
-            }
             writer.write("\t");
             if (phenotype.relatedEntity != null) {
               properties.asJava.addAll(phenotype.relatedEntity.getObjectPropertiesInSignature());
               writer.write(getID(phenotype.relatedEntity));
               writer.write("\t");
               writer.write(getLabel(phenotype.relatedEntity));
-            } else {
+            } else
               writer.write("\t");
-            }
             writer.write("\t");
             writer.newLine();
           }
@@ -131,9 +141,8 @@ object AnnotationReport {
       }
     }
     writer.close();
-    for (property <- properties) {
+    for (property <- properties)
       println(property.getIRI() + " " + labelRenderer.render(property));
-    }
   }
 
   def getStates(character: Element, sets: Map[String, Iterable[Element]]): Iterable[Element] = {
@@ -146,13 +155,11 @@ object AnnotationReport {
     return phenotypes.asScala.map(PhenoXMLUtil.translatePhenotypeCharacter(_)).toSeq;
   }
 
-  def getID(owlClass: OWLClassExpression): String = {
+  def getID(owlClass: OWLClassExpression): String =
     return idRenderer.render(owlClass).replaceAll("\n", "").replaceAll("\\s+", " ");
-  }
 
-  def getLabel(owlClass: OWLClassExpression): String = {
+  def getLabel(owlClass: OWLClassExpression): String =
     return labelRenderer.render(owlClass).replaceAll("\n", "").replaceAll("\\s+", " ");
-  }
 
   def writeCharacter(character: Element, index: Int, writer: Writer): Unit = {
     writer.write(index + "");

@@ -35,9 +35,15 @@ object MatrixGenerator extends OWLTask {
     manager.loadOntologyFromOntologyDocument(new File("references.owl"));
     manager.loadOntologyFromOntologyDocument(new File("merged.owl"));
     val uberon = manager.loadOntologyFromOntologyDocument(new File("ext.owl"));
-    manager.applyChange(new AddImport(dataOntology, factory.getOWLImportsDeclaration(ro.getOntologyID.getOntologyIRI.get)));
-    manager.applyChange(new AddImport(dataOntology, factory.getOWLImportsDeclaration(pato.getOntologyID.getOntologyIRI.get)));
-    manager.applyChange(new AddImport(dataOntology, factory.getOWLImportsDeclaration(uberon.getOntologyID.getOntologyIRI.get)));
+    manager.applyChange(
+      new AddImport(dataOntology, factory.getOWLImportsDeclaration(ro.getOntologyID.getOntologyIRI.get))
+    );
+    manager.applyChange(
+      new AddImport(dataOntology, factory.getOWLImportsDeclaration(pato.getOntologyID.getOntologyIRI.get))
+    );
+    manager.applyChange(
+      new AddImport(dataOntology, factory.getOWLImportsDeclaration(uberon.getOntologyID.getOntologyIRI.get))
+    );
     //val partOfLimbFin = Class(IRI.create("http://example.org/partOfLimbFin"));
     val anatomicalEntity = Class(Vocab.ANATOMICAL_ENTITY);
     //manager.addAxiom(uberon, (partOfLimbFin EquivalentTo (partOf some limbFin)));
@@ -46,14 +52,28 @@ object MatrixGenerator extends OWLTask {
     uberonReasoner.dispose();
     val attributes = attributesSlim.getClassesInSignature();
     println("Creating phenotype classes");
-    val newAxioms = (for (entity <- entities.asScala; quality <- attributes.asScala) yield composeEntityAndQuality(entity, quality)).flatten;
-    val characterClasses = for (entity <- entities.asScala; quality <- attributes.asScala) yield Class(compositionIRI(entity, quality));
+    val newAxioms = (for {
+      entity <- entities.asScala
+      quality <- attributes.asScala
+    } yield composeEntityAndQuality(entity, quality)).flatten;
+    val characterClasses = for {
+      entity <- entities.asScala
+      quality <- attributes.asScala
+    } yield Class(compositionIRI(entity, quality));
     manager.addAxioms(dataOntology, newAxioms.asJava);
     val dataReasoner = new ElkReasonerFactory().createReasoner(dataOntology);
     val newManager = OWLManager.createOWLOntologyManager();
     val resultOntology = newManager.createOntology();
     println("Creating class assertions with reasoner");
-    val classAssertions = characterClasses.map(charClass => dataReasoner.getInstances(charClass, true).getFlattened().asScala.map(inst => factory.getOWLClassAssertionAxiom(charClass, inst))).flatten;
+    val classAssertions = characterClasses
+      .map(charClass =>
+        dataReasoner
+          .getInstances(charClass, true)
+          .getFlattened()
+          .asScala
+          .map(inst => factory.getOWLClassAssertionAxiom(charClass, inst))
+      )
+      .flatten;
     newManager.addAxioms(resultOntology, classAssertions.asJava);
     newManager.addAxioms(resultOntology, newAxioms.asJava);
     newManager.addAxioms(resultOntology, dataOntology.getAxioms(dcDescription));
@@ -63,9 +83,9 @@ object MatrixGenerator extends OWLTask {
     System.exit(0);
   }
 
-  def composeEntityAndQuality(entity: OWLClass, quality: OWLClass): Set[OWLAxiom] = {
-    annotateComposedEntityAndQuality(entity, quality).toSet[OWLAxiom] + composeEntityAndQualityInvolves(entity, quality);
-  }
+  def composeEntityAndQuality(entity: OWLClass, quality: OWLClass): Set[OWLAxiom] =
+    annotateComposedEntityAndQuality(entity, quality)
+      .toSet[OWLAxiom] + composeEntityAndQualityInvolves(entity, quality);
 
   def annotateComposedEntityAndQuality(entity: OWLClass, quality: OWLClass): Set[OWLAnnotationAssertionAxiom] = {
     val subject = compositionIRI(entity, quality);
@@ -79,10 +99,7 @@ object MatrixGenerator extends OWLTask {
     composition EquivalentTo ((involves some entity) and (involves some quality));
   }
 
-  def compositionIRI(entity: OWLClass, quality: OWLClass): IRI = {
+  def compositionIRI(entity: OWLClass, quality: OWLClass): IRI =
     IRI.create("http://example.org/involves?entity=%s&quality=%s".format(entity.getIRI(), quality.getIRI()));
-  }
-
-
 
 }

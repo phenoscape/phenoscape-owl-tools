@@ -27,11 +27,10 @@ object MaterializeInferences extends OWLTask {
     val manager = OWLManager.createOWLOntologyManager
     val ontology = manager.loadOntologyFromOntologyDocument(new File(args(0)))
     materializeInferences(ontology)
-    if (args.size > 1) {
+    if (args.size > 1)
       manager.saveOntology(ontology, IRI.create(new File(args(1))))
-    } else {
+    else
       manager.saveOntology(ontology)
-    }
     System.exit(0) //for some reason this is required for execution to terminate when using Elk
   }
 
@@ -39,14 +38,14 @@ object MaterializeInferences extends OWLTask {
     val reasoner = if (propertiesOnly()) {
       val manager = ontology.getOWLOntologyManager()
       val classes = ontology.getClassesInSignature()
-      val tempOntology = manager.createOntology(ontology.getImportsClosure.asScala.flatMap(_.getAxioms().asScala).toSet.asJava)
+      val tempOntology =
+        manager.createOntology(ontology.getImportsClosure.asScala.flatMap(_.getAxioms().asScala).toSet.asJava)
       val entityRemover = new OWLEntityRemover(Set(tempOntology).asJava)
       tempOntology.getClassesInSignature().asScala.foreach(entityRemover.visit)
       manager.applyChanges(entityRemover.getChanges())
       createReasoner(tempOntology, getReasonerChoice())
-    } else {
+    } else
       createReasoner(ontology, getReasonerChoice())
-    }
     materializeInferences(ontology, reasoner)
     reasoner.dispose()
   }
@@ -56,36 +55,33 @@ object MaterializeInferences extends OWLTask {
     val axiomGenerators = List[InferredAxiomGenerator[_ <: OWLAxiom]](
       new InferredClassAssertionAxiomGenerator(),
       new InferredEquivalentClassAxiomGenerator(),
-      new InferredSubClassAxiomGenerator())
-    val axiomGeneratorsUpdated = if (!reasoner.isInstanceOf[ElkReasoner]) {
-      (new InferredPropertyAssertionGenerator()) :: axiomGenerators
-    } else axiomGenerators
+      new InferredSubClassAxiomGenerator()
+    )
+    val axiomGeneratorsUpdated =
+      if (!reasoner.isInstanceOf[ElkReasoner])
+        (new InferredPropertyAssertionGenerator()) :: axiomGenerators
+      else axiomGenerators
     val generator = new InferredOntologyGenerator(reasoner, axiomGeneratorsUpdated.asJava)
     generator.fillOntology(ontology.getOWLOntologyManager.getOWLDataFactory, ontology)
   }
 
-  def getReasonerChoice(): String = {
-    if (System.getProperties().containsKey(REASONER)) {
+  def getReasonerChoice(): String =
+    if (System.getProperties().containsKey(REASONER))
       return System.getProperty(REASONER)
-    } else {
+    else
       return "elk"
-    }
-  }
 
-  def createReasoner(ontology: OWLOntology, kind: String): OWLReasoner = {
+  def createReasoner(ontology: OWLOntology, kind: String): OWLReasoner =
     kind match {
       //case "hermit" => new ReasonerFactory().createReasoner(ontology)
       case "elk" => new ElkReasonerFactory().createReasoner(ontology)
       // case "trowl" => new RELReasonerFactory().createReasoner(ontology)
     }
-  }
 
-  def propertiesOnly(): Boolean = {
-    if (System.getProperties().containsKey(PROPERTIES_ONLY)) {
+  def propertiesOnly(): Boolean =
+    if (System.getProperties().containsKey(PROPERTIES_ONLY))
       System.getProperty(PROPERTIES_ONLY).toBoolean
-    } else {
+    else
       false
-    }
-  }
 
 }

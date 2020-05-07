@@ -28,22 +28,21 @@ testFrameworks += new TestFramework("utest.runner.Framework")
 
 libraryDependencies ++= {
   Seq(
-    "org.apache.commons"          %  "commons-lang3"            % "3.1",
-    "commons-io"                  %  "commons-io"               % "2.4",
-    "org.jdom"                    %  "jdom"                     % "2.0.2",
-    "net.sourceforge.owlapi"      %  "owlapi-distribution"      % "4.5.8",
-    "org.semanticweb.elk"         %  "elk-owlapi"               % "0.4.3",
-    "com.blazegraph"              %  "bigdata-core"             % "2.1.2",
-    "org.openrdf.sesame"          %  "sesame-rio"               % "2.7.12",
-    "org.phenoscape"              %% "scowl"                    % "1.3.4",
-    "org.phenoscape"              %% "owlet"                    % "1.6",
-    "org.phenoscape"              %% "phenoscape-kb-ingest"     % "1.6.2",
-    "log4j"                       %  "log4j"                    % "1.2.17",
-    "org.apache.directory.studio" %  "org.apache.commons.codec" % "1.8",
-    "com.github.pathikrit"        %% "better-files"             % "3.4.0",
-    "com.lihaoyi"                 %% "utest"                    % "0.6.9" % Test,
-    "org.phenoscape"              %% "sparql-interpolator"      % "1.0",
-    "io.monix"                    %% "monix"                    % "3.0.0-RC2"
-
+    "org.apache.commons"          % "commons-lang3"            % "3.1",
+    "commons-io"                  % "commons-io"               % "2.4",
+    "org.jdom"                    % "jdom"                     % "2.0.2",
+    "net.sourceforge.owlapi"      % "owlapi-distribution"      % "4.5.8",
+    "org.semanticweb.elk"         % "elk-owlapi"               % "0.4.3",
+    "com.blazegraph"              % "bigdata-core"             % "2.1.2",
+    "org.openrdf.sesame"          % "sesame-rio"               % "2.7.12",
+    "org.phenoscape"              %% "scowl"                   % "1.3.4",
+    "org.phenoscape"              %% "owlet"                   % "1.6",
+    "org.phenoscape"              %% "phenoscape-kb-ingest"    % "1.6.2",
+    "log4j"                       % "log4j"                    % "1.2.17",
+    "org.apache.directory.studio" % "org.apache.commons.codec" % "1.8",
+    "com.github.pathikrit"        %% "better-files"            % "3.4.0",
+    "com.lihaoyi"                 %% "utest"                   % "0.6.9" % Test,
+    "org.phenoscape"              %% "sparql-interpolator"     % "1.0",
+    "io.monix"                    %% "monix"                   % "3.0.0-RC2"
   )
 }

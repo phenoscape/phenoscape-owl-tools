@@ -31,7 +31,9 @@ object AnnotationStatus {
       publications.add(pub);
       val format = nexml.getChild("characters", nexmlNS).getChild("format", nexmlNS);
       val stateSets = format.getChildren("states", nexmlNS);
-      val stateSetsByID = stateSets.asScala.map(states => (states.getAttributeValue("id"), states.getChildren("state", nexmlNS).asScala.toIterable)).toMap;
+      val stateSetsByID = stateSets.asScala
+        .map(states => (states.getAttributeValue("id"), states.getChildren("state", nexmlNS).asScala.toIterable))
+        .toMap;
       val characters = format.getChildren("char", nexmlNS);
       var i = 0;
       for (character <- characters.asScala) {
@@ -39,20 +41,20 @@ object AnnotationStatus {
         val states = AnnotationReport.getStates(character, stateSetsByID);
         val annotated = mutable.Set[Element]();
         for (state <- states) {
-          val phenotypes = state.getDescendants(new ElementFilter("phenotype_character", phenoNS)).iterator().asScala.toList;
+          val phenotypes =
+            state.getDescendants(new ElementFilter("phenotype_character", phenoNS)).iterator().asScala.toList;
           allAnnotations.asJava.addAll(phenotypes.asJava);
           if (!phenotypes.isEmpty) {
             annotatedStates.add(state);
             annotated.add(state);
           }
         }
-        if (annotated.size == 0) {
+        if (annotated.size == 0)
           unannotatedCharacters.add(character);
-        } else if (annotated.size < states.size) {
+        else if (annotated.size < states.size)
           partiallyAnnotatedCharacters.add(character);
-        } else {
+        else
           completedCharacters.add(character);
-        }
       }
     }
     println("Publication count: " + publications.size);
