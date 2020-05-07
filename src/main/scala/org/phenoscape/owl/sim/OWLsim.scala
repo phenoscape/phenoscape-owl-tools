@@ -98,34 +98,42 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
 
   val nodeIC: Map[Node, Double] = convertFrequenciesToInformationContent(classToNode(OWLNothing))
 
-  def computeAllSimilarityToCorpus(inputs: Set[OWLNamedIndividual]): Set[Statement] =
-    (for {
-      inputProfile <- inputs.toParArray
-      corpusProfile <- individualsInCorpus.toParArray
-      triple <- groupWiseSimilarity(inputProfile, corpusProfile).toTriples
-    } yield triple).toSet.seq
 
-  def computeAllSimilarityToCorpusDirectOutput(inputs: Set[OWLNamedIndividual], outfile: File): Unit = {
+  def computeAllSimilarityToCorpus(inputs: Set[OWLNamedIndividual]): Set[Statement] = (for {
+    inputProfile <- inputs.toParArray
+    corpusProfile <- individualsInCorpus.toParArray
+    (_, triples) = groupWiseSimilarity(inputProfile, corpusProfile).toTriples
+    triple <- triples
+  } yield triple).toSet.seq
+
+  def computeAllSimilarityToCorpusDirectOutput(inputs: Set[OWLNamedIndividual], triplesOutfile: File, tsvOutfile: File): Unit = {
     import monix.execution.Scheduler.Implicits.global
-    val outputStream = new FileOutputStream(outfile)
+    val tsvWriter = new PrintWriter(tsvOutfile, "utf-8")
+    tsvWriter.println("?match\t?score\t?query\t?corpusprofile")
+    val outputStream = new FileOutputStream(triplesOutfile)
     val rdfWriter = StreamRDFWriter.getWriterStream(outputStream, RDFFormat.TURTLE_FLAT)
     rdfWriter.start()
     val comparisons = for {
       inputProfile <- Observable.fromIterable(inputs)
       corpusProfile <- Observable.fromIterable(individualsInCorpus)
     } yield (inputProfile, corpusProfile)
-    val processed = comparisons.mapParallelUnordered(Runtime.getRuntime.availableProcessors) {
-      case (inputProfile, corpusProfile) =>
-        Task(groupWiseSimilarity(inputProfile, corpusProfile).toTriples)
-    }
-    processed
-      .foreachL { triples =>
-        //FIXME wasted conversions here
-        triples.foreach(triple => rdfWriter.triple(sesameTripleToJena(triple).asTriple))
+
+    val processed = comparisons.mapParallelUnordered(Runtime.getRuntime.availableProcessors) { case (inputProfile, corpusProfile) =>
+      Task {
+        val similarity = groupWiseSimilarity(inputProfile, corpusProfile)
+        val (comparison, triples) = similarity.toTriples
+        val tsvLine = s"$comparison\t${similarity.score}\t${similarity.queryIndividual.getIRI}\t${similarity.corpusIndividual.getIRI}"
+        (tsvLine, triples)
       }
-      .runSyncUnsafe(Duration.Inf)
+    }
+    processed.foreachL { case (tsvLine, triples) =>
+      //FIXME wasted conversions here
+      triples.foreach(triple => rdfWriter.triple(sesameTripleToJena(triple).asTriple))
+      tsvWriter.println(tsvLine)
+    }.runSyncUnsafe(Duration.Inf)
     rdfWriter.finish()
     outputStream.close()
+    tsvWriter.close()
   }
 
   def computeAllSimilarityToCorpusJ(
@@ -367,7 +375,7 @@ final case class GroupWiseSimilarity(
 
   import GroupWiseSimilarity._
 
-  def toTriples: Set[Statement] = {
+  def toTriples: (URI, Set[Statement]) = {
     val self = new URIImpl(OntUtil.nextIRI.toString)
     val micasTriples = for {
       pair <- pairs
@@ -379,11 +387,12 @@ final case class GroupWiseSimilarity(
       node <- distinctSubsumers
       term <- node.classes
     } yield new StatementImpl(self, has_subsumer, new URIImpl(term.getIRI.toString))
-    Set(
+    val triples = Set(
       new StatementImpl(self, combined_score, new NumericLiteralImpl(score)),
       new StatementImpl(self, for_query_profile, new URIImpl(queryIndividual.getIRI.toString)),
-      new StatementImpl(self, for_corpus_profile, new URIImpl(corpusIndividual.getIRI.toString))
-    ) ++ subsumerTriples ++ micasTriples
+
+      new StatementImpl(self, for_corpus_profile, new URIImpl(corpusIndividual.getIRI.toString))) ++ subsumerTriples ++ micasTriples
+    self -> triples.toSet
   }
 
 }

@@ -17,7 +17,8 @@ object RunPairwiseOWLSim extends App {
   val ontfile = new File(args(2))
   val profilesFile = new File(args(3))
   val corpus = args(4)
-  val outfile = args(5)
+  val triplesOutfile = args(5)
+  val tsvOutfile = args(6)
 
   val manager = OWLManager.createOWLOntologyManager()
   val ontology = manager.loadOntologyFromOntologyDocument(ontfile)
@@ -44,6 +45,6 @@ object RunPairwiseOWLSim extends App {
   val startIndex = (taskNum - 1) * groupSize
   val group = orderedProfiles.drop(startIndex).take(groupSize)
   println("Computing similarity matrix")
-  owlSim.computeAllSimilarityToCorpusDirectOutput(group.toSet, new File(outfile))
+  owlSim.computeAllSimilarityToCorpusDirectOutput(group.toSet, new File(triplesOutfile), new File(tsvOutfile))
   println("Done: " + new Date())
 }
