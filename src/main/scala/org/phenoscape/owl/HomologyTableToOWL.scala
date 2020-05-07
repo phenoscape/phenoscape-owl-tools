@@ -63,12 +63,11 @@ object HomologyTableToOWL extends OWLTask {
         evidence Type evidenceCode,
         evidence Annotation (source, pub)
       )
-    } else {
+    } else
       //FIXME
       // including negative homology assertions will create inconsistency
       // since the same structures are asserted both ways
       Set()
-    }
   }
 
 }

@@ -58,9 +58,9 @@ object HomologyTableToOWLVAHM extends App {
     val uniquePrefix = s"http://purl.phenoscape.org/homology/annotation/$uniqueID"
     val relation = items(4).trim
     val (upProperty, downProperty, negated) = relation match {
-      case "hom to" => (HistoricalHomologyMemberof, HasHistoricalHomologyMember, false)
-      case "ser hom to" => (SerialHomologyMemberOf, HasSerialHomologyMember, false)
-      case "not hom to" => (HistoricalHomologyMemberof, HasHistoricalHomologyMember, true)
+      case "hom to"         => (HistoricalHomologyMemberof, HasHistoricalHomologyMember, false)
+      case "ser hom to"     => (SerialHomologyMemberOf, HasSerialHomologyMember, false)
+      case "not hom to"     => (HistoricalHomologyMemberof, HasHistoricalHomologyMember, true)
       case "not ser hom to" => (SerialHomologyMemberOf, HasSerialHomologyMember, true)
     }
     val structure1Text = items(1).trim

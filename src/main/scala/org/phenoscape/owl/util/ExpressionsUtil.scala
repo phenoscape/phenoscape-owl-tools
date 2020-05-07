@@ -45,20 +45,17 @@ object ExpressionsUtil {
   def instantiateClassAssertion(individual: OWLIndividual, aClass: OWLClassExpression): Set[OWLAxiom] = {
     var axioms = Set.empty[OWLAxiom]
     aClass match {
-      case ObjectSomeValuesFrom(property, filler) => {
+      case ObjectSomeValuesFrom(property, filler) =>
         val value = OntUtil.nextIndividual()
         axioms += factory.getOWLObjectPropertyAssertionAxiom(property, individual, value)
         axioms ++= instantiateClassAssertion(value, filler)
-      }
-      case ObjectAllValuesFrom(property, filler) => {
+      case ObjectAllValuesFrom(property, filler)  =>
         val value = OntUtil.nextIndividual()
         axioms += factory.getOWLObjectPropertyAssertionAxiom(property, individual, value)
         axioms ++= instantiateClassAssertion(value, filler)
-      }
-      case ObjectIntersectionOf(operands) => {
+      case ObjectIntersectionOf(operands)         =>
         operands.foreach(o => axioms ++= instantiateClassAssertion(individual, o))
-      }
-      case _ => axioms += factory.getOWLClassAssertionAxiom(aClass, individual)
+      case _                                      => axioms += factory.getOWLClassAssertionAxiom(aClass, individual)
     }
     axioms
   }
@@ -98,11 +95,11 @@ object ExpressionsUtil {
 
   def permute(expression: OWLClassExpression)(implicit reasoner: OWLReasoner): Set[OWLClassExpression] =
     expression match {
-      case namedClass: OWLClass =>
+      case namedClass: OWLClass                    =>
         (reasoner.getSuperClasses(namedClass, true).getFlattened.asScala.toSet + namedClass).toSet[OWLClassExpression]
       case someValuesFrom: OWLObjectSomeValuesFrom => permute(someValuesFrom)
-      case intersection: OWLObjectIntersectionOf => permute(intersection)
-      case _ => Set(expression)
+      case intersection: OWLObjectIntersectionOf   => permute(intersection)
+      case _                                       => Set(expression)
     }
 
   def permute(expression: OWLObjectSomeValuesFrom)(implicit reasoner: OWLReasoner): Set[OWLObjectSomeValuesFrom] = {

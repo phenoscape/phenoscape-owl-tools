@@ -64,4 +64,5 @@ object NegationHierarchyAsserterTest extends TestSuite {
       }
     }
   }
+
 }

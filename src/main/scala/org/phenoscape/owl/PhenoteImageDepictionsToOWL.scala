@@ -43,7 +43,7 @@ object PhenoteImageDepictionsToOWL extends OWLTask {
             factory.getOWLObjectSomeValuesFrom(part_of, locator),
             factory.getOWLObjectSomeValuesFrom(part_of, taxon)
           );
-        case None =>
+        case None          =>
           factory.getOWLObjectIntersectionOf(depictedStructure, factory.getOWLObjectSomeValuesFrom(part_of, taxon));
       }
       manager.addAxiom(

@@ -49,13 +49,12 @@ object AnnotationStatus {
             annotated.add(state);
           }
         }
-        if (annotated.size == 0) {
+        if (annotated.size == 0)
           unannotatedCharacters.add(character);
-        } else if (annotated.size < states.size) {
+        else if (annotated.size < states.size)
           partiallyAnnotatedCharacters.add(character);
-        } else {
+        else
           completedCharacters.add(character);
-        }
       }
     }
     println("Publication count: " + publications.size);

@@ -24,11 +24,13 @@ object ComputeICs extends App {
   } else if (corpus == "genes") { ind: OWLNamedIndividual =>
     !ind.getIRI.toString.contains("VTO_")
   } else throw new RuntimeException("Invalid corpus name.")
+
   def inQueriesFunc(ind: OWLNamedIndividual): Boolean = !(inCorpusFunc(ind))
 
   val manager = OWLManager.createOWLOntologyManager()
   val ontology = manager.loadOntologyFromOntologyDocument(ontfile)
   val profiles = manager.loadOntologyFromOntologyDocument(profilesFile)
+
   val combined =
     manager.createOntology((ontology.getAxioms().asScala ++ profiles.getAxioms().asScala).asJava, OntUtil.nextIRI)
 

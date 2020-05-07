@@ -41,38 +41,40 @@ object GenerateTboxesForSimilarityAnalysis extends App {
   val xaoToUberon = loadFromWebWithImports("http://purl.obolibrary.org/obo/uberon/bridge/uberon-bridge-to-xao.owl")
 
   val uberonPATOReasoner = reasoner(uberon ++ pato)
+
   val anatomicalEntities =
     uberonPATOReasoner.getSubClasses(AnatomicalEntity, false).getFlattened.asScala.filterNot(_.isOWLNothing).toSet
+
   val qualities = uberonPATOReasoner.getSubClasses(Quality, false).getFlattened.asScala.filterNot(_.isOWLNothing).toSet
   uberonPATOReasoner.dispose()
 
   val (entityPhenotypes, entityPhenotypeAxioms) = flattenAxioms(
     anatomicalEntities.map(SimilarityTemplates.entity).unzip[OWLClass, Set[OWLAxiom]]
   )
+
   val (entityPartsPhenotypes, entityPartsPhenotypeAxioms) = flattenAxioms(
     anatomicalEntities.map(SimilarityTemplates.partsOfEntity).unzip[OWLClass, Set[OWLAxiom]]
   )
+
   val (qualityPhenotypes, qualityPhenotypeAxioms) = flattenAxioms(
     qualities.map(SimilarityTemplates.quality).unzip[OWLClass, Set[OWLAxiom]]
   )
 
   val attributes = loadFromWebWithImports("http://svn.code.sf.net/p/phenoscape/code/trunk/vocab/character_slims.obo")
   val attributeQualities = attributes.flatMap(_.getClassesInSignature.asScala) + HasNumberOf
+
   val (entityAttributePhenotypes, entityAttributePhenotypeAxioms) = flattenAxioms(
     (for {
       attribute <- attributeQualities
       entity <- anatomicalEntities
-    } yield {
-      SimilarityTemplates.entityWithQuality(entity, attribute)
-    }).unzip[OWLClass, Set[OWLAxiom]]
+    } yield SimilarityTemplates.entityWithQuality(entity, attribute)).unzip[OWLClass, Set[OWLAxiom]]
   )
+
   val (entityPartAttributePhenotypes, entityPartAttributePhenotypeAxioms) = flattenAxioms(
     (for {
       attribute <- attributeQualities
       entity <- anatomicalEntities
-    } yield {
-      SimilarityTemplates.partsOfEntityWithQuality(entity, attribute)
-    }).unzip[OWLClass, Set[OWLAxiom]]
+    } yield SimilarityTemplates.partsOfEntityWithQuality(entity, attribute)).unzip[OWLClass, Set[OWLAxiom]]
   )
 
   val mainTbox = OntologyUtil.filterDisjointAxioms(
@@ -82,9 +84,11 @@ object GenerateTboxesForSimilarityAnalysis extends App {
   )
 
   val entitiesOnt = manager.createOntology((mainTbox ++ entityPhenotypeAxioms ++ entityPartsPhenotypeAxioms).asJava)
+
   val entitiesAndQualitiesOnt = manager.createOntology(
     (mainTbox ++ entityPhenotypeAxioms ++ entityPartsPhenotypeAxioms ++ qualityPhenotypeAxioms).asJava
   )
+
   val entitiesAttributesOnt =
     manager.createOntology((mainTbox ++ entityAttributePhenotypeAxioms ++ entityPartAttributePhenotypeAxioms).asJava)
 
@@ -122,11 +126,13 @@ object GenerateTboxesForSimilarityAnalysis extends App {
 
   val entitiesAttributesWriter =
     new OutputStreamWriter(new FileOutputStream("entity_attribute_phenotypes.txt"), "UTF-8")
+
   entityAttributePhenotypes.foreach(p => entitiesAttributesWriter.write(s"${p.getIRI.toString}\n"))
   entitiesAttributesWriter.close()
 
   val entityPartsAttributesWriter =
     new OutputStreamWriter(new FileOutputStream("entity_part_attribute_phenotypes.txt"), "UTF-8")
+
   entityPartAttributePhenotypes.foreach(p => entityPartsAttributesWriter.write(s"${p.getIRI.toString}\n"))
   entityPartsAttributesWriter.close()
 

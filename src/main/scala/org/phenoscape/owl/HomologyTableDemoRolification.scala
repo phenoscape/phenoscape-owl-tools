@@ -44,9 +44,9 @@ object HomologyTableDemoRolification extends App {
     val uniquePrefix = s"http://purl.phenoscape.org/homology/annotation/$uniqueID"
     val relation = items(4).trim
     val (property, negated) = relation match {
-      case "hom to" => (InHistoricalHomologyRelationshipWith, false)
-      case "ser hom to" => (SeriallyHomologousTo, false)
-      case "not hom to" => (InHistoricalHomologyRelationshipWith, true)
+      case "hom to"         => (InHistoricalHomologyRelationshipWith, false)
+      case "ser hom to"     => (SeriallyHomologousTo, false)
+      case "not hom to"     => (InHistoricalHomologyRelationshipWith, true)
       case "not ser hom to" => (SeriallyHomologousTo, true)
     }
     val structure1Text = items(1).trim
@@ -74,7 +74,7 @@ object HomologyTableDemoRolification extends App {
         }
         axioms += evidence Type evidenceCode
         axioms += evidence Annotation (source, pub)
-      case None =>
+      case None             =>
         if (!negated) {
           axioms += ((structure1 and (in_taxon some taxon1)) SubClassOf (role1.Self))
           axioms += ((structure2 and (in_taxon some taxon2)) SubClassOf (role2.Self))

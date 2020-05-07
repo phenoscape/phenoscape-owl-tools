@@ -24,13 +24,13 @@ object GeneProfiles {
       phenotypeURI = new URIImpl(phenotypeURIString)
       profileURI = new URIImpl(s"$geneURIString#profile")
       statement <- Set(
-                    new StatementImpl(profileURI, RDF.TYPE, phenotypeURI),
-                    new StatementImpl(
-                      new URIImpl(geneURIString),
-                      new URIImpl(has_phenotypic_profile.toString),
-                      profileURI
-                    )
-                  )
+                     new StatementImpl(profileURI, RDF.TYPE, phenotypeURI),
+                     new StatementImpl(
+                       new URIImpl(geneURIString),
+                       new URIImpl(has_phenotypic_profile.toString),
+                       profileURI
+                     )
+                   )
     } yield statement).toSet
   }
 

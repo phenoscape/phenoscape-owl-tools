@@ -55,9 +55,7 @@ object EvolutionaryProfiles {
     } {
       val taxonLabel = ExpressionsUtil.labelFor(taxon, taxonomy).getOrElse("unlabeled")
       println(s"$taxonLabel")
-      for { (character, states) <- profile } {
-        println(s"\t${character.label}: ${states.map(_.label).mkString("\t")}")
-      }
+      for { (character, states) <- profile } println(s"\t${character.label}: ${states.map(_.label).mkString("\t")}")
       println
     }
 
@@ -79,17 +77,17 @@ object EvolutionaryProfiles {
       phenotype <- statePhenotypes.getOrElse(state, Set.empty)
       profileURI = ResourceFactory.createResource(taxonProfileURI(taxon))
       statement <- Set(
-                    ResourceFactory.createStatement(
-                      profileURI,
-                      ResourceFactory.createProperty(rdfType.toString),
-                      ResourceFactory.createResource(phenotype.iri.toString)
-                    ),
-                    ResourceFactory.createStatement(
-                      ResourceFactory.createResource(taxon.iri.toString),
-                      ResourceFactory.createProperty(has_phenotypic_profile.toString),
-                      profileURI
-                    )
-                  )
+                     ResourceFactory.createStatement(
+                       profileURI,
+                       ResourceFactory.createProperty(rdfType.toString),
+                       ResourceFactory.createResource(phenotype.iri.toString)
+                     ),
+                     ResourceFactory.createStatement(
+                       ResourceFactory.createResource(taxon.iri.toString),
+                       ResourceFactory.createProperty(has_phenotypic_profile.toString),
+                       profileURI
+                     )
+                   )
     } yield statement).toSet
   }
 
@@ -108,9 +106,9 @@ object EvolutionaryProfiles {
   ): (StateAssociations, StateAssociations) = {
     val children = (for {
       s <- model
-            .listStatements(null, ResourceFactory.createProperty(rdfsSubClassOf.toString), node.asJenaNode)
-            .asScala
-            .toList
+             .listStatements(null, ResourceFactory.createProperty(rdfsSubClassOf.toString), node.asJenaNode)
+             .asScala
+             .toList
       term = s.getSubject
       if term.getURI != OWLNothing
       // check if blank node
@@ -118,9 +116,9 @@ object EvolutionaryProfiles {
       if term.getURI.startsWith("http://purl.obolibrary.org/obo/VTO_")
     } yield TaxonNode(IRI.create(term.getURI))).toSet
     val nodeStates = startingAssociations.getOrElse(node, Map.empty[Character, Set[State]])
-    if (children.isEmpty) {
+    if (children.isEmpty)
       (Map(node -> nodeStates), Map.empty)
-    } else {
+    else {
       val (subtreeAssociationsGroups, subtreeProfilesGroups) =
         children.par.map(postorder(_, model, startingAssociations, startingProfiles)).unzip
       val subtreeAssociations = subtreeAssociationsGroups.flatten.toMap
@@ -144,10 +142,9 @@ object EvolutionaryProfiles {
             allStateSets.size match {
               case 0 => (Set.empty, Set.empty)
               case 1 => (allStateSets.head, Set.empty)
-              case _ => {
+              case _ =>
                 val unionStates = allStateSets.reduce(_ union _)
                 (unionStates, unionStates)
-              }
             }
         (character -> currentStates, character -> statesForProfile)
       }
@@ -209,6 +206,7 @@ object EvolutionaryProfiles {
     ?state $DescribesPhenotype ?phenotype
     }
     """
+
 }
 
 case class TaxonNode(iri: IRI) {

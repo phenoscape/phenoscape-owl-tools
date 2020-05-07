@@ -143,10 +143,8 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
       inputProfile <- inputs.toParArray
       corpusProfile <- individualsInCorpus.toParArray
       score = groupWiseSimilarityJaccard(inputProfile, corpusProfile)
-    } {
-      this.synchronized {
-        pw.println(s"${inputProfile.getIRI.toString}\t${corpusProfile.getIRI.toString}\t$score")
-      }
+    } this.synchronized {
+      pw.println(s"${inputProfile.getIRI.toString}\t${corpusProfile.getIRI.toString}\t$score")
     }
     pw.close()
   }
@@ -158,10 +156,8 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
       corpusProfile <- individualsInCorpus.toParArray
       if inputProfile.getIRI.toString < corpusProfile.getIRI.toString
       score = groupWiseSimilarityJaccard(inputProfile, corpusProfile)
-    } {
-      this.synchronized {
-        pw.println(s"${inputProfile.getIRI.toString}\t${corpusProfile.getIRI.toString}\t$score")
-      }
+    } this.synchronized {
+      pw.println(s"${inputProfile.getIRI.toString}\t${corpusProfile.getIRI.toString}\t$score")
     }
     pw.close()
   }
@@ -242,12 +238,12 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
         parents.foreach(traverse)
         val instancesInCorpus = directAndIndirectAssociationsByNode(node).intersect(individualsInCorpus)
         val freq = instancesInCorpus.size
-        val ic = if (freq == 0) {
-          if (parents.isEmpty) 1
-          else parents.map(ics).max
-        } else {
-          normalizedIC(freq)
-        }
+        val ic =
+          if (freq == 0)
+            if (parents.isEmpty) 1
+            else parents.map(ics).max
+          else
+            normalizedIC(freq)
         ics += (node -> ic)
       }
 
@@ -270,14 +266,12 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
     val directAssociationsByCorpusIndividual = directAssociationsByIndividual(corpusIndividual)
     val pairScores = for {
       queryAnnotation <- directAssociationsByIndividual(queryIndividual)
-    } yield {
-      directAssociationsByCorpusIndividual
-        .map { corpusAnnotation =>
-          val maxSubsumer = maxICSubsumer(queryAnnotation, corpusAnnotation)
-          PairScore(queryAnnotation, corpusAnnotation, maxSubsumer, nodeIC(maxSubsumer))
-        }
-        .maxBy(_.maxSubsumerIC)
-    }
+    } yield directAssociationsByCorpusIndividual
+      .map { corpusAnnotation =>
+        val maxSubsumer = maxICSubsumer(queryAnnotation, corpusAnnotation)
+        PairScore(queryAnnotation, corpusAnnotation, maxSubsumer, nodeIC(maxSubsumer))
+      }
+      .maxBy(_.maxSubsumerIC)
     val medianScore = median(pairScores.map(_.maxSubsumerIC).toSeq)
     GroupWiseSimilarity(queryIndividual, corpusIndividual, medianScore, pairScores)
   }
@@ -330,12 +324,12 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
   private def sesameTripleToJena(triple: Statement): JenaStatement = {
     val subject = triple.getSubject match {
       case bnode: BNode => new ResourceImpl(new AnonId(bnode.getID))
-      case uri: URI => ResourceFactory.createResource(uri.stringValue)
+      case uri: URI     => ResourceFactory.createResource(uri.stringValue)
     }
     val predicate = ResourceFactory.createProperty(triple.getPredicate.stringValue)
     val obj = triple.getObject match {
-      case bnode: BNode => new ResourceImpl(new AnonId(bnode.getID))
-      case uri: URI => ResourceFactory.createResource(uri.stringValue)
+      case bnode: BNode                                    => new ResourceImpl(new AnonId(bnode.getID))
+      case uri: URI                                        => ResourceFactory.createResource(uri.stringValue)
       case literal: Literal if literal.getLanguage != null =>
         ResourceFactory.createLangLiteral(literal.getLabel, literal.getLanguage)
       case literal: Literal if literal.getDatatype != null =>
@@ -343,7 +337,7 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
           literal.getLabel,
           TypeMapper.getInstance.getSafeTypeByName(literal.getDatatype.stringValue)
         )
-      case literal: Literal => ResourceFactory.createStringLiteral(literal.getLabel)
+      case literal: Literal                                => ResourceFactory.createStringLiteral(literal.getLabel)
     }
     ResourceFactory.createStatement(subject, predicate, obj)
   }

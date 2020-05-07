@@ -62,16 +62,15 @@ object MaterializeSubClassOfClosure extends OWLTask {
   ): Set[OWLAxiom] = {
     val axioms = mutable.Set[OWLAxiom]()
     val firstTime = doneClasses.add(owlClass)
-    if (!firstTime) {
+    if (!firstTime)
       axioms
-    } else {
+    else {
       val newSuperClasses = mutable.Set[OWLClass]()
       newSuperClasses.asJava.addAll(superClasses.asJava)
       newSuperClasses.add(owlClass)
       val directSubClasses = reasoner.getSubClasses(owlClass, true).getFlattened()
-      for (subclass <- directSubClasses.asScala) {
+      for (subclass <- directSubClasses.asScala)
         axioms.asJava.addAll(newSuperClasses.map(factory.getOWLSubClassOfAxiom(subclass, _)).asJava)
-      }
       val recursiveAxioms: Set[OWLAxiom] =
         directSubClasses.asScala.map(createSubClassOfAxioms(_, newSuperClasses, reasoner, doneClasses)).flatten
       axioms.asJava.addAll(recursiveAxioms.asJava)

@@ -50,9 +50,7 @@ object EQCreator {
     for {
       entity <- anatomicalEntities.asScala
       quality <- qualities.asScala
-    } {
-      manager.addAxiom(eqs, createEQ(entity, quality));
-    }
+    } manager.addAxiom(eqs, createEQ(entity, quality));
     println(new Date() + ": saving EQs");
     val outputStream = new GZIPOutputStream(new BufferedOutputStream(new FileOutputStream(new File(args(0) + ".gz"))));
     manager.saveOntology(eqs, outputStream);

@@ -24,41 +24,35 @@ object PhenoXMLUtil {
     val bearer = phenotype.getChild("bearer", phenoNS)
     val entityClass = if (bearer != null) {
       val bearerType = bearer.getChild("typeref", phenoNS)
-      if (bearerType != null) {
+      if (bearerType != null)
         classFromTyperef(bearerType)
-      } else {
+      else
         null
-      }
-    } else {
+    } else
       null
-    }
     val quality = phenotype.getChild("quality", phenoNS)
     val qualityClass = if (quality != null) {
       val qualityType = quality.getChild("typeref", phenoNS)
-      if (qualityType != null) {
+      if (qualityType != null)
         classFromTyperef(qualityType)
-      } else {
+      else
         null
-      }
 
-    } else {
+    } else
       null
-    }
-    val relatedEntity = if (quality != null) {
-      quality.getChild("related_entity", phenoNS)
-    } else {
-      null
-    }
+    val relatedEntity =
+      if (quality != null)
+        quality.getChild("related_entity", phenoNS)
+      else
+        null
     val relatedEntityClass = if (relatedEntity != null) {
       val relatedEntityType = relatedEntity.getChild("typeref", phenoNS)
-      if (relatedEntityType != null) {
+      if (relatedEntityType != null)
         classFromTyperef(relatedEntityType)
-      } else {
+      else
         null
-      }
-    } else {
+    } else
       null
-    }
     return EQ(entityClass, qualityClass, relatedEntityClass)
   }
 
@@ -66,9 +60,9 @@ object PhenoXMLUtil {
     val genusID = typeref.getAttributeValue("about")
     val qualifiers = typeref.getChildren("qualifier", phenoNS)
     val genus = factory.getOWLClass(OBOUtil.iriForTermID(genusID))
-    if (qualifiers.isEmpty()) {
+    if (qualifiers.isEmpty())
       return genus
-    } else {
+    else {
 //      val operands: mutable.Set[OWLClassExpression] = mutable.Set(genus)
       val operands = qualifiers.asScala.map(restrictionFromQualifier(_)).toSet[OWLClassExpression] + genus
       return factory.getOWLObjectIntersectionOf(operands.asJava)

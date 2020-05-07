@@ -29,23 +29,22 @@ object ParseProfileSemantics {
 
   def axiomsForNamed(owlClass: OWLClass): Set[OWLAxiom] = {
     val iriString = owlClass.getIRI.toString
-    val expanded = if (iriString.startsWith(ExpressionUtil.namedExpressionPrefix)) {
-      for {
-        expression <- ExpressionsUtil.expressionForName(owlClass)
-      } yield axiomsFor(expression) + (owlClass EquivalentTo expression)
-    } else if (iriString.startsWith(ExpressionUtil.namedSubClassPrefix)) {
-      for {
-        expression <- ExpressionsUtil.expressionForName(owlClass)
-      } yield axiomsFor(expression) + (owlClass SubClassOf expression)
-    } else {
-      Success(Set.empty[OWLAxiom])
-    }
+    val expanded =
+      if (iriString.startsWith(ExpressionUtil.namedExpressionPrefix))
+        for {
+          expression <- ExpressionsUtil.expressionForName(owlClass)
+        } yield axiomsFor(expression) + (owlClass EquivalentTo expression)
+      else if (iriString.startsWith(ExpressionUtil.namedSubClassPrefix))
+        for {
+          expression <- ExpressionsUtil.expressionForName(owlClass)
+        } yield axiomsFor(expression) + (owlClass SubClassOf expression)
+      else
+        Success(Set.empty[OWLAxiom])
     expanded match {
-      case Success(axioms) => axioms
-      case Failure(message) => {
+      case Success(axioms)  => axioms
+      case Failure(message) =>
         println(s"Problem: $message")
         Set.empty[OWLAxiom]
-      }
     }
   }
 

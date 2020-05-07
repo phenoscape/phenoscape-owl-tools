@@ -41,6 +41,7 @@ object AnnotationReport {
   val phenoNS = Namespace.getNamespace("http://www.bioontologies.org/obd/schema/pheno");
   val factory = OWLManager.getOWLDataFactory();
   val manager = OWLManager.createOWLOntologyManager();
+
   val header =
     "File\tCharacter Number\tCharacter Label\tState Symbol\tState Label\tEntity ID\tEntity Label\tQuality ID\tQuality Label\tRelated Entity ID\tRelated Entity Label";
   val prefixManager = new DefaultPrefixManager();
@@ -48,6 +49,7 @@ object AnnotationReport {
   prefixManager.setPrefix("BSPO:", "http://purl.obolibrary.org/obo/BSPO_");
   prefixManager.setPrefix("PATO:", "http://purl.obolibrary.org/obo/PATO_");
   prefixManager.setPrefix("GO:", "http://purl.obolibrary.org/obo/GO_");
+
   val idRenderer = new ObjectRenderer {
 
     def render(obj: OWLObject): String = {
@@ -59,6 +61,7 @@ object AnnotationReport {
     }
 
   }
+
   val labelRenderer = new ObjectRenderer {
 
     def render(obj: OWLObject): String = {
@@ -113,27 +116,24 @@ object AnnotationReport {
               writer.write(getID(phenotype.entity));
               writer.write("\t");
               writer.write(getLabel(phenotype.entity));
-            } else {
+            } else
               writer.write("\t");
-            }
             writer.write("\t");
             if (phenotype.quality != null) {
               properties.asJava.addAll(phenotype.quality.getObjectPropertiesInSignature());
               writer.write(getID(phenotype.quality));
               writer.write("\t");
               writer.write(getLabel(phenotype.quality));
-            } else {
+            } else
               writer.write("\t");
-            }
             writer.write("\t");
             if (phenotype.relatedEntity != null) {
               properties.asJava.addAll(phenotype.relatedEntity.getObjectPropertiesInSignature());
               writer.write(getID(phenotype.relatedEntity));
               writer.write("\t");
               writer.write(getLabel(phenotype.relatedEntity));
-            } else {
+            } else
               writer.write("\t");
-            }
             writer.write("\t");
             writer.newLine();
           }
@@ -141,9 +141,8 @@ object AnnotationReport {
       }
     }
     writer.close();
-    for (property <- properties) {
+    for (property <- properties)
       println(property.getIRI() + " " + labelRenderer.render(property));
-    }
   }
 
   def getStates(character: Element, sets: Map[String, Iterable[Element]]): Iterable[Element] = {

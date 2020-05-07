@@ -69,11 +69,10 @@ object HomologyTableToOWLWithAncestralStructure extends OWLTask {
         evidence Type evidenceCode,
         evidence Annotation (source, pub)
       )
-    } else {
+    } else
       //FIXME
       // not including negative homology assertions
       Set()
-    }
   }
 
 }

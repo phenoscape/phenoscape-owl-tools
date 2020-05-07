@@ -31,7 +31,9 @@ object PropertyNormalizer extends OWLTask {
     IRI.create("http://purl.obolibrary.org/obo/emapa#develops_from") -> Vocab.DEVELOPS_FROM.getIRI,
     IRI.create("http://purl.obolibrary.org/obo/fma#develops_from") -> Vocab.DEVELOPS_FROM.getIRI,
     IRI
-      .create("http://purl.obolibrary.org/obo/mp/mp-equivalent-axioms-subq#develops_from") -> Vocab.DEVELOPS_FROM.getIRI,
+      .create(
+        "http://purl.obolibrary.org/obo/mp/mp-equivalent-axioms-subq#develops_from"
+      ) -> Vocab.DEVELOPS_FROM.getIRI,
     IRI.create("http://purl.obolibrary.org/obo/OBO_REL_bearer_of") -> Vocab.bearer_of.getIRI,
     IRI.create("http://purl.obolibrary.org/obo/BFO_0000053") -> Vocab.bearer_of.getIRI,
     IRI.create("http://purl.obolibrary.org/obo/OBO_REL#_has_quality") -> Vocab.bearer_of.getIRI,
@@ -43,7 +45,9 @@ object PropertyNormalizer extends OWLTask {
     IRI.create("http://purl.obolibrary.org/obo/OBO_REL_inheres_in") -> Vocab.inheres_in.getIRI,
     IRI.create("http://purl.obolibrary.org/obo/TODO_inheres_in") -> Vocab.inheres_in.getIRI,
     IRI.create("http://purl.obolibrary.org/obo/mp/mp-equivalent-axioms-subq#inheres_in") -> Vocab.inheres_in.getIRI,
-    IRI.create("http://purl.obolibrary.org/obo/mp/mp-equivalent-axioms-subq#inheres_in_part_of") -> Vocab.inheres_in_part_of.getIRI,
+    IRI.create(
+      "http://purl.obolibrary.org/obo/mp/mp-equivalent-axioms-subq#inheres_in_part_of"
+    ) -> Vocab.inheres_in_part_of.getIRI,
     IRI.create("http://purl.obolibrary.org/obo/BFO_0000052") -> Vocab.inheres_in.getIRI,
     IRI.create("http://purl.obolibrary.org/obo/overlaps") -> IRI.create("http://purl.obolibrary.org/obo/RO_0002131"),
     IRI.create("http://purl.obolibrary.org/obo/RO_overlaps") -> IRI.create("http://purl.obolibrary.org/obo/RO_0002131"),
@@ -59,9 +63,8 @@ object PropertyNormalizer extends OWLTask {
   def normalize(ontology: OWLOntology): OWLOntology = {
     val manager = ontology.getOWLOntologyManager
     val renamer = new OWLEntityRenamer(manager, Set(ontology).asJava)
-    for ((key, value) <- properties) {
+    for ((key, value) <- properties)
       if (key != value) manager.applyChanges(renamer.changeIRI(key, value))
-    }
     return ontology
   }
 

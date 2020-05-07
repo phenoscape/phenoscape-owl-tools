@@ -137,7 +137,8 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     addTriples(hp, bigdata, graphURI)
     val mp = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/mp.owl"), true)
     addTriples(mp, bigdata, graphURI)
-    val ro = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/ro.owl"), false) //.axioms.filter(_.isAnnotationAxiom)
+    val ro =
+      loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/ro.owl"), false) //.axioms.filter(_.isAnnotationAxiom)
     addTriples(ro, bigdata, graphURI)
     val eco = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/eco/eco-base.owl"), false)
     addTriples(eco, bigdata, graphURI)
@@ -303,11 +304,13 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     } yield axiom
     addTriples(subsumers, bigdata, graphURI)
 
-    val allTBox = ro.axioms ++ uberon.axioms ++ homology.axioms ++ pato.axioms ++ bspo.axioms ++ vto.axioms ++ vtoToNCBI.axioms ++ zfa.axioms ++ xao.axioms ++ hp.axioms ++ mp.axioms ++
+    val allTBox =
+      ro.axioms ++ uberon.axioms ++ homology.axioms ++ pato.axioms ++ bspo.axioms ++ vto.axioms ++ vtoToNCBI.axioms ++ zfa.axioms ++ xao.axioms ++ hp.axioms ++ mp.axioms ++
       caroToUberon.axioms ++ zfaToUberon.axioms ++ xaoToUberon.axioms ++ mgiToEMAPA.axioms ++ emapaToUberon.axioms ++ eco.axioms ++
       parts ++ hasParts ++ hasPartsInheringIns ++ phenotypeOfs ++ phenotypeOfPartOfs ++ presences ++ absences ++ absenceNegationEquivalences ++ developsFromRulesForAbsence ++ subsumers ++ tboxFromData ++ phenoscapeVocab.axioms
 
-    val coreTBox = ro.axioms ++ uberon.axioms ++ homology.axioms ++ pato.axioms ++ bspo.axioms ++ vto.axioms ++ vtoToNCBI.axioms ++ zfa.axioms ++ xao.axioms ++ hp.axioms ++ mp.axioms ++
+    val coreTBox =
+      ro.axioms ++ uberon.axioms ++ homology.axioms ++ pato.axioms ++ bspo.axioms ++ vto.axioms ++ vtoToNCBI.axioms ++ zfa.axioms ++ xao.axioms ++ hp.axioms ++ mp.axioms ++
       caroToUberon.axioms ++ zfaToUberon.axioms ++ xaoToUberon.axioms ++ mgiToEMAPA.axioms ++ emapaToUberon.axioms ++ eco.axioms ++
       developsFromRulesForAbsence ++ tboxFromData ++ phenoscapeVocab.axioms
     println("tbox class count: " + allTBox.flatMap(_.getClassesInSignature.asScala).size)
@@ -317,9 +320,9 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
 
     step("Check satisfiability with disjoints")
     val disjointReasoner = reasoner(coreTBox)
-    if (disjointReasoner.getUnsatisfiableClasses().getEntitiesMinusBottom().isEmpty()) {
+    if (disjointReasoner.getUnsatisfiableClasses().getEntitiesMinusBottom().isEmpty())
       println("SUCCESS: all classes are satisfiable with disjoints.")
-    } else {
+    else {
       println("WARNING: some classes are unsatisfiable with disjoints.")
       println(disjointReasoner.getUnsatisfiableClasses())
     }
@@ -346,9 +349,9 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     step("Materializing negation reasoner inferences")
     MaterializeInferences.materializeInferences(inferredAxioms, negationReasoner)
 
-    if (negationReasoner.getUnsatisfiableClasses().getEntitiesMinusBottom().isEmpty()) {
+    if (negationReasoner.getUnsatisfiableClasses().getEntitiesMinusBottom().isEmpty())
       println("SUCCESS: all classes are satisfiable.")
-    } else {
+    else {
       println("WARNING: some classes are unsatisfiable.")
       println(negationReasoner.getUnsatisfiableClasses())
     }
@@ -441,6 +444,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
   triplesOutput.close()
 
   step("Exporting phenotypic profiles for semantic similarity")
+
   val profilesQuery = bigdata.prepareGraphQuery(
     QueryLanguage.SPARQL,
     """
@@ -458,6 +462,7 @@ WHERE {
 }
     """
   )
+
   val profilesOutput = new BufferedOutputStream(new FileOutputStream((KB / "profiles.ttl").toJava))
   profilesQuery.evaluate(new TurtleWriter(profilesOutput))
   profilesOutput.close()

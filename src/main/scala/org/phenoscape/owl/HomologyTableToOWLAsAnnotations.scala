@@ -61,11 +61,10 @@ object HomologyTableToOWLAsAnnotations extends OWLTask {
     val evidence = Individual("http://example.org/" + UUID.randomUUID().toString)
     val pub = factory.getOWLLiteral(items(11).trim)
     Set(
-      if (items(4).trim == "hom to") {
+      if (items(4).trim == "hom to")
         annotation Type homologyAnnotation
-      } else {
-        annotation Type negativeHomologyAnnotation
-      },
+      else
+        annotation Type negativeHomologyAnnotation,
       annotation Fact (aboutStructure, structure1),
       annotation Fact (aboutStructure, structure2),
       annotation Fact (has_evidence, evidence),
