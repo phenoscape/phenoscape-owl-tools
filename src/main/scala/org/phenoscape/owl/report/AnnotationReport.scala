@@ -42,7 +42,7 @@ object AnnotationReport {
   val factory           = OWLManager.getOWLDataFactory();
   val manager           = OWLManager.createOWLOntologyManager();
 
-  val header =
+  val header        =
     "File\tCharacter Number\tCharacter Label\tState Symbol\tState Label\tEntity ID\tEntity Label\tQuality ID\tQuality Label\tRelated Entity ID\tRelated Entity Label";
   val prefixManager = new DefaultPrefixManager();
   prefixManager.setPrefix("UBERON:", "http://purl.obolibrary.org/obo/UBERON_");
@@ -65,7 +65,7 @@ object AnnotationReport {
   val labelRenderer = new ObjectRenderer {
 
     def render(obj: OWLObject): String = {
-      val writer = new StringWriter()
+      val writer   = new StringWriter()
       val renderer = new ManchesterOWLSyntaxObjectRenderer(
         writer,
         new AnnotationValueShortFormProvider(
@@ -88,17 +88,17 @@ object AnnotationReport {
     val writer     = new BufferedWriter(new FileWriter(System.getProperty(OUTPUT_PROPERTY)));
     writer.write(header);
     writer.newLine();
-    for (arg <- args) {
-      val file      = new File(arg);
-      val nexml     = builder.build(file).getRootElement();
-      val pub       = file.getName();
-      val format    = nexml.getChild("characters", nexmlNS).getChild("format", nexmlNS);
-      val stateSets = format.getChildren("states", nexmlNS);
+    for (arg      <- args) {
+      val file          = new File(arg);
+      val nexml         = builder.build(file).getRootElement();
+      val pub           = file.getName();
+      val format        = nexml.getChild("characters", nexmlNS).getChild("format", nexmlNS);
+      val stateSets     = format.getChildren("states", nexmlNS);
       val stateSetsByID = stateSets.asScala
         .map(states => (states.getAttributeValue("id"), states.getChildren("state", nexmlNS).asScala.toIterable))
         .toMap;
-      val characters = format.getChildren("char", nexmlNS);
-      var i          = 0;
+      val characters    = format.getChildren("char", nexmlNS);
+      var i             = 0;
       for (character <- characters.asScala) {
         i += 1;
         val states = getStates(character, stateSetsByID);

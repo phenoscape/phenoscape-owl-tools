@@ -62,9 +62,9 @@ class KnowledgeBaseBuilder extends App {
   }
 
   def loadFromWeb(iri: IRI, excludeImports: Boolean): SourcedAxioms = {
-    val manager = OWLManager.createOWLOntologyManager()
+    val manager         = OWLManager.createOWLOntologyManager()
     // Even if we are excluding axioms from imports, we want to initially include imports in case property types rely on declarations there
-    val ont = manager.loadOntology(iri)
+    val ont             = manager.loadOntology(iri)
     if (!excludeImports) {
       val importsAxioms = ont.getImports.asScala.flatMap(_.getAxioms().asScala)
       manager.addAxioms(ont, importsAxioms.asJava)
@@ -90,7 +90,7 @@ class KnowledgeBaseBuilder extends App {
     val outStream = new ByteArrayOutputStream()
     manager.saveOntology(ontology, new RioRDFXMLDocumentFormat(), outStream)
     outStream.close()
-    val inStream = new ByteArrayInputStream(outStream.toByteArray())
+    val inStream  = new ByteArrayInputStream(outStream.toByteArray())
     db.add(inStream, "", RDFFormat.RDFXML, graph)
     inStream.close()
   }

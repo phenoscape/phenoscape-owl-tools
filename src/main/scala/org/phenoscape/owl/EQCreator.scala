@@ -26,16 +26,16 @@ object EQCreator {
     BasicConfigurator.configure();
     Logger.getRootLogger().setLevel(Level.ERROR);
     println(new Date() + ": starting");
-    val manager = OWLManager.createOWLOntologyManager();
-    val factory = manager.getOWLDataFactory();
-    val eqs     = manager.createOntology();
+    val manager            = OWLManager.createOWLOntologyManager();
+    val factory            = manager.getOWLDataFactory();
+    val eqs                = manager.createOntology();
     manager.addAxiom(eqs, factory.getOWLTransitiveObjectPropertyAxiom(has_part));
     manager.addAxiom(eqs, factory.getOWLReflexiveObjectPropertyAxiom(has_part));
     manager.addAxiom(eqs, factory.getOWLTransitiveObjectPropertyAxiom(part_of));
     manager.addAxiom(eqs, factory.getOWLReflexiveObjectPropertyAxiom(part_of));
     manager.addAxiom(eqs, factory.getOWLInverseObjectPropertiesAxiom(has_part, part_of));
-    val uberon = manager.loadOntologyFromOntologyDocument(new File("uberon.owl"));
-    val pato   = manager.loadOntologyFromOntologyDocument(new File("pato.owl"));
+    val uberon             = manager.loadOntologyFromOntologyDocument(new File("uberon.owl"));
+    val pato               = manager.loadOntologyFromOntologyDocument(new File("pato.owl"));
     manager.applyChange(new AddImport(eqs, factory.getOWLImportsDeclaration(uberon.getOntologyID.getOntologyIRI.get)));
     manager.applyChange(new AddImport(eqs, factory.getOWLImportsDeclaration(pato.getOntologyID.getOntologyIRI.get)));
     val anatomicalEntity   = Class(IRI.create("http://purl.obolibrary.org/obo/UBERON_0001062"));
@@ -44,7 +44,7 @@ object EQCreator {
     val patoReasoner       = new ElkReasonerFactory().createReasoner(pato);
     val anatomicalEntities = uberonReasoner.getSubClasses(anatomicalEntity, false).getFlattened();
     uberonReasoner.dispose();
-    val qualities = patoReasoner.getSubClasses(qualityRoot, false).getFlattened();
+    val qualities          = patoReasoner.getSubClasses(qualityRoot, false).getFlattened();
     patoReasoner.dispose();
     println(new Date() + ": building");
     for {
@@ -56,9 +56,9 @@ object EQCreator {
     manager.saveOntology(eqs, outputStream);
     outputStream.close();
     println(new Date() + ": done saving");
-    val hierarchy = manager.createOntology();
+    val hierarchy    = manager.createOntology();
     println(new Date() + ": starting classification");
-    val eqReasoner = new ElkReasonerFactory().createReasoner(eqs);
+    val eqReasoner   = new ElkReasonerFactory().createReasoner(eqs);
     eqReasoner.precomputeInferences(InferenceType.CLASS_HIERARCHY); //
     println(new Date() + ": done classification");
     //MaterializeInferences.materializeInferences(hierarchy, eqReasoner);

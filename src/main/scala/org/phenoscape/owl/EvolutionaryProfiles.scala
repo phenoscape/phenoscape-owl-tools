@@ -75,19 +75,19 @@ object EvolutionaryProfiles {
       (character, states) <- profile
       state               <- states
       phenotype           <- statePhenotypes.getOrElse(state, Set.empty)
-      profileURI = ResourceFactory.createResource(taxonProfileURI(taxon))
-      statement <- Set(
-        ResourceFactory.createStatement(
-          profileURI,
-          ResourceFactory.createProperty(rdfType.toString),
-          ResourceFactory.createResource(phenotype.iri.toString)
-        ),
-        ResourceFactory.createStatement(
-          ResourceFactory.createResource(taxon.iri.toString),
-          ResourceFactory.createProperty(has_phenotypic_profile.toString),
-          profileURI
-        )
-      )
+      profileURI           = ResourceFactory.createResource(taxonProfileURI(taxon))
+      statement           <- Set(
+                     ResourceFactory.createStatement(
+                       profileURI,
+                       ResourceFactory.createProperty(rdfType.toString),
+                       ResourceFactory.createResource(phenotype.iri.toString)
+                     ),
+                     ResourceFactory.createStatement(
+                       ResourceFactory.createResource(taxon.iri.toString),
+                       ResourceFactory.createProperty(has_phenotypic_profile.toString),
+                       profileURI
+                     )
+                   )
     } yield statement).toSet
   }
 
@@ -103,13 +103,12 @@ object EvolutionaryProfiles {
     model: Model,
     startingAssociations: StateAssociations,
     startingProfiles: StateAssociations
-  ): (StateAssociations, StateAssociations) = {
-    val children = (for {
-      s <-
-        model
-          .listStatements(null, ResourceFactory.createProperty(rdfsSubClassOf.toString), node.asJenaNode)
-          .asScala
-          .toList
+  ): (StateAssociations, StateAssociations)                                                     = {
+    val children   = (for {
+      s   <- model
+             .listStatements(null, ResourceFactory.createProperty(rdfsSubClassOf.toString), node.asJenaNode)
+             .asScala
+             .toList
       term = s.getSubject
       if term.getURI != OWLNothing
       // check if blank node
@@ -122,17 +121,17 @@ object EvolutionaryProfiles {
     else {
       val (subtreeAssociationsGroups, subtreeProfilesGroups) =
         children.par.map(postorder(_, model, startingAssociations, startingProfiles)).unzip
-      val subtreeAssociations        = subtreeAssociationsGroups.flatten.toMap
-      val subtreeProfiles            = subtreeProfilesGroups.flatten.toMap
-      val charactersWithAssociations = subtreeAssociations.values.flatMap(_.keys).toSet ++ nodeStates.keys
-      val currentNodeAssociationsAndProfile = for {
+      val subtreeAssociations                                = subtreeAssociationsGroups.flatten.toMap
+      val subtreeProfiles                                    = subtreeProfilesGroups.flatten.toMap
+      val charactersWithAssociations                         = subtreeAssociations.values.flatMap(_.keys).toSet ++ nodeStates.keys
+      val currentNodeAssociationsAndProfile                  = for {
         character <- charactersWithAssociations
       } yield {
-        val nodeStateSet      = nodeStates.getOrElse(character, Set.empty)
-        val childrenStateSets = children.map(subtreeAssociations(_).getOrElse(character, Set.empty))
-        val allStateSets      = childrenStateSets + nodeStateSet
-        val nonEmptyStateSets = allStateSets.filter(_.nonEmpty)
-        val sharedStates: Set[State] = nonEmptyStateSets.size match {
+        val nodeStateSet                                              = nodeStates.getOrElse(character, Set.empty)
+        val childrenStateSets                                         = children.map(subtreeAssociations(_).getOrElse(character, Set.empty))
+        val allStateSets                                              = childrenStateSets + nodeStateSet
+        val nonEmptyStateSets                                         = allStateSets.filter(_.nonEmpty)
+        val sharedStates: Set[State]                                  = nonEmptyStateSets.size match {
           case 0 => Set.empty
           case 1 => nonEmptyStateSets.head
           case _ => nonEmptyStateSets.reduce(_ intersect _)
@@ -149,8 +148,8 @@ object EvolutionaryProfiles {
             }
         (character -> currentStates, character -> statesForProfile)
       }
-      val (currentNodeAssociations, rawProfile) = currentNodeAssociationsAndProfile.unzip
-      val profileWithoutEmptyCharacters         = rawProfile.filter { case (character, states) => states.nonEmpty }
+      val (currentNodeAssociations, rawProfile)              = currentNodeAssociationsAndProfile.unzip
+      val profileWithoutEmptyCharacters                      = rawProfile.filter { case (character, states) => states.nonEmpty }
       (
         subtreeAssociations + (node -> currentNodeAssociations.toMap),
         subtreeProfiles + (node     -> profileWithoutEmptyCharacters.toMap)

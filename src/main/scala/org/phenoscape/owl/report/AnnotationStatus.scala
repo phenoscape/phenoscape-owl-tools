@@ -25,17 +25,17 @@ object AnnotationStatus {
   def main(args: Array[String]): Unit = {
     val builder = new SAXBuilder();
     for (arg <- args) {
-      val file  = new File(arg);
-      val nexml = builder.build(file).getRootElement();
-      val pub   = file.getName();
+      val file          = new File(arg);
+      val nexml         = builder.build(file).getRootElement();
+      val pub           = file.getName();
       publications.add(pub);
-      val format    = nexml.getChild("characters", nexmlNS).getChild("format", nexmlNS);
-      val stateSets = format.getChildren("states", nexmlNS);
+      val format        = nexml.getChild("characters", nexmlNS).getChild("format", nexmlNS);
+      val stateSets     = format.getChildren("states", nexmlNS);
       val stateSetsByID = stateSets.asScala
         .map(states => (states.getAttributeValue("id"), states.getChildren("state", nexmlNS).asScala.toIterable))
         .toMap;
-      val characters = format.getChildren("char", nexmlNS);
-      var i          = 0;
+      val characters    = format.getChildren("char", nexmlNS);
+      var i             = 0;
       for (character <- characters.asScala) {
         allCharacters.add(character);
         val states    = AnnotationReport.getStates(character, stateSetsByID);

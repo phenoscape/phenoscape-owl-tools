@@ -32,7 +32,7 @@ class SubsumerGenerator(ont: OWLOntology, reasonerFactory: OWLReasonerFactory) {
       for {
         //FIXME not combining roots with subclasses
         //entity <- reasoner.getSubClasses(rootEntity, true).getFlattened.asScala
-        entity <- EntitySearcher.getSubClasses(rootEntity, ont).asScala.toSet + rootEntity
+        entity  <- EntitySearcher.getSubClasses(rootEntity, ont).asScala.toSet + rootEntity
         if !entity.isAnonymous
         quality <- EntitySearcher.getSubClasses(rootQuality, ont).asScala.toSet + rootQuality
         if !quality.isAnonymous
@@ -51,13 +51,13 @@ class SubsumerGenerator(ont: OWLOntology, reasonerFactory: OWLReasonerFactory) {
     println(s"Accumulated ${accumulatedAxioms.size}")
     println(s"Working with ${makers.size} makers")
     println("Removing already tested EQs")
-    val testMakers = makers diff tested
-    val testAxioms = testMakers map (_.axiom)
+    val testMakers     = makers diff tested
+    val testAxioms     = testMakers map (_.axiom)
     println(s"Testing ${testAxioms.size}")
     manager.addAxioms(ont, testAxioms.asJava)
     reasoner.flush()
     println("Querying subclasses")
-    val keeps = testMakers filter { maker =>
+    val keeps          = testMakers filter { maker =>
       val nodeSet = reasoner.getSubClasses(maker.namedClass, false)
       !nodeSet.isBottomSingleton
     }
@@ -65,11 +65,11 @@ class SubsumerGenerator(ont: OWLOntology, reasonerFactory: OWLReasonerFactory) {
     manager.removeAxioms(ont, testAxioms.asJava)
     println("Unzip stuff")
     println("Collect new axioms")
-    val newAxioms = keeps map (_.axiom)
+    val newAxioms      = keeps map (_.axiom)
     println("Create next generation")
     val nextGeneration = keeps.par flatMap (_.next)
     println("Concatenate lists")
-    val allNewAxioms = newAxioms ++ accumulatedAxioms
+    val allNewAxioms   = newAxioms ++ accumulatedAxioms
     println("Done concatenating")
     if (nextGeneration.isEmpty) allNewAxioms
     else generateSubsumers(nextGeneration.seq, allNewAxioms, tested ++ testMakers)

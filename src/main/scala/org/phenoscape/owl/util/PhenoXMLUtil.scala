@@ -21,8 +21,8 @@ object PhenoXMLUtil {
   ) {}
 
   def translatePhenotypeCharacter(phenotype: Element): EQ = {
-    val bearer = phenotype.getChild("bearer", phenoNS)
-    val entityClass = if (bearer != null) {
+    val bearer             = phenotype.getChild("bearer", phenoNS)
+    val entityClass        = if (bearer != null) {
       val bearerType = bearer.getChild("typeref", phenoNS)
       if (bearerType != null)
         classFromTyperef(bearerType)
@@ -30,8 +30,8 @@ object PhenoXMLUtil {
         null
     } else
       null
-    val quality = phenotype.getChild("quality", phenoNS)
-    val qualityClass = if (quality != null) {
+    val quality            = phenotype.getChild("quality", phenoNS)
+    val qualityClass       = if (quality != null) {
       val qualityType = quality.getChild("typeref", phenoNS)
       if (qualityType != null)
         classFromTyperef(qualityType)
@@ -40,7 +40,7 @@ object PhenoXMLUtil {
 
     } else
       null
-    val relatedEntity =
+    val relatedEntity      =
       if (quality != null)
         quality.getChild("related_entity", phenoNS)
       else

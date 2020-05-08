@@ -36,9 +36,9 @@ object MaterializeInferences extends OWLTask {
 
   def materializeInferences(ontology: OWLOntology): Unit = {
     val reasoner = if (propertiesOnly()) {
-      val manager = ontology.getOWLOntologyManager()
-      val classes = ontology.getClassesInSignature()
-      val tempOntology =
+      val manager       = ontology.getOWLOntologyManager()
+      val classes       = ontology.getClassesInSignature()
+      val tempOntology  =
         manager.createOntology(ontology.getImportsClosure.asScala.flatMap(_.getAxioms().asScala).toSet.asJava)
       val entityRemover = new OWLEntityRemover(Set(tempOntology).asJava)
       tempOntology.getClassesInSignature().asScala.foreach(entityRemover.visit)
@@ -52,7 +52,7 @@ object MaterializeInferences extends OWLTask {
 
   def materializeInferences(ontology: OWLOntology, reasoner: OWLReasoner): Unit = {
     reasoner.precomputeInferences(InferenceType.CLASS_HIERARCHY) // this must be called first for ELK
-    val axiomGenerators = List[InferredAxiomGenerator[_ <: OWLAxiom]](
+    val axiomGenerators        = List[InferredAxiomGenerator[_ <: OWLAxiom]](
       new InferredClassAssertionAxiomGenerator(),
       new InferredEquivalentClassAxiomGenerator(),
       new InferredSubClassAxiomGenerator()
@@ -61,7 +61,7 @@ object MaterializeInferences extends OWLTask {
       if (!reasoner.isInstanceOf[ElkReasoner])
         (new InferredPropertyAssertionGenerator()) :: axiomGenerators
       else axiomGenerators
-    val generator = new InferredOntologyGenerator(reasoner, axiomGeneratorsUpdated.asJava)
+    val generator              = new InferredOntologyGenerator(reasoner, axiomGeneratorsUpdated.asJava)
     generator.fillOntology(ontology.getOWLOntologyManager.getOWLDataFactory, ontology)
   }
 

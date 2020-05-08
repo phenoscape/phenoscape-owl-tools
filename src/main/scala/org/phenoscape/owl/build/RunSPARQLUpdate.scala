@@ -21,10 +21,10 @@ object RunSPARQLUpdate extends App {
   val blazegraphProperties = new Properties()
   blazegraphProperties.load(new FileReader(BlazegraphProperties))
   blazegraphProperties.setProperty(Options.FILE, BlazegraphJournal.getAbsolutePath)
-  val sail       = new BigdataSail(blazegraphProperties)
-  val repository = new BigdataSailRepository(sail)
+  val sail                 = new BigdataSail(blazegraphProperties)
+  val repository           = new BigdataSailRepository(sail)
   repository.initialize()
-  val blazegraph = repository.getUnisolatedConnection()
+  val blazegraph           = repository.getUnisolatedConnection()
 
   val query = blazegraph.prepareUpdate(QueryLanguage.SPARQL, Source.fromFile(queryFile, "utf-8").mkString)
   query.execute()

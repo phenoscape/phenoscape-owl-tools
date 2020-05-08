@@ -50,7 +50,7 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
 
   val allNodes: Set[Node] = superClassOfIndex.keySet
 
-  val classToNode: Map[OWLClass, Node] = (for {
+  val classToNode: Map[OWLClass, Node]                    = (for {
     node   <- allNodes
     aClass <- node.classes
   } yield aClass -> node).toMap
@@ -110,11 +110,11 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
     val outputStream = new FileOutputStream(outfile)
     val rdfWriter    = StreamRDFWriter.getWriterStream(outputStream, RDFFormat.TURTLE_FLAT)
     rdfWriter.start()
-    val comparisons = for {
+    val comparisons  = for {
       inputProfile  <- Observable.fromIterable(inputs)
       corpusProfile <- Observable.fromIterable(individualsInCorpus)
     } yield (inputProfile, corpusProfile)
-    val processed = comparisons.mapParallelUnordered(Runtime.getRuntime.availableProcessors) {
+    val processed    = comparisons.mapParallelUnordered(Runtime.getRuntime.availableProcessors) {
       case (inputProfile, corpusProfile) =>
         Task(groupWiseSimilarity(inputProfile, corpusProfile).toTriples)
     }
@@ -130,11 +130,11 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
 
   def computeAllSimilarityToCorpusJ(
     inputs: Set[OWLNamedIndividual]
-  ): Map[(OWLNamedIndividual, OWLNamedIndividual), Double] =
+  ): Map[(OWLNamedIndividual, OWLNamedIndividual), Double]                                           =
     (for {
       inputProfile  <- inputs.toParArray
       corpusProfile <- individualsInCorpus.toParArray
-      score = groupWiseSimilarityJaccard(inputProfile, corpusProfile)
+      score          = groupWiseSimilarityJaccard(inputProfile, corpusProfile)
     } yield (inputProfile, corpusProfile) -> score).toMap.seq
 
   def computeAllSimilarityToCorpusJDirectOutput(inputs: Set[OWLNamedIndividual], output: File): Unit = {
@@ -142,7 +142,7 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
     for {
       inputProfile  <- inputs.toParArray
       corpusProfile <- individualsInCorpus.toParArray
-      score = groupWiseSimilarityJaccard(inputProfile, corpusProfile)
+      score          = groupWiseSimilarityJaccard(inputProfile, corpusProfile)
     } this.synchronized {
       pw.println(s"${inputProfile.getIRI.toString}\t${corpusProfile.getIRI.toString}\t$score")
     }
@@ -155,7 +155,7 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
       inputProfile  <- individualsInCorpus.toParArray
       corpusProfile <- individualsInCorpus.toParArray
       if inputProfile.getIRI.toString < corpusProfile.getIRI.toString
-      score = groupWiseSimilarityJaccard(inputProfile, corpusProfile)
+      score          = groupWiseSimilarityJaccard(inputProfile, corpusProfile)
     } this.synchronized {
       pw.println(s"${inputProfile.getIRI.toString}\t${corpusProfile.getIRI.toString}\t$score")
     }
@@ -190,8 +190,8 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
   def indexDirectAssociations(
     reasoner: OWLReasoner
   ): (Map[Node, Set[OWLNamedIndividual]], Map[OWLNamedIndividual, Set[Node]]) = {
-    val individuals = reasoner.getRootOntology.getIndividualsInSignature(true).asScala.toSet
-    val init        = (Map.empty[Node, Set[OWLNamedIndividual]], Map.empty[OWLNamedIndividual, Set[Node]])
+    val individuals        = reasoner.getRootOntology.getIndividualsInSignature(true).asScala.toSet
+    val init               = (Map.empty[Node, Set[OWLNamedIndividual]], Map.empty[OWLNamedIndividual, Set[Node]])
     val individualsToNodes = (individuals.map { individual =>
       val nodes = reasoner.getTypes(individual, true).getNodes.asScala.map(Node(_)).toSet
       individual -> nodes
@@ -204,7 +204,7 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
 
     def traverse(node: Node): Unit =
       if (!index.contains(node)) {
-        val children = superClassOfIndex(node)
+        val children         = superClassOfIndex(node)
         children.foreach(traverse)
         val nodeAssociations = directAssociationsByNode.getOrElse(node, Set.empty) ++ children.flatMap(index)
         index += (node -> nodeAssociations)
@@ -219,7 +219,7 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
 
     def traverse(node: Node): Unit =
       if (!index.contains(node)) {
-        val parents = subClassOfIndex(node)
+        val parents   = subClassOfIndex(node)
         parents.foreach(traverse)
         val ancestors = parents ++ parents.flatMap(index)
         index += (node -> (ancestors + node))
@@ -234,11 +234,11 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
 
     def traverse(node: Node): Unit =
       if (!ics.contains(node)) {
-        val parents = subClassOfIndex(node)
+        val parents           = subClassOfIndex(node)
         parents.foreach(traverse)
         val instancesInCorpus = directAndIndirectAssociationsByNode(node).intersect(individualsInCorpus)
         val freq              = instancesInCorpus.size
-        val ic =
+        val ic                =
           if (freq == 0)
             if (parents.isEmpty) 1
             else parents.map(ics).max
@@ -264,7 +264,7 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
     corpusIndividual: OWLNamedIndividual
   ): GroupWiseSimilarity = {
     val directAssociationsByCorpusIndividual = directAssociationsByIndividual(corpusIndividual)
-    val pairScores = for {
+    val pairScores                           = for {
       queryAnnotation <- directAssociationsByIndividual(queryIndividual)
     } yield directAssociationsByCorpusIndividual
       .map { corpusAnnotation =>
@@ -272,7 +272,7 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
         PairScore(queryAnnotation, corpusAnnotation, maxSubsumer, nodeIC(maxSubsumer))
       }
       .maxBy(_.maxSubsumerIC)
-    val medianScore = median(pairScores.map(_.maxSubsumerIC).toSeq)
+    val medianScore                          = median(pairScores.map(_.maxSubsumerIC).toSeq)
     GroupWiseSimilarity(queryIndividual, corpusIndividual, medianScore, pairScores)
   }
 
@@ -322,14 +322,14 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
   }
 
   private def sesameTripleToJena(triple: Statement): JenaStatement = {
-    val subject = triple.getSubject match {
+    val subject   = triple.getSubject match {
       case bnode: BNode => new ResourceImpl(new AnonId(bnode.getID))
       case uri: URI     => ResourceFactory.createResource(uri.stringValue)
     }
     val predicate = ResourceFactory.createProperty(triple.getPredicate.stringValue)
-    val obj = triple.getObject match {
-      case bnode: BNode => new ResourceImpl(new AnonId(bnode.getID))
-      case uri: URI     => ResourceFactory.createResource(uri.stringValue)
+    val obj       = triple.getObject match {
+      case bnode: BNode                                    => new ResourceImpl(new AnonId(bnode.getID))
+      case uri: URI                                        => ResourceFactory.createResource(uri.stringValue)
       case literal: Literal if literal.getLanguage != null =>
         ResourceFactory.createLangLiteral(literal.getLabel, literal.getLanguage)
       case literal: Literal if literal.getDatatype != null =>
@@ -337,7 +337,7 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
           literal.getLabel,
           TypeMapper.getInstance.getSafeTypeByName(literal.getDatatype.stringValue)
         )
-      case literal: Literal => ResourceFactory.createStringLiteral(literal.getLabel)
+      case literal: Literal                                => ResourceFactory.createStringLiteral(literal.getLabel)
     }
     ResourceFactory.createStatement(subject, predicate, obj)
   }
@@ -368,14 +368,14 @@ final case class GroupWiseSimilarity(
   import GroupWiseSimilarity._
 
   def toTriples: Set[Statement] = {
-    val self = new URIImpl(OntUtil.nextIRI.toString)
-    val micasTriples = for {
+    val self                         = new URIImpl(OntUtil.nextIRI.toString)
+    val micasTriples                 = for {
       pair     <- pairs
       subsumer <- pair.maxSubsumer.classes
     } yield new StatementImpl(new URIImpl(subsumer.getIRI.toString), RDF.TYPE, FoundAsMICA)
     val bestPairComparisons          = pairs.toSeq.sortBy(_.maxSubsumerIC).takeRight(20).filter(_.maxSubsumerIC > 0)
     val distinctSubsumers: Set[Node] = bestPairComparisons.map(_.maxSubsumer).toSet
-    val subsumerTriples = for {
+    val subsumerTriples              = for {
       node <- distinctSubsumers
       term <- node.classes
     } yield new StatementImpl(self, has_subsumer, new URIImpl(term.getIRI.toString))

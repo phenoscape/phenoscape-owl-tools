@@ -49,13 +49,13 @@ object ExpressionsUtil {
         val value = OntUtil.nextIndividual()
         axioms += factory.getOWLObjectPropertyAssertionAxiom(property, individual, value)
         axioms ++= instantiateClassAssertion(value, filler)
-      case ObjectAllValuesFrom(property, filler) =>
+      case ObjectAllValuesFrom(property, filler)  =>
         val value = OntUtil.nextIndividual()
         axioms += factory.getOWLObjectPropertyAssertionAxiom(property, individual, value)
         axioms ++= instantiateClassAssertion(value, filler)
-      case ObjectIntersectionOf(operands) =>
+      case ObjectIntersectionOf(operands)         =>
         operands.foreach(o => axioms ++= instantiateClassAssertion(individual, o))
-      case _ => axioms += factory.getOWLClassAssertionAxiom(aClass, individual)
+      case _                                      => axioms += factory.getOWLClassAssertionAxiom(aClass, individual)
     }
     axioms
   }
@@ -67,7 +67,7 @@ object ExpressionsUtil {
       .map(_.getValue)
       .collect({ case literal: OWLLiteral => literal.getLiteral.toString })
 
-  def labelFor(obj: OWLEntity, ont: OWLOntology): Option[String] =
+  def labelFor(obj: OWLEntity, ont: OWLOntology): Option[String]                                          =
     annotationsFor(obj, factory.getRDFSLabel, ont).headOption
 
   def labelFor(obj: OWLEntity, onts: Iterable[OWLOntology]): Option[String] =
@@ -95,7 +95,7 @@ object ExpressionsUtil {
 
   def permute(expression: OWLClassExpression)(implicit reasoner: OWLReasoner): Set[OWLClassExpression] =
     expression match {
-      case namedClass: OWLClass =>
+      case namedClass: OWLClass                    =>
         (reasoner.getSuperClasses(namedClass, true).getFlattened.asScala.toSet + namedClass).toSet[OWLClassExpression]
       case someValuesFrom: OWLObjectSomeValuesFrom => permute(someValuesFrom)
       case intersection: OWLObjectIntersectionOf   => permute(intersection)

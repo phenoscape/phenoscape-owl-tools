@@ -35,7 +35,7 @@ object RunPairwiseOWLSim extends App {
     !ind.getIRI.toString.contains("VTO_")
   } else throw new RuntimeException("Invalid corpus name.")
 
-  val owlSim = new OWLsim(combined, inCorpusFunc)
+  val owlSim          = new OWLsim(combined, inCorpusFunc)
   println("Done creating OWLSim")
   val queryProfiles   = owlSim.allIndividuals.filterNot(inCorpusFunc)
   val orderedProfiles = queryProfiles.toSeq.sortBy(_.getIRI.toString())

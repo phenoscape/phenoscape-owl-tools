@@ -10,7 +10,7 @@ import org.semanticweb.owlapi.model.OWLAxiom
 object ExtractNamedClassHierarchy extends OWLTask {
 
   def extractHierarchy(ontology: OWLOntology): OWLOntology = {
-    val manager = ontology.getOWLOntologyManager
+    val manager          = ontology.getOWLOntologyManager
     val namedClassAxioms = for {
       axiom <- ontology.getAxioms(AxiomType.SUBCLASS_OF, true).asScala
       if !axiom.getSubClass.isAnonymous

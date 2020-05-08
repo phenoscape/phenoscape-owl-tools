@@ -30,7 +30,7 @@ object HomologyTableToOWLWithAncestralStructure extends OWLTask {
   }
 
   def convertFile(file: Source): OWLOntology = {
-    val axioms = (file.getLines.drop(1) flatMap processEntry).toSet.asJava
+    val axioms   = (file.getLines.drop(1) flatMap processEntry).toSet.asJava
     val ontology =
       manager.createOntology(axioms, IRI.create("http://purl.obolibrary.org/obo/uberon/homology_with_ancestors.owl"))
     manager.applyChange(

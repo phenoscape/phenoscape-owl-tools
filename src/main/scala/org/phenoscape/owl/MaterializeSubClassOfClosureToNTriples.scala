@@ -17,9 +17,9 @@ object MaterializeSubClassOfClosureToNTriples extends OWLTask {
     val targetFile = new File(System.getProperty("org.phenoscape.owl.MaterializeSubClassOfClosure.target"));
     if (!targetFile.exists())
       targetFile.createNewFile();
-    val source = manager.loadOntologyFromOntologyDocument(new File(args(0)));
+    val source     = manager.loadOntologyFromOntologyDocument(new File(args(0)));
     println(manager.getOntologies().asScala.map(_.getAxiomCount()).reduce(_ + _));
-    val reasoner = new ElkReasonerFactory().createReasoner(source);
+    val reasoner   = new ElkReasonerFactory().createReasoner(source);
     writeClosureToFile(reasoner, targetFile);
     reasoner.dispose();
     System.exit(0);
@@ -30,7 +30,7 @@ object MaterializeSubClassOfClosureToNTriples extends OWLTask {
     val allClasses = reasoner.getRootOntology().getClassesInSignature(true).asScala;
     val classCount = allClasses.size;
     println("Total classes: " + classCount);
-    var progress = 0;
+    var progress   = 0;
     for (ontClass <- allClasses) {
       writer.append(
         String

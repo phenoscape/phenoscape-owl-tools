@@ -39,29 +39,29 @@ object HomologyTableDemoRolification extends App {
   }
 
   def processEntry(line: String): Set[OWLAxiom] = {
-    val items        = line.split("\t", -1)
-    val uniqueID     = DigestUtils.sha1Hex(line)
-    val uniquePrefix = s"http://purl.phenoscape.org/homology/annotation/$uniqueID"
-    val relation     = items(4).trim
+    val items               = line.split("\t", -1)
+    val uniqueID            = DigestUtils.sha1Hex(line)
+    val uniquePrefix        = s"http://purl.phenoscape.org/homology/annotation/$uniqueID"
+    val relation            = items(4).trim
     val (property, negated) = relation match {
       case "hom to"         => (InHistoricalHomologyRelationshipWith, false)
       case "ser hom to"     => (SeriallyHomologousTo, false)
       case "not hom to"     => (InHistoricalHomologyRelationshipWith, true)
       case "not ser hom to" => (SeriallyHomologousTo, true)
     }
-    val structure1Text = items(1).trim
-    val structure1 =
+    val structure1Text      = items(1).trim
+    val structure1          =
       if (structure1Text.contains("^")) PostCompositionParser.parseExpression(structure1Text).get
       else Class(IRI.create(structure1Text))
-    val taxon1         = Class(IRI.create(items(3).trim))
-    val role1          = ObjectProperty(s"$uniquePrefix#role1")
-    val structure2Text = items(6).trim
-    val structure2 =
+    val taxon1              = Class(IRI.create(items(3).trim))
+    val role1               = ObjectProperty(s"$uniquePrefix#role1")
+    val structure2Text      = items(6).trim
+    val structure2          =
       if (structure2Text.contains("^")) PostCompositionParser.parseExpression(structure2Text).get
       else Class(IRI.create(structure2Text))
-    val taxon2 = Class(IRI.create(items(8).trim))
-    val role2  = ObjectProperty(s"$uniquePrefix#role2")
-    var axioms = Set.empty[OWLAxiom]
+    val taxon2              = Class(IRI.create(items(8).trim))
+    val role2               = ObjectProperty(s"$uniquePrefix#role2")
+    var axioms              = Set.empty[OWLAxiom]
     Option(StringUtils.stripToNull(items(12))) match {
       case Some(evidenceID) =>
         val evidenceCode = Class(OBOUtil.iriForTermID(evidenceID))
@@ -74,7 +74,7 @@ object HomologyTableDemoRolification extends App {
         }
         axioms += evidence Type evidenceCode
         axioms += evidence Annotation (source, pub)
-      case None =>
+      case None             =>
         if (!negated) {
           axioms += ((structure1 and (in_taxon some taxon1)) SubClassOf (role1.Self))
           axioms += ((structure2 and (in_taxon some taxon2)) SubClassOf (role2.Self))

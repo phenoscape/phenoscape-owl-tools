@@ -16,8 +16,8 @@ object AbsenceClassGenerator extends OWLTask {
   val manager   = OWLManager.createOWLOntologyManager
 
   def generateAbsenceClasses(ontology: OWLOntology): OWLOntology = {
-    val manager = ontology.getOWLOntologyManager()
-    val newIRI  = getAbsenceOntologyIRI(ontology)
+    val manager   = ontology.getOWLOntologyManager()
+    val newIRI    = getAbsenceOntologyIRI(ontology)
     val newAxioms = for {
       ontClass <- ontology.getClassesInSignature(false).asScala
       axiom    <- createAbsenceClass(ontClass)
@@ -26,8 +26,8 @@ object AbsenceClassGenerator extends OWLTask {
   }
 
   def createAbsenceClass(ontClass: OWLClass): Set[OWLAxiom] = {
-    val classIRI     = ontClass.getIRI
-    val absenceClass = Class(getAbsenceIRI(classIRI))
+    val classIRI        = ontClass.getIRI
+    val absenceClass    = Class(getAbsenceIRI(classIRI))
     val notHasPartClass = Class(
       NegationClassGenerator.getNegationIRI(NamedRestrictionGenerator.getRestrictionIRI(has_part.getIRI, classIRI))
     )

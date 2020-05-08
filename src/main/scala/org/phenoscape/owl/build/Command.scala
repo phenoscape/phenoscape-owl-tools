@@ -27,7 +27,7 @@ object Command extends App {
         case "ava"          => HomologyTableToOWLVAHM.main(homologyArgs)
         case "rolification" => HomologyTableDemoRolification.main(homologyArgs)
       }
-    case _ =>
+    case _                       =>
       println(
         """
 Valid commands are:
