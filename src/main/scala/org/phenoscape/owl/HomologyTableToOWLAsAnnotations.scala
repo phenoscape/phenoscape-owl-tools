@@ -17,15 +17,15 @@ import Vocab._
 
 object HomologyTableToOWLAsAnnotations extends OWLTask {
 
-  val manager = OWLManager.createOWLOntologyManager
-  val source = factory.getOWLAnnotationProperty(DublinCoreVocabulary.SOURCE.getIRI)
-  val description = factory.getOWLAnnotationProperty(DublinCoreVocabulary.DESCRIPTION.getIRI)
-  val aboutStructure = ObjectProperty("http://example.org/about_structure")
-  val homologyAnnotation = Class("http://example.org/HomologyAnnotation")
+  val manager                    = OWLManager.createOWLOntologyManager
+  val source                     = factory.getOWLAnnotationProperty(DublinCoreVocabulary.SOURCE.getIRI)
+  val description                = factory.getOWLAnnotationProperty(DublinCoreVocabulary.DESCRIPTION.getIRI)
+  val aboutStructure             = ObjectProperty("http://example.org/about_structure")
+  val homologyAnnotation         = Class("http://example.org/HomologyAnnotation")
   val negativeHomologyAnnotation = Class("http://example.org/NegativeHomologyAnnotation")
 
   def main(args: Array[String]): Unit = {
-    val input = Source.fromFile(args(0), "utf-8")
+    val input  = Source.fromFile(args(0), "utf-8")
     val output = convertFile(input)
     manager.saveOntology(output, IRI.create(new File(args(1))))
   }
@@ -53,13 +53,13 @@ object HomologyTableToOWLAsAnnotations extends OWLTask {
   }
 
   def processEntry(line: String): Set[OWLAxiom] = {
-    val items = line.split("\t", -1)
-    val annotation = Individual("http://example.org/" + UUID.randomUUID().toString)
-    val structure1 = Individual(IRI.create(items(1).trim))
-    val structure2 = Individual(IRI.create(items(6).trim))
+    val items        = line.split("\t", -1)
+    val annotation   = Individual("http://example.org/" + UUID.randomUUID().toString)
+    val structure1   = Individual(IRI.create(items(1).trim))
+    val structure2   = Individual(IRI.create(items(6).trim))
     val evidenceCode = Class(OBOUtil.iriForTermID(items(10).trim))
-    val evidence = Individual("http://example.org/" + UUID.randomUUID().toString)
-    val pub = factory.getOWLLiteral(items(11).trim)
+    val evidence     = Individual("http://example.org/" + UUID.randomUUID().toString)
+    val pub          = factory.getOWLLiteral(items(11).trim)
     Set(
       if (items(4).trim == "hom to")
         annotation Type homologyAnnotation

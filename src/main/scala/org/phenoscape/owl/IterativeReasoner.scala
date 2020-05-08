@@ -20,14 +20,14 @@ object IterativeReasoner extends OWLTask {
   }
 
   def computeInferences(mainOntology: OWLOntology, targetOntologies: Seq[OWLOntology]): Unit = {
-    val manager = mainOntology.getOWLOntologyManager();
+    val manager                 = mainOntology.getOWLOntologyManager();
     val aggregateTargetOntology = manager.createOntology();
     targetOntologies.foreach(target => manager.addAxioms(aggregateTargetOntology, target.getAxioms()));
     computeInferences(mainOntology, aggregateTargetOntology);
   }
 
   def computeInferences(mainOntology: OWLOntology, targetOntology: OWLOntology): Unit = {
-    val manager = mainOntology.getOWLOntologyManager();
+    val manager       = mainOntology.getOWLOntologyManager();
     var oldAxiomCount = 0;
     var newAxiomCount = 1;
     while (newAxiomCount > oldAxiomCount) {

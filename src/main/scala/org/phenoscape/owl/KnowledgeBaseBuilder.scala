@@ -55,7 +55,7 @@ class KnowledgeBaseBuilder extends App {
     new ElkReasonerFactory().createReasoner(OWLManager.createOWLOntologyManager().createOntology(axioms.asJava))
 
   def loadNormalized(location: File): OWLOntology = {
-    val ont = globalManager.loadOntologyFromOntologyDocument(location)
+    val ont             = globalManager.loadOntologyFromOntologyDocument(location)
     val definedByAxioms = ont.getClassesInSignature().asScala.flatMap(OBOUtil.createDefinedByAnnotation)
     globalManager.addAxioms(ont, definedByAxioms.asJava)
     PropertyNormalizer.normalize(ont)
@@ -86,7 +86,7 @@ class KnowledgeBaseBuilder extends App {
   def isTboxAxiom(axiom: OWLAxiom): Boolean = axiom.isOfType(AxiomType.TBoxAxiomTypes)
 
   def addTriples(ontology: OWLOntology, db: SailRepositoryConnection, graph: URI): Unit = {
-    val manager = ontology.getOWLOntologyManager
+    val manager   = ontology.getOWLOntologyManager
     val outStream = new ByteArrayOutputStream()
     manager.saveOntology(ontology, new RioRDFXMLDocumentFormat(), outStream)
     outStream.close()
@@ -105,7 +105,7 @@ class KnowledgeBaseBuilder extends App {
     ontID: OWLOntologyID = new OWLOntologyID()
   ): Unit = {
     val manager = OWLManager.createOWLOntologyManager()
-    val ont = manager.createOntology(ontID)
+    val ont     = manager.createOntology(ontID)
     manager.addAxioms(ont, axioms.toSet[OWLAxiom].asJava)
     addTriples(ont, db, graph)
   }

@@ -15,13 +15,13 @@ import java.io.BufferedOutputStream
 object RunSPARQLUpdate extends App {
 
   val BlazegraphProperties = new File(args(0))
-  val BlazegraphJournal = new File(args(1))
-  val queryFile = new File(args(2))
+  val BlazegraphJournal    = new File(args(1))
+  val queryFile            = new File(args(2))
 
   val blazegraphProperties = new Properties()
   blazegraphProperties.load(new FileReader(BlazegraphProperties))
   blazegraphProperties.setProperty(Options.FILE, BlazegraphJournal.getAbsolutePath)
-  val sail = new BigdataSail(blazegraphProperties)
+  val sail       = new BigdataSail(blazegraphProperties)
   val repository = new BigdataSailRepository(sail)
   repository.initialize()
   val blazegraph = repository.getUnisolatedConnection()

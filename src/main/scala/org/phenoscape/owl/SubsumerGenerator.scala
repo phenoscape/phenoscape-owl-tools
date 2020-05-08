@@ -14,8 +14,8 @@ import org.semanticweb.owlapi.search.EntitySearcher
 
 class SubsumerGenerator(ont: OWLOntology, reasonerFactory: OWLReasonerFactory) {
 
-  val reasoner = reasonerFactory.createReasoner(ont)
-  val manager = ont.getOWLOntologyManager
+  val reasoner                       = reasonerFactory.createReasoner(ont)
+  val manager                        = ont.getOWLOntologyManager
   val expressionMakers: Set[EQMaker] = Set(new EQMaker(Class(Vocab.ANATOMICAL_ENTITY), Class(Vocab.QUALITY)))
 
   case class EQMaker(rootEntity: OWLClass, rootQuality: OWLClass) {

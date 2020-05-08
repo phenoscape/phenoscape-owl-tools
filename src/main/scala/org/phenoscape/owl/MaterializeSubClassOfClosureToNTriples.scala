@@ -26,7 +26,7 @@ object MaterializeSubClassOfClosureToNTriples extends OWLTask {
   }
 
   def writeClosureToFile(reasoner: OWLReasoner, file: File): Unit = {
-    val writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), "utf-8"));
+    val writer     = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), "utf-8"));
     val allClasses = reasoner.getRootOntology().getClassesInSignature(true).asScala;
     val classCount = allClasses.size;
     println("Total classes: " + classCount);

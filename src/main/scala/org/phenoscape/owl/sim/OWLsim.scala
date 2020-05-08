@@ -35,14 +35,14 @@ import scala.util.hashing.MurmurHash3
 class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
 
   type SuperClassOfIndex = Map[Node, Set[Node]]
-  type SubClassOfIndex = Map[Node, Set[Node]]
+  type SubClassOfIndex   = Map[Node, Set[Node]]
 
-  private val OWLThing = OWLManager.getOWLDataFactory.getOWLThing
+  private val OWLThing   = OWLManager.getOWLDataFactory.getOWLThing
   private val OWLNothing = OWLManager.getOWLDataFactory.getOWLNothing
 
   val (superClassOfIndex, subClassOfIndex, directAssociationsByNode, directAssociationsByIndividual) = {
-    val reasoner = new ElkReasonerFactory().createReasoner(ontology)
-    val (superClassOf, subClassOf) = nonRedundantHierarchy(reasoner)
+    val reasoner                                     = new ElkReasonerFactory().createReasoner(ontology)
+    val (superClassOf, subClassOf)                   = nonRedundantHierarchy(reasoner)
     val (directAssocByNode, directAssocByIndividual) = indexDirectAssociations(reasoner)
     reasoner.dispose()
     (superClassOf, subClassOf, directAssocByNode, directAssocByIndividual)
@@ -51,7 +51,7 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
   val allNodes: Set[Node] = superClassOfIndex.keySet
 
   val classToNode: Map[OWLClass, Node] = (for {
-    node <- allNodes
+    node   <- allNodes
     aClass <- node.classes
   } yield aClass -> node).toMap
 
@@ -66,22 +66,22 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
       case (individual, nodes) => individual -> (nodes ++ nodes.flatMap(childToReflexiveAncestorIndex))
     }
 
-  private val rdfType = new URIImpl(Vocab.rdfType.toString)
+  private val rdfType        = new URIImpl(Vocab.rdfType.toString)
   private val rdfsSubClassOf = new URIImpl(Vocab.rdfsSubClassOf.toString)
 
   def directAndIndirectAssociationsByIndividualToTriples: Set[Statement] =
     for {
       (individual, nodes) <- directAndIndirectAssociationsByIndividual.toSet
-      node <- nodes
-      term <- node.classes
+      node                <- nodes
+      term                <- node.classes
     } yield new StatementImpl(new URIImpl(individual.getIRI.toString), rdfType, new URIImpl(term.getIRI.toString))
 
   def childToReflexiveAncestorIndexToTriples: Set[Statement] =
     for {
       (node, nodes) <- childToReflexiveAncestorIndex.toSet
-      term <- node.classes
-      ancestorNode <- nodes
-      ancestor <- ancestorNode.classes
+      term          <- node.classes
+      ancestorNode  <- nodes
+      ancestor      <- ancestorNode.classes
     } yield new StatementImpl(new URIImpl(term.getIRI.toString), rdfsSubClassOf, new URIImpl(ancestor.getIRI.toString))
 
   val corpusSize: Int = individualsInCorpus.size
@@ -100,18 +100,18 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
 
   def computeAllSimilarityToCorpus(inputs: Set[OWLNamedIndividual]): Set[Statement] =
     (for {
-      inputProfile <- inputs.toParArray
+      inputProfile  <- inputs.toParArray
       corpusProfile <- individualsInCorpus.toParArray
-      triple <- groupWiseSimilarity(inputProfile, corpusProfile).toTriples
+      triple        <- groupWiseSimilarity(inputProfile, corpusProfile).toTriples
     } yield triple).toSet.seq
 
   def computeAllSimilarityToCorpusDirectOutput(inputs: Set[OWLNamedIndividual], outfile: File): Unit = {
     import monix.execution.Scheduler.Implicits.global
     val outputStream = new FileOutputStream(outfile)
-    val rdfWriter = StreamRDFWriter.getWriterStream(outputStream, RDFFormat.TURTLE_FLAT)
+    val rdfWriter    = StreamRDFWriter.getWriterStream(outputStream, RDFFormat.TURTLE_FLAT)
     rdfWriter.start()
     val comparisons = for {
-      inputProfile <- Observable.fromIterable(inputs)
+      inputProfile  <- Observable.fromIterable(inputs)
       corpusProfile <- Observable.fromIterable(individualsInCorpus)
     } yield (inputProfile, corpusProfile)
     val processed = comparisons.mapParallelUnordered(Runtime.getRuntime.availableProcessors) {
@@ -132,7 +132,7 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
     inputs: Set[OWLNamedIndividual]
   ): Map[(OWLNamedIndividual, OWLNamedIndividual), Double] =
     (for {
-      inputProfile <- inputs.toParArray
+      inputProfile  <- inputs.toParArray
       corpusProfile <- individualsInCorpus.toParArray
       score = groupWiseSimilarityJaccard(inputProfile, corpusProfile)
     } yield (inputProfile, corpusProfile) -> score).toMap.seq
@@ -140,7 +140,7 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
   def computeAllSimilarityToCorpusJDirectOutput(inputs: Set[OWLNamedIndividual], output: File): Unit = {
     val pw = new PrintWriter(output)
     for {
-      inputProfile <- inputs.toParArray
+      inputProfile  <- inputs.toParArray
       corpusProfile <- individualsInCorpus.toParArray
       score = groupWiseSimilarityJaccard(inputProfile, corpusProfile)
     } this.synchronized {
@@ -152,7 +152,7 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
   def computePairwiseSimilarityInCorpusJDirectOutput(output: File): Unit = {
     val pw = new PrintWriter(output)
     for {
-      inputProfile <- individualsInCorpus.toParArray
+      inputProfile  <- individualsInCorpus.toParArray
       corpusProfile <- individualsInCorpus.toParArray
       if inputProfile.getIRI.toString < corpusProfile.getIRI.toString
       score = groupWiseSimilarityJaccard(inputProfile, corpusProfile)
@@ -164,16 +164,16 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
 
   def nonRedundantHierarchy(reasoner: OWLReasoner): (SuperClassOfIndex, SubClassOfIndex) = {
     val parentToChildren = mutable.Map[Node, Set[Node]]()
-    val childToParents = mutable.Map[Node, Set[Node]]()
+    val childToParents   = mutable.Map[Node, Set[Node]]()
 
     def traverse(reasonerNode: ReasonerNode[OWLClass]): Unit = {
       val parent = Node(reasonerNode)
       if (!parentToChildren.contains(parent)) {
         val representative = reasonerNode.getRepresentativeElement
-        val children = reasoner.getSubClasses(representative, true).getNodes.asScala.toSet
+        val children       = reasoner.getSubClasses(representative, true).getNodes.asScala.toSet
         children.foreach { childNode =>
           traverse(childNode)
-          val child = Node(childNode)
+          val child   = Node(childNode)
           val parents = childToParents.getOrElse(child, Set.empty)
           childToParents += (child -> (parents + parent))
         }
@@ -191,7 +191,7 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
     reasoner: OWLReasoner
   ): (Map[Node, Set[OWLNamedIndividual]], Map[OWLNamedIndividual, Set[Node]]) = {
     val individuals = reasoner.getRootOntology.getIndividualsInSignature(true).asScala.toSet
-    val init = (Map.empty[Node, Set[OWLNamedIndividual]], Map.empty[OWLNamedIndividual, Set[Node]])
+    val init        = (Map.empty[Node, Set[OWLNamedIndividual]], Map.empty[OWLNamedIndividual, Set[Node]])
     val individualsToNodes = (individuals.map { individual =>
       val nodes = reasoner.getTypes(individual, true).getNodes.asScala.map(Node(_)).toSet
       individual -> nodes
@@ -237,7 +237,7 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
         val parents = subClassOfIndex(node)
         parents.foreach(traverse)
         val instancesInCorpus = directAndIndirectAssociationsByNode(node).intersect(individualsInCorpus)
-        val freq = instancesInCorpus.size
+        val freq              = instancesInCorpus.size
         val ic =
           if (freq == 0)
             if (parents.isEmpty) 1
@@ -277,15 +277,15 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
   }
 
   def groupWiseSimilarityJaccard(queryIndividual: OWLNamedIndividual, corpusIndividual: OWLNamedIndividual): Double = {
-    val queryTypes = directAndIndirectAssociationsByIndividual(queryIndividual)
+    val queryTypes  = directAndIndirectAssociationsByIndividual(queryIndividual)
     val corpusTypes = directAndIndirectAssociationsByIndividual(corpusIndividual)
     queryTypes.intersect(corpusTypes).size.toDouble / queryTypes.union(corpusTypes).size
   }
 
   def similarityProfileJaccard(queryIndividual: OWLNamedIndividual, corpusIndividual: OWLNamedIndividual): Set[Node] = {
-    val queryTypes = directAndIndirectAssociationsByIndividual(queryIndividual)
-    val corpusTypes = directAndIndirectAssociationsByIndividual(corpusIndividual)
-    val common = queryTypes.intersect(corpusTypes)
+    val queryTypes                 = directAndIndirectAssociationsByIndividual(queryIndividual)
+    val corpusTypes                = directAndIndirectAssociationsByIndividual(corpusIndividual)
+    val common                     = queryTypes.intersect(corpusTypes)
     val superClassesOfIntersection = common.flatMap(subClassOfIndex)
     common -- superClassesOfIntersection
   }
@@ -314,7 +314,7 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
     val has_ic = new URIImpl(Vocab.has_ic.getIRI.toString)
     (for {
       (node, ic) <- nodeIC
-      term <- node.classes
+      term       <- node.classes
     } yield {
       val termURL = new URIImpl(term.getIRI.toString)
       new StatementImpl(termURL, has_ic, new NumericLiteralImpl(ic))
@@ -328,8 +328,8 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
     }
     val predicate = ResourceFactory.createProperty(triple.getPredicate.stringValue)
     val obj = triple.getObject match {
-      case bnode: BNode                                    => new ResourceImpl(new AnonId(bnode.getID))
-      case uri: URI                                        => ResourceFactory.createResource(uri.stringValue)
+      case bnode: BNode => new ResourceImpl(new AnonId(bnode.getID))
+      case uri: URI     => ResourceFactory.createResource(uri.stringValue)
       case literal: Literal if literal.getLanguage != null =>
         ResourceFactory.createLangLiteral(literal.getLabel, literal.getLanguage)
       case literal: Literal if literal.getDatatype != null =>
@@ -337,7 +337,7 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
           literal.getLabel,
           TypeMapper.getInstance.getSafeTypeByName(literal.getDatatype.stringValue)
         )
-      case literal: Literal                                => ResourceFactory.createStringLiteral(literal.getLabel)
+      case literal: Literal => ResourceFactory.createStringLiteral(literal.getLabel)
     }
     ResourceFactory.createStatement(subject, predicate, obj)
   }
@@ -370,10 +370,10 @@ final case class GroupWiseSimilarity(
   def toTriples: Set[Statement] = {
     val self = new URIImpl(OntUtil.nextIRI.toString)
     val micasTriples = for {
-      pair <- pairs
+      pair     <- pairs
       subsumer <- pair.maxSubsumer.classes
     } yield new StatementImpl(new URIImpl(subsumer.getIRI.toString), RDF.TYPE, FoundAsMICA)
-    val bestPairComparisons = pairs.toSeq.sortBy(_.maxSubsumerIC).takeRight(20).filter(_.maxSubsumerIC > 0)
+    val bestPairComparisons          = pairs.toSeq.sortBy(_.maxSubsumerIC).takeRight(20).filter(_.maxSubsumerIC > 0)
     val distinctSubsumers: Set[Node] = bestPairComparisons.map(_.maxSubsumer).toSet
     val subsumerTriples = for {
       node <- distinctSubsumers
@@ -390,11 +390,11 @@ final case class GroupWiseSimilarity(
 
 object GroupWiseSimilarity {
 
-  val combined_score = new URIImpl(Vocab.combined_score.getIRI.toString)
-  val has_subsumer = new URIImpl(Vocab.has_subsumer.getIRI.toString)
-  val for_query_profile = new URIImpl(Vocab.for_query_profile.getIRI.toString)
+  val combined_score     = new URIImpl(Vocab.combined_score.getIRI.toString)
+  val has_subsumer       = new URIImpl(Vocab.has_subsumer.getIRI.toString)
+  val for_query_profile  = new URIImpl(Vocab.for_query_profile.getIRI.toString)
   val for_corpus_profile = new URIImpl(Vocab.for_corpus_profile.getIRI.toString)
-  val FoundAsMICA = new URIImpl(Vocab.FoundAsMICA.getIRI.toString)
+  val FoundAsMICA        = new URIImpl(Vocab.FoundAsMICA.getIRI.toString)
 
 }
 

@@ -12,14 +12,14 @@ import scala.collection.JavaConverters._
 
 object RunPairwiseOWLSim extends App {
 
-  val taskCount = args(0).toInt
-  val taskNum = args(1).toInt
-  val ontfile = new File(args(2))
+  val taskCount    = args(0).toInt
+  val taskNum      = args(1).toInt
+  val ontfile      = new File(args(2))
   val profilesFile = new File(args(3))
-  val corpus = args(4)
-  val outfile = args(5)
+  val corpus       = args(4)
+  val outfile      = args(5)
 
-  val manager = OWLManager.createOWLOntologyManager()
+  val manager  = OWLManager.createOWLOntologyManager()
   val ontology = manager.loadOntologyFromOntologyDocument(ontfile)
   val profiles = manager.loadOntologyFromOntologyDocument(profilesFile)
 
@@ -37,12 +37,12 @@ object RunPairwiseOWLSim extends App {
 
   val owlSim = new OWLsim(combined, inCorpusFunc)
   println("Done creating OWLSim")
-  val queryProfiles = owlSim.allIndividuals.filterNot(inCorpusFunc)
+  val queryProfiles   = owlSim.allIndividuals.filterNot(inCorpusFunc)
   val orderedProfiles = queryProfiles.toSeq.sortBy(_.getIRI.toString())
-  val numProfiles = orderedProfiles.size
-  val groupSize = (numProfiles.toFloat / taskCount).ceil.toInt
-  val startIndex = (taskNum - 1) * groupSize
-  val group = orderedProfiles.drop(startIndex).take(groupSize)
+  val numProfiles     = orderedProfiles.size
+  val groupSize       = (numProfiles.toFloat / taskCount).ceil.toInt
+  val startIndex      = (taskNum - 1) * groupSize
+  val group           = orderedProfiles.drop(startIndex).take(groupSize)
   println("Computing similarity matrix")
   owlSim.computeAllSimilarityToCorpusDirectOutput(group.toSet, new File(outfile))
   println("Done: " + new Date())

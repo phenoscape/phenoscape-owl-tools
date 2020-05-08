@@ -14,10 +14,10 @@ import org.semanticweb.owlapi.model.OWLNamedIndividual
 
 object ComputeICs extends App {
 
-  val ontfile = new File(args(0))
+  val ontfile      = new File(args(0))
   val profilesFile = new File(args(1))
-  val corpus = args(2)
-  val outfile = new File(args(3))
+  val corpus       = args(2)
+  val outfile      = new File(args(3))
 
   val inCorpusFunc = if (corpus == "taxa") { ind: OWLNamedIndividual =>
     ind.getIRI.toString.contains("VTO_")
@@ -27,17 +27,17 @@ object ComputeICs extends App {
 
   def inQueriesFunc(ind: OWLNamedIndividual): Boolean = !(inCorpusFunc(ind))
 
-  val manager = OWLManager.createOWLOntologyManager()
+  val manager  = OWLManager.createOWLOntologyManager()
   val ontology = manager.loadOntologyFromOntologyDocument(ontfile)
   val profiles = manager.loadOntologyFromOntologyDocument(profilesFile)
 
   val combined =
     manager.createOntology((ontology.getAxioms().asScala ++ profiles.getAxioms().asScala).asJava, OntUtil.nextIRI)
 
-  val owlSim = new OWLsim(combined, inCorpusFunc)
-  val triples = owlSim.classICScoresAsTriples
+  val owlSim        = new OWLsim(combined, inCorpusFunc)
+  val triples       = owlSim.classICScoresAsTriples
   val triplesOutput = new BufferedOutputStream(new FileOutputStream(outfile))
-  val writer = Rio.createWriter(RDFFormat.TURTLE, triplesOutput)
+  val writer        = Rio.createWriter(RDFFormat.TURTLE, triplesOutput)
   writer.startRDF()
   triples.foreach(writer.handleStatement)
   writer.endRDF()

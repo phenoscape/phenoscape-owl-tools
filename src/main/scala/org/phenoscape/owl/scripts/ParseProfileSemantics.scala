@@ -17,14 +17,14 @@ object ParseProfileSemantics {
 
   def tboxWithSemanticsForProfiles(profiles: OWLOntology): Set[OWLAxiom] =
     for {
-      axiom <- profiles.getAxioms(AxiomType.CLASS_ASSERTION).asScala.toSet[OWLClassAssertionAxiom]
+      axiom      <- profiles.getAxioms(AxiomType.CLASS_ASSERTION).asScala.toSet[OWLClassAssertionAxiom]
       classAxiom <- axiomsFor(axiom.getClassExpression)
     } yield classAxiom
 
   def axiomsFor(expression: OWLClassExpression): Set[OWLAxiom] =
     for {
       owlClass <- expression.getClassesInSignature.asScala.toSet[OWLClass]
-      axiom <- axiomsForNamed(owlClass)
+      axiom    <- axiomsForNamed(owlClass)
     } yield axiom
 
   def axiomsForNamed(owlClass: OWLClass): Set[OWLAxiom] = {
@@ -41,7 +41,7 @@ object ParseProfileSemantics {
       else
         Success(Set.empty[OWLAxiom])
     expanded match {
-      case Success(axioms)  => axioms
+      case Success(axioms) => axioms
       case Failure(message) =>
         println(s"Problem: $message")
         Set.empty[OWLAxiom]

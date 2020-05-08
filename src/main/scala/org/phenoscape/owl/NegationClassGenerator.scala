@@ -17,7 +17,7 @@ object NegationClassGenerator extends OWLTask {
     val factory = OWLManager.getOWLDataFactory
     for {
       ontClass <- classes
-      axiom <- createNegationClassAxioms(ontClass)
+      axiom    <- createNegationClassAxioms(ontClass)
     } yield axiom
   }
 

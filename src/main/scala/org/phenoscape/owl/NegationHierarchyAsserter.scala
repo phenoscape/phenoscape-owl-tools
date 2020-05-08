@@ -15,9 +15,9 @@ object NegationHierarchyAsserter {
 
   def main(args: Array[String]): Unit = {
 
-    val manager: OWLOntologyManager = OWLManager.createOWLOntologyManager()
-    val inputOntology: OWLOntology = manager.loadOntologyFromOntologyDocument(new File(args(0)))
-    val axioms: Set[OWLAxiom] = inputOntology.getAxioms(Imports.INCLUDED).asScala.toSet
+    val manager: OWLOntologyManager   = OWLManager.createOWLOntologyManager()
+    val inputOntology: OWLOntology    = manager.loadOntologyFromOntologyDocument(new File(args(0)))
+    val axioms: Set[OWLAxiom]         = inputOntology.getAxioms(Imports.INCLUDED).asScala.toSet
     val negationAxioms: Set[OWLAxiom] = assertNegationHierarchy(axioms)
     val negationOntology: OWLOntology = manager.createOntology(negationAxioms.asJava)
     manager.saveOntology(negationOntology, new FileOutputStream(args(1))) //  negation axioms file
@@ -29,7 +29,7 @@ object NegationHierarchyAsserter {
       EquivalentClasses(_, expr) <- axioms
       //  extract named classes and expressions
       namedClasses: Set[OWLClass] = expr.collect { case owlClass: OWLClass => owlClass }
-      namedClass: OWLClass <- namedClasses
+      namedClass: OWLClass           <- namedClasses
       expression: OWLClassExpression <- expr
     } yield (expression, namedClass)
     // map (class expression -> named classes)
@@ -43,7 +43,7 @@ object NegationHierarchyAsserter {
       namedNegationClasses = expr.collect { case owlClass: OWLClass => owlClass }
       expression <- expressions
       expressionAsNamed = Set(expression).collect { case n: OWLClass => n }
-      namedClass <- classMap.getOrElse(expression, Set.empty) ++ expressionAsNamed
+      namedClass         <- classMap.getOrElse(expression, Set.empty) ++ expressionAsNamed
       namedNegationClass <- namedNegationClasses
     } yield (namedNegationClass.getIRI, namedClass.getIRI)
 
@@ -55,8 +55,8 @@ object NegationHierarchyAsserter {
     val subclassesIndex = buildIndex(superToSubclassPairs)
 
     val subclassAxioms = for {
-      (negater, negated) <- negatesPairs
-      subClassOfNegatedClass <- subclassesIndex(Class(negated))
+      (negater, negated)      <- negatesPairs
+      subClassOfNegatedClass  <- subclassesIndex(Class(negated))
       superClassOfOntClassIRI <- negatedByIndex(subClassOfNegatedClass.getIRI)
     } yield Class(negater) SubClassOf Class(superClassOfOntClassIRI)
 

@@ -17,17 +17,17 @@ import scala.io.Source
 
 object HomologyTableDemoRolification extends App {
 
-  val factory = OWLManager.getOWLDataFactory
-  val manager = OWLManager.createOWLOntologyManager
-  val source = AnnotationProperty(DublinCoreVocabulary.SOURCE.getIRI)
-  val description = AnnotationProperty(DublinCoreVocabulary.DESCRIPTION.getIRI)
+  val factory                              = OWLManager.getOWLDataFactory
+  val manager                              = OWLManager.createOWLOntologyManager
+  val source                               = AnnotationProperty(DublinCoreVocabulary.SOURCE.getIRI)
+  val description                          = AnnotationProperty(DublinCoreVocabulary.DESCRIPTION.getIRI)
   val InHistoricalHomologyRelationshipWith = ObjectProperty("http://purl.obolibrary.org/obo/RO_HOM0000007")
-  val SeriallyHomologousTo = ObjectProperty("http://purl.obolibrary.org/obo/RO_HOM0000027")
+  val SeriallyHomologousTo                 = ObjectProperty("http://purl.obolibrary.org/obo/RO_HOM0000027")
 
   val input = Source.fromFile(args(0), "utf-8")
 
   def convertFile(file: Source): OWLOntology = {
-    val axioms = (file.getLines.drop(1).flatMap(processEntry)).toSet.asJava
+    val axioms   = (file.getLines.drop(1).flatMap(processEntry)).toSet.asJava
     val ontology = manager.createOntology(axioms, IRI.create("http://purl.org/phenoscape/demo/phenoscape_homology.owl"))
     manager.applyChange(
       new AddOntologyAnnotation(
@@ -39,10 +39,10 @@ object HomologyTableDemoRolification extends App {
   }
 
   def processEntry(line: String): Set[OWLAxiom] = {
-    val items = line.split("\t", -1)
-    val uniqueID = DigestUtils.sha1Hex(line)
+    val items        = line.split("\t", -1)
+    val uniqueID     = DigestUtils.sha1Hex(line)
     val uniquePrefix = s"http://purl.phenoscape.org/homology/annotation/$uniqueID"
-    val relation = items(4).trim
+    val relation     = items(4).trim
     val (property, negated) = relation match {
       case "hom to"         => (InHistoricalHomologyRelationshipWith, false)
       case "ser hom to"     => (SeriallyHomologousTo, false)
@@ -53,20 +53,20 @@ object HomologyTableDemoRolification extends App {
     val structure1 =
       if (structure1Text.contains("^")) PostCompositionParser.parseExpression(structure1Text).get
       else Class(IRI.create(structure1Text))
-    val taxon1 = Class(IRI.create(items(3).trim))
-    val role1 = ObjectProperty(s"$uniquePrefix#role1")
+    val taxon1         = Class(IRI.create(items(3).trim))
+    val role1          = ObjectProperty(s"$uniquePrefix#role1")
     val structure2Text = items(6).trim
     val structure2 =
       if (structure2Text.contains("^")) PostCompositionParser.parseExpression(structure2Text).get
       else Class(IRI.create(structure2Text))
     val taxon2 = Class(IRI.create(items(8).trim))
-    val role2 = ObjectProperty(s"$uniquePrefix#role2")
+    val role2  = ObjectProperty(s"$uniquePrefix#role2")
     var axioms = Set.empty[OWLAxiom]
     Option(StringUtils.stripToNull(items(12))) match {
       case Some(evidenceID) =>
         val evidenceCode = Class(OBOUtil.iriForTermID(evidenceID))
-        val evidence = Individual(s"$uniquePrefix#evidence")
-        val pub = factory.getOWLLiteral(items(13).trim)
+        val evidence     = Individual(s"$uniquePrefix#evidence")
+        val pub          = factory.getOWLLiteral(items(13).trim)
         if (!negated) {
           axioms += ((structure1 and (in_taxon some taxon1)) SubClassOf (role1.Self)) Annotation (axiom_has_evidence, evidence)
           axioms += ((structure2 and (in_taxon some taxon2)) SubClassOf (role2.Self)) Annotation (axiom_has_evidence, evidence)
@@ -74,7 +74,7 @@ object HomologyTableDemoRolification extends App {
         }
         axioms += evidence Type evidenceCode
         axioms += evidence Annotation (source, pub)
-      case None             =>
+      case None =>
         if (!negated) {
           axioms += ((structure1 and (in_taxon some taxon1)) SubClassOf (role1.Self))
           axioms += ((structure2 and (in_taxon some taxon2)) SubClassOf (role2.Self))
