@@ -1,17 +1,12 @@
 package org.phenoscape.owl.scripts
 
-import org.semanticweb.owlapi.model.OWLAxiom
-import org.semanticweb.owlapi.model.OWLOntology
-import org.semanticweb.owlapi.model.AxiomType
-import scala.collection.JavaConverters._
-import org.semanticweb.owlapi.model.OWLClass
-import org.semanticweb.owlapi.model.OWLClassExpression
 import org.phenoscape.kb.ingest.util.ExpressionUtil
 import org.phenoscape.owl.util.ExpressionsUtil
 import org.phenoscape.scowl._
-import scalaz.Success
-import scalaz.Failure
-import org.semanticweb.owlapi.model.OWLClassAssertionAxiom
+import org.semanticweb.owlapi.model._
+import scalaz.{Failure, Success}
+
+import scala.collection.JavaConverters._
 
 object ParseProfileSemantics {
 

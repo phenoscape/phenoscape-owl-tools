@@ -68,16 +68,16 @@ object HomologyTableDemoRolification extends App {
         val evidence = Individual(s"$uniquePrefix#evidence")
         val pub = factory.getOWLLiteral(items(13).trim)
         if (!negated) {
-          axioms += ((structure1 and (in_taxon some taxon1)) SubClassOf (role1.Self)) Annotation (axiom_has_evidence, evidence)
-          axioms += ((structure2 and (in_taxon some taxon2)) SubClassOf (role2.Self)) Annotation (axiom_has_evidence, evidence)
+          axioms += ((structure1 and (in_taxon some taxon1)) SubClassOf role1.Self) Annotation (axiom_has_evidence, evidence)
+          axioms += ((structure2 and (in_taxon some taxon2)) SubClassOf role2.Self) Annotation (axiom_has_evidence, evidence)
           axioms += (property SubPropertyChain (role1 o factory.getOWLTopObjectProperty o role2)) Annotation (axiom_has_evidence, evidence)
         }
         axioms += evidence Type evidenceCode
         axioms += evidence Annotation (source, pub)
       case None             =>
         if (!negated) {
-          axioms += ((structure1 and (in_taxon some taxon1)) SubClassOf (role1.Self))
-          axioms += ((structure2 and (in_taxon some taxon2)) SubClassOf (role2.Self))
+          axioms += ((structure1 and (in_taxon some taxon1)) SubClassOf role1.Self)
+          axioms += ((structure2 and (in_taxon some taxon2)) SubClassOf role2.Self)
           axioms += (property SubPropertyChain (role1 o factory.getOWLTopObjectProperty o role2))
         }
     }

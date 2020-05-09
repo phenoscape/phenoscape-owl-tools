@@ -1,18 +1,11 @@
 package org.phenoscape.owl
 
-import java.io.File
-
-import org.apache.log4j.{BasicConfigurator, Level, Logger}
 import org.phenoscape.owl.Vocab._
 import org.phenoscape.owl.{Vocab => _}
-import org.phenoscape.scowl._
-import org.semanticweb.owlapi.vocab.OWLRDFVocabulary
 
 object PostorderTest extends KnowledgeBaseBuilder {
 
   val inFile = args(0)
-  BasicConfigurator.configure()
-  Logger.getRootLogger().setLevel(Level.ERROR)
 
 //  val manager = getManager
 //  val rdfsSubClassOf = ObjectProperty(OWLRDFVocabulary.RDFS_SUBCLASS_OF.getIRI)

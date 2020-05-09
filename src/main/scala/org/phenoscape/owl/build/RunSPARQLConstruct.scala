@@ -1,20 +1,14 @@
 package org.phenoscape.owl.build
 
-import java.io.BufferedOutputStream
-import java.io.File
-import java.io.FileOutputStream
-import java.io.FileReader
+import java.io.{BufferedOutputStream, File, FileOutputStream, FileReader}
 import java.util.Properties
 
-import scala.io.Source
-
+import com.bigdata.journal.Options
+import com.bigdata.rdf.sail.{BigdataSail, BigdataSailRepository}
 import org.openrdf.query.QueryLanguage
 import org.openrdf.rio.turtle.TurtleWriter
 
-import com.bigdata.journal.Options
-
-import com.bigdata.rdf.sail.BigdataSail
-import com.bigdata.rdf.sail.BigdataSailRepository
+import scala.io.Source
 
 object RunSPARQLConstruct extends App {
 

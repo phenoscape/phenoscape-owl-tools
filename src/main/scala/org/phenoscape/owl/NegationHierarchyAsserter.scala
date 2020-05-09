@@ -1,12 +1,13 @@
 package org.phenoscape.owl
 
+import java.io.{File, FileOutputStream}
+
 import org.phenoscape.scowl._
-import org.semanticweb.owlapi.model._
 import org.semanticweb.owlapi.apibinding.OWLManager
-import java.io.File
-import java.io.FileOutputStream
-import scala.collection.JavaConverters._
+import org.semanticweb.owlapi.model._
 import org.semanticweb.owlapi.model.parameters.Imports
+
+import scala.collection.JavaConverters._
 
 object NegationHierarchyAsserter {
 

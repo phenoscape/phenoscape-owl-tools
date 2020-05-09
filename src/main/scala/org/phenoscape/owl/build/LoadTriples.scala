@@ -1,12 +1,12 @@
 package org.phenoscape.owl.build
 
-import java.io.File
-import java.io.FileReader
+import java.io.{File, FileReader}
 import java.util.Properties
-import org.openrdf.rio.RDFFormat
+
 import com.bigdata.journal.Options
 import com.bigdata.rdf.sail.BigdataSail
 import com.bigdata.rdf.store.DataLoader
+import org.openrdf.rio.RDFFormat
 
 object LoadTriples extends App {
 
@@ -18,7 +18,7 @@ object LoadTriples extends App {
   bigdataProperties.load(new FileReader(bigdataPropertiesFile))
   bigdataProperties.setProperty(Options.FILE, bigdataJournalFile.getAbsolutePath)
   val sail = new BigdataSail(bigdataProperties)
-  val tripleStore = sail.getDatabase
+  val tripleStore = sail.getUnisolatedConnection.getTripleStore
   val loader = new DataLoader(tripleStore)
   val baseURI = ""
   val stats = loader.loadFiles(inputFolder, baseURI, RDFFormat.TURTLE, graphURI, null)

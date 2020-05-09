@@ -1,23 +1,21 @@
 package org.phenoscape.owl
 
-import scala.collection.JavaConverters._
-
-import org.semanticweb.owlapi.apibinding.OWLManager
 import java.io.File
-import org.semanticweb.owlapi.model.OWLOntology
-import scala.io.Source
-import org.semanticweb.owlapi.model.IRI
-import org.semanticweb.owlapi.model.OWLAxiom
-import org.phenoscape.scowl._
-import org.semanticweb.owlapi.vocab.DublinCoreVocabulary
-import org.phenoscape.kb.ingest.util.OBOUtil
-import org.semanticweb.owlapi.model.AddOntologyAnnotation
-import org.semanticweb.owlapi.model.AddImport
 import java.util.UUID
-import Vocab._
 
-object HomologyTableToOWL extends OWLTask {
+import org.phenoscape.kb.ingest.util.OBOUtil
+import org.phenoscape.owl.Vocab._
+import org.phenoscape.scowl._
+import org.semanticweb.owlapi.apibinding.OWLManager
+import org.semanticweb.owlapi.model._
+import org.semanticweb.owlapi.vocab.DublinCoreVocabulary
 
+import scala.collection.JavaConverters._
+import scala.io.Source
+
+object HomologyTableToOWL {
+
+  val factory = OWLManager.getOWLDataFactory
   val manager = OWLManager.createOWLOntologyManager
   val source = factory.getOWLAnnotationProperty(DublinCoreVocabulary.SOURCE.getIRI)
   val description = factory.getOWLAnnotationProperty(DublinCoreVocabulary.DESCRIPTION.getIRI)
@@ -67,7 +65,7 @@ object HomologyTableToOWL extends OWLTask {
       //FIXME
       // including negative homology assertions will create inconsistency
       // since the same structures are asserted both ways
-      Set()
+      Set.empty
   }
 
 }

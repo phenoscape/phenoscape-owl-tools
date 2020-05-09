@@ -25,8 +25,9 @@ import org.semanticweb.owlapi.model.OWLOntologySetProvider
 import org.semanticweb.owlapi.reasoner.OWLReasoner
 import org.semanticweb.owlapi.search.EntitySearcher
 import org.semanticweb.owlapi.util.AnnotationValueShortFormProvider
-
 import scalaz._
+
+import scala.annotation.tailrec
 
 object ExpressionsUtil {
 
@@ -65,7 +66,7 @@ object ExpressionsUtil {
       .getAnnotations(obj, ont, property)
       .asScala
       .map(_.getValue)
-      .collect({ case literal: OWLLiteral => literal.getLiteral.toString })
+      .collect({ case literal: OWLLiteral => literal.getLiteral })
 
   def labelFor(obj: OWLEntity, ont: OWLOntology): Option[String] =
     annotationsFor(obj, factory.getRDFSLabel, ont).headOption
@@ -93,6 +94,7 @@ object ExpressionsUtil {
     }
   }
 
+  @tailrec
   def permute(expression: OWLClassExpression)(implicit reasoner: OWLReasoner): Set[OWLClassExpression] =
     expression match {
       case namedClass: OWLClass                    =>
@@ -119,7 +121,7 @@ object ExpressionsUtil {
   }
 
   def allCombinations[T](sets: Set[Set[T]]): Set[Set[T]] = {
-    def combine[T](combinations: Set[Set[T]], itemsToCombine: Set[T]): Set[Set[T]] =
+    def combine(combinations: Set[Set[T]], itemsToCombine: Set[T]): Set[Set[T]] =
       for {
         combination <- combinations
         item <- itemsToCombine

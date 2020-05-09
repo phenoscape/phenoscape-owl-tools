@@ -1,13 +1,12 @@
 package org.phenoscape.owl
 
-import scala.collection.JavaConverters._
-import org.semanticweb.owlapi.model.IRI
-import org.semanticweb.owlapi.model.OWLOntology
-import org.semanticweb.owlapi.util.OWLEntityRenamer
 import org.semanticweb.owlapi.apibinding.OWLManager
-import org.semanticweb.owlapi.model.OWLAxiom
+import org.semanticweb.owlapi.model.{IRI, OWLAxiom, OWLOntology}
+import org.semanticweb.owlapi.util.OWLEntityRenamer
 
-object PropertyNormalizer extends OWLTask {
+import scala.collection.JavaConverters._
+
+object PropertyNormalizer {
 
   val properties = Map(
     IRI.create("http://purl.obolibrary.org/obo/OBO_REL_part_of") -> Vocab.part_of.getIRI,
@@ -65,7 +64,7 @@ object PropertyNormalizer extends OWLTask {
     val renamer = new OWLEntityRenamer(manager, Set(ontology).asJava)
     for ((key, value) <- properties)
       if (key != value) manager.applyChanges(renamer.changeIRI(key, value))
-    return ontology
+    ontology
   }
 
   def normalize(axioms: Set[OWLAxiom]): Set[OWLAxiom] = {

@@ -1,22 +1,18 @@
 package org.phenoscape.owl.scripts
 
-import java.io.File
-import scala.collection.JavaConverters._
-import scala.collection.immutable.Set
-import org.phenoscape.owl.MaterializeInferences
-import org.phenoscape.owl.PropertyNormalizer
-import org.phenoscape.owl.SimilarityTemplates
+import java.io.{File, FileOutputStream, OutputStreamWriter}
+
 import org.phenoscape.owl.Vocab._
 import org.phenoscape.owl.util.OntologyUtil
+import org.phenoscape.owl.{MaterializeInferences, PropertyNormalizer, SimilarityTemplates}
 import org.phenoscape.scowl._
 import org.semanticweb.elk.owlapi.ElkReasonerFactory
 import org.semanticweb.owlapi.apibinding.OWLManager
-import org.semanticweb.owlapi.model.IRI
-import org.semanticweb.owlapi.model.OWLAxiom
+import org.semanticweb.owlapi.model.{IRI, OWLAxiom, OWLClass}
 import org.semanticweb.owlapi.reasoner.OWLReasoner
-import org.semanticweb.owlapi.model.OWLClass
-import java.io.FileOutputStream
-import java.io.OutputStreamWriter
+
+import scala.collection.JavaConverters._
+import scala.collection.immutable.Set
 
 object GenerateTboxesForSimilarityAnalysis extends App {
 

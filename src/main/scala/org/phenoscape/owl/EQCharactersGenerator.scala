@@ -1,15 +1,10 @@
 package org.phenoscape.owl
 
-import org.semanticweb.owlapi.model.OWLClass
-import org.semanticweb.owlapi.model.OWLAxiom
-import scala.collection.JavaConversions._
-import org.semanticweb.owlapi.apibinding.OWLManager
-import org.semanticweb.owlapi.model.IRI
-import org.semanticweb.owlapi.model.OWLAnnotationAssertionAxiom
+import org.phenoscape.owl.Vocab._
 import org.phenoscape.scowl._
+import org.semanticweb.owlapi.apibinding.OWLManager
+import org.semanticweb.owlapi.model._
 import org.semanticweb.owlapi.vocab.DublinCoreVocabulary
-import org.semanticweb.owlapi.model.OWLEquivalentClassesAxiom
-import Vocab._
 
 object EQCharactersGenerator {
 

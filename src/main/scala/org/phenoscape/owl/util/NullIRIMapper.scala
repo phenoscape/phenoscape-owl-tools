@@ -1,7 +1,6 @@
 package org.phenoscape.owl.util
 
-import org.semanticweb.owlapi.model.OWLOntologyIRIMapper
-import org.semanticweb.owlapi.model.IRI
+import org.semanticweb.owlapi.model.{IRI, OWLOntologyIRIMapper}
 
 object NullIRIMapper extends OWLOntologyIRIMapper {
 
