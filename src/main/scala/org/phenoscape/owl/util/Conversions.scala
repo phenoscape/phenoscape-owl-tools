@@ -1,6 +1,7 @@
 package org.phenoscape.owl.util
 
 import better.files._
+
 import scala.io.Source
 
 object Conversions {

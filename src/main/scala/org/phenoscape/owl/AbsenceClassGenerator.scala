@@ -2,10 +2,12 @@ package org.phenoscape.owl
 
 import org.phenoscape.owl.Vocab._
 import org.phenoscape.scowl._
+import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model.{OWLAxiom, OWLClass}
 
-object AbsenceClassGenerator extends OWLTask {
+object AbsenceClassGenerator {
 
+  val factory = OWLManager.getOWLDataFactory
   val absenceOf = factory.getOWLAnnotationProperty(Vocab.ABSENCE_OF)
 
   def createAbsenceClass(ontClass: OWLClass): Set[OWLAxiom] = {

@@ -1,12 +1,12 @@
 package org.phenoscape.owl.build
 
-import java.io.File
-import scala.collection.JavaConverters._
-import org.phenoscape.owl.sim.OWLsim
+import java.io.{BufferedWriter, File, FileWriter}
+
 import org.phenoscape.kb.ingest.util.OntUtil
+import org.phenoscape.owl.sim.OWLsim
 import org.semanticweb.owlapi.apibinding.OWLManager
-import java.io.FileWriter
-import java.io.BufferedWriter
+
+import scala.collection.JavaConverters._
 
 object PrintTaxonAndGeneProfileSizes extends App {
 

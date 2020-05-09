@@ -1,12 +1,9 @@
 package org.phenoscape.owl.util
 
-import scala.collection.JavaConverters._
 import org.semanticweb.owlapi.apibinding.OWLManager
-import org.semanticweb.owlapi.model.OWLOntology
-import org.semanticweb.owlapi.model.AxiomType
-import org.semanticweb.owlapi.model.OWLEquivalentClassesAxiom
-import org.semanticweb.owlapi.model.OWLSubClassOfAxiom
-import org.semanticweb.owlapi.model.OWLAxiom
+import org.semanticweb.owlapi.model._
+
+import scala.collection.JavaConverters._
 
 object OntologyUtil {
 

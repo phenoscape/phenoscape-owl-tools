@@ -1,13 +1,9 @@
 package org.phenoscape.owl
 
-import org.phenoscape.scowl._
-import org.semanticweb.owlapi.model.OWLClass
-import org.phenoscape.owl.Vocab._
-import org.phenoscape.owl.util.OntologyUtil
-import org.semanticweb.owlapi.model.OWLClassExpression
-import org.semanticweb.owlapi.model.OWLEquivalentClassesAxiom
 import org.phenoscape.kb.ingest.util.ExpressionUtil
-import org.semanticweb.owlapi.model.OWLAxiom
+import org.phenoscape.owl.Vocab._
+import org.phenoscape.scowl._
+import org.semanticweb.owlapi.model.{OWLAxiom, OWLClass}
 
 object SimilarityTemplates {
 

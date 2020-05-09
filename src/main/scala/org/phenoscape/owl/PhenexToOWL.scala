@@ -2,35 +2,25 @@ package org.phenoscape.owl
 
 import java.io.File
 
-import scala.collection.JavaConverters._
-import scala.collection.mutable
-
 import org.apache.commons.lang3.StringUtils
-import org.jdom2.Element
-import org.jdom2.Namespace
 import org.jdom2.filter.ElementFilter
 import org.jdom2.input.SAXBuilder
-import org.phenoscape.kb.ingest.util.ExpressionUtil
-import org.phenoscape.kb.ingest.util.OBOUtil
-import org.phenoscape.kb.ingest.util.OntUtil
+import org.jdom2.{Element, Namespace}
+import org.phenoscape.kb.ingest.util.{ExpressionUtil, OBOUtil, OntUtil}
+import org.phenoscape.owl.Vocab._
 import org.phenoscape.owl.util.ExpressionsUtil
 import org.phenoscape.owl.util.OntologyUtil.optionWithSet
 import org.phenoscape.scowl._
 import org.semanticweb.owlapi.apibinding.OWLManager
-import org.semanticweb.owlapi.model.IRI
-import org.semanticweb.owlapi.model.OWLAnnotation
-import org.semanticweb.owlapi.model.OWLAxiom
-import org.semanticweb.owlapi.model.OWLClass
-import org.semanticweb.owlapi.model.OWLClassExpression
-import org.semanticweb.owlapi.model.OWLNamedIndividual
-import org.semanticweb.owlapi.model.OWLObject
-import org.semanticweb.owlapi.model.OWLOntology
+import org.semanticweb.owlapi.model._
 import org.semanticweb.owlapi.vocab.DublinCoreVocabulary
 
-import Vocab._
+import scala.collection.JavaConverters._
+import scala.collection.mutable
 
-object PhenexToOWL extends OWLTask {
+object PhenexToOWL {
 
+  val factory = OWLManager.getOWLDataFactory
   val dcTermsNS = Namespace.getNamespace("http://purl.org/dc/terms/")
   val dwcNS = Namespace.getNamespace("http://rs.tdwg.org/dwc/terms/")
   val nexmlNS = Namespace.getNamespace("http://www.nexml.org/2009")
@@ -330,7 +320,7 @@ object PhenexToOWL extends OWLTask {
           qualityLabel = "present"
           Option(has_part some (Present and (inheres_in some entity)))
         case (Some(entity), None, Some(_))                                  =>
-          logger.warn("Related entity with no quality. Shouldn't be possible.")
+          scribe.warn("Related entity with no quality. Shouldn't be possible.")
           qualityLabel = "present"
           Option(has_part some (Present and (inheres_in some entity)))
         case (Some(entity), Some(Absent), None)                             =>

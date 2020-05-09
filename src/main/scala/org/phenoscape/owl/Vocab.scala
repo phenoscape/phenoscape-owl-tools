@@ -2,10 +2,8 @@ package org.phenoscape.owl
 
 import org.phenoscape.scowl._
 import org.semanticweb.owlapi.apibinding.OWLManager
-
 import org.semanticweb.owlapi.model.IRI
-import org.semanticweb.owlapi.vocab.DublinCoreVocabulary
-import org.semanticweb.owlapi.vocab.OWLRDFVocabulary
+import org.semanticweb.owlapi.vocab.{DublinCoreVocabulary, OWLRDFVocabulary}
 
 object Vocab {
 

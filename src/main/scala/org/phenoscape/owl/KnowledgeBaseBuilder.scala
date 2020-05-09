@@ -1,11 +1,8 @@
 package org.phenoscape.owl
 
-import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
-import java.io.File
+import java.io.{ByteArrayInputStream, ByteArrayOutputStream, File}
 import java.util.Date
 
-import scala.collection.JavaConverters._
 import org.openrdf.model.URI
 import org.openrdf.repository.sail.SailRepositoryConnection
 import org.openrdf.rio.RDFFormat
@@ -13,17 +10,13 @@ import org.phenoscape.kb.ingest.util.OBOUtil
 import org.phenoscape.owl.util.NullIRIMapper
 import org.semanticweb.elk.owlapi.ElkReasonerFactory
 import org.semanticweb.owlapi.apibinding.OWLManager
-import org.semanticweb.owlapi.formats.RDFXMLDocumentFormat
-import org.semanticweb.owlapi.formats.RioRDFXMLDocumentFormat
+import org.semanticweb.owlapi.formats.{RDFXMLDocumentFormat, RioRDFXMLDocumentFormat}
 import org.semanticweb.owlapi.io.FileDocumentTarget
-import org.semanticweb.owlapi.model.AxiomType
-import org.semanticweb.owlapi.model.IRI
-import org.semanticweb.owlapi.model.OWLAxiom
-import org.semanticweb.owlapi.model.OWLOntology
-import org.semanticweb.owlapi.model.OWLOntologyManager
+import org.semanticweb.owlapi.model._
 import org.semanticweb.owlapi.model.parameters.Imports
 import org.semanticweb.owlapi.reasoner.OWLReasoner
-import org.semanticweb.owlapi.model.OWLOntologyID
+
+import scala.collection.JavaConverters._
 
 class KnowledgeBaseBuilder extends App {
 
@@ -76,7 +69,7 @@ class KnowledgeBaseBuilder extends App {
   }
 
   def write(ontology: OWLOntology, file: File): Unit = {
-    val ontManager = ontology.getOWLOntologyManager()
+    val ontManager = ontology.getOWLOntologyManager
     ontManager.saveOntology(ontology, new RDFXMLDocumentFormat(), new FileDocumentTarget(file))
   }
 
@@ -90,7 +83,7 @@ class KnowledgeBaseBuilder extends App {
     val outStream = new ByteArrayOutputStream()
     manager.saveOntology(ontology, new RioRDFXMLDocumentFormat(), outStream)
     outStream.close()
-    val inStream = new ByteArrayInputStream(outStream.toByteArray())
+    val inStream = new ByteArrayInputStream(outStream.toByteArray)
     db.add(inStream, "", RDFFormat.RDFXML, graph)
     inStream.close()
   }

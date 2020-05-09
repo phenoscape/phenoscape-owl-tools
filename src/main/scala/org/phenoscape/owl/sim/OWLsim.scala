@@ -5,30 +5,24 @@ import java.io.{File, FileOutputStream, PrintWriter}
 import monix.eval.Task
 import monix.reactive.Observable
 import org.apache.jena.datatypes.TypeMapper
+import org.apache.jena.rdf.model.impl.ResourceImpl
 import org.apache.jena.rdf.model.{AnonId, ResourceFactory, Statement => JenaStatement}
 import org.apache.jena.riot.RDFFormat
 import org.apache.jena.riot.system.StreamRDFWriter
-
-import scala.collection.JavaConverters._
-import scala.collection.mutable
-import scala.collection.parallel._
-import org.openrdf.model.{BNode, Literal, Statement, URI}
-import org.openrdf.model.impl.NumericLiteralImpl
-import org.openrdf.model.impl.StatementImpl
-import org.openrdf.model.impl.URIImpl
+import org.openrdf.model.impl.{NumericLiteralImpl, StatementImpl, URIImpl}
 import org.openrdf.model.vocabulary.RDF
-import org.apache.jena.graph.Triple
-import org.apache.jena.rdf.model.impl.ResourceImpl
+import org.openrdf.model.{BNode, Literal, Statement, URI}
 import org.phenoscape.kb.ingest.util.OntUtil
 import org.phenoscape.owl.Vocab
 import org.semanticweb.elk.owlapi.ElkReasonerFactory
 import org.semanticweb.owlapi.apibinding.OWLManager
-import org.semanticweb.owlapi.model.OWLClass
-import org.semanticweb.owlapi.model.OWLNamedIndividual
-import org.semanticweb.owlapi.model.OWLOntology
-import org.semanticweb.owlapi.reasoner.{Node => ReasonerNode}
-import org.semanticweb.owlapi.reasoner.OWLReasoner
+import org.semanticweb.owlapi.model.parameters.Imports
+import org.semanticweb.owlapi.model.{OWLClass, OWLNamedIndividual, OWLOntology}
+import org.semanticweb.owlapi.reasoner.{OWLReasoner, Node => ReasonerNode}
 
+import scala.collection.JavaConverters._
+import scala.collection.mutable
+import scala.collection.parallel._
 import scala.concurrent.duration.Duration
 import scala.util.hashing.MurmurHash3
 
@@ -86,7 +80,7 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
 
   val corpusSize: Int = individualsInCorpus.size
 
-  private def uncorrectedIC(numInstances: Int): Double = -Math.log((numInstances.toDouble / corpusSize)) / Math.log(2)
+  private def uncorrectedIC(numInstances: Int): Double = -Math.log(numInstances.toDouble / corpusSize) / Math.log(2)
 
   val MaximumIC: Double = uncorrectedIC(1)
 
@@ -98,15 +92,19 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
 
   val nodeIC: Map[Node, Double] = convertFrequenciesToInformationContent(classToNode(OWLNothing))
 
+  def computeAllSimilarityToCorpus(inputs: Set[OWLNamedIndividual]): Set[Statement] =
+    (for {
+      inputProfile <- inputs.toParArray
+      corpusProfile <- individualsInCorpus.toParArray
+      (_, triples) = groupWiseSimilarity(inputProfile, corpusProfile).toTriples
+      triple <- triples
+    } yield triple).toSet.seq
 
-  def computeAllSimilarityToCorpus(inputs: Set[OWLNamedIndividual]): Set[Statement] = (for {
-    inputProfile <- inputs.toParArray
-    corpusProfile <- individualsInCorpus.toParArray
-    (_, triples) = groupWiseSimilarity(inputProfile, corpusProfile).toTriples
-    triple <- triples
-  } yield triple).toSet.seq
-
-  def computeAllSimilarityToCorpusDirectOutput(inputs: Set[OWLNamedIndividual], triplesOutfile: File, tsvOutfile: File): Unit = {
+  def computeAllSimilarityToCorpusDirectOutput(
+    inputs: Set[OWLNamedIndividual],
+    triplesOutfile: File,
+    tsvOutfile: File
+  ): Unit = {
     import monix.execution.Scheduler.Implicits.global
     val tsvWriter = new PrintWriter(tsvOutfile, "utf-8")
     tsvWriter.println("?match\t?score\t?query\t?corpusprofile")
@@ -118,19 +116,24 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
       corpusProfile <- Observable.fromIterable(individualsInCorpus)
     } yield (inputProfile, corpusProfile)
 
-    val processed = comparisons.mapParallelUnordered(Runtime.getRuntime.availableProcessors) { case (inputProfile, corpusProfile) =>
-      Task {
-        val similarity = groupWiseSimilarity(inputProfile, corpusProfile)
-        val (comparison, triples) = similarity.toTriples
-        val tsvLine = s"$comparison\t${similarity.score}\t${similarity.queryIndividual.getIRI}\t${similarity.corpusIndividual.getIRI}"
-        (tsvLine, triples)
-      }
+    val processed = comparisons.mapParallelUnordered(Runtime.getRuntime.availableProcessors) {
+      case (inputProfile, corpusProfile) =>
+        Task {
+          val similarity = groupWiseSimilarity(inputProfile, corpusProfile)
+          val (comparison, triples) = similarity.toTriples
+          val tsvLine =
+            s"$comparison\t${similarity.score}\t${similarity.queryIndividual.getIRI}\t${similarity.corpusIndividual.getIRI}"
+          (tsvLine, triples)
+        }
     }
-    processed.foreachL { case (tsvLine, triples) =>
-      //FIXME wasted conversions here
-      triples.foreach(triple => rdfWriter.triple(sesameTripleToJena(triple).asTriple))
-      tsvWriter.println(tsvLine)
-    }.runSyncUnsafe(Duration.Inf)
+    processed
+      .foreachL {
+        case (tsvLine, triples) =>
+          //FIXME wasted conversions here
+          triples.foreach(triple => rdfWriter.triple(sesameTripleToJena(triple).asTriple))
+          tsvWriter.println(tsvLine)
+      }
+      .runSyncUnsafe(Duration.Inf)
     rdfWriter.finish()
     outputStream.close()
     tsvWriter.close()
@@ -198,12 +201,12 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
   def indexDirectAssociations(
     reasoner: OWLReasoner
   ): (Map[Node, Set[OWLNamedIndividual]], Map[OWLNamedIndividual, Set[Node]]) = {
-    val individuals = reasoner.getRootOntology.getIndividualsInSignature(true).asScala.toSet
+    val individuals = reasoner.getRootOntology.getIndividualsInSignature(Imports.INCLUDED).asScala.toSet
     val init = (Map.empty[Node, Set[OWLNamedIndividual]], Map.empty[OWLNamedIndividual, Set[Node]])
-    val individualsToNodes = (individuals.map { individual =>
+    val individualsToNodes = individuals.map { individual =>
       val nodes = reasoner.getTypes(individual, true).getNodes.asScala.map(Node(_)).toSet
       individual -> nodes
-    }).toMap
+    }.toMap
     (invertMapOfSets(individualsToNodes), individualsToNodes)
   }
 
@@ -300,17 +303,12 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
 
   private def median(values: Seq[Double]): Double = {
     val (lower, upper) = values.sorted.splitAt(values.size / 2)
-    if (values.size % 2 == 0) ((lower.last + upper.head) / 2.0) else upper.head
+    if (values.size % 2 == 0) (lower.last + upper.head) / 2.0 else upper.head
   }
 
   private def invertMapOfSets[K, V](in: Map[K, Set[V]]): Map[V, Set[K]] =
-    in.toIterable
-      .flatMap {
-        case (k, vs) => vs.map(_ -> k)
-      }
-      .groupBy {
-        case (v, k) => v
-      }
+    in.flatMap { case (k, vs) => vs.map(_ -> k) }
+      .groupBy { case (v, k) => v }
       .map {
         case (v, vks) =>
           v -> vks.map {
@@ -354,7 +352,7 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
 
 final case class Node(classes: Set[OWLClass]) {
 
-  final override val hashCode: Int = MurmurHash3.productHash(this)
+  override val hashCode: Int = MurmurHash3.productHash(this)
 
 }
 
@@ -388,10 +386,10 @@ final case class GroupWiseSimilarity(
       term <- node.classes
     } yield new StatementImpl(self, has_subsumer, new URIImpl(term.getIRI.toString))
     val triples = Set(
-      new StatementImpl(self, combined_score, new NumericLiteralImpl(score)),
-      new StatementImpl(self, for_query_profile, new URIImpl(queryIndividual.getIRI.toString)),
-
-      new StatementImpl(self, for_corpus_profile, new URIImpl(corpusIndividual.getIRI.toString))) ++ subsumerTriples ++ micasTriples
+        new StatementImpl(self, combined_score, new NumericLiteralImpl(score)),
+        new StatementImpl(self, for_query_profile, new URIImpl(queryIndividual.getIRI.toString)),
+        new StatementImpl(self, for_corpus_profile, new URIImpl(corpusIndividual.getIRI.toString))
+      ) ++ subsumerTriples ++ micasTriples
     self -> triples.toSet
   }
 
@@ -409,6 +407,6 @@ object GroupWiseSimilarity {
 
 final case class SimpleSimilarity(i: OWLNamedIndividual, j: OWLNamedIndividual, score: Double) {
 
-  override def toString() = s"${i.getIRI.toString}\t${j.getIRI.toString}\t${score}"
+  override def toString = s"${i.getIRI.toString}\t${j.getIRI.toString}\t$score"
 
 }

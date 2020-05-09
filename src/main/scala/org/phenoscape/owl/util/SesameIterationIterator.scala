@@ -2,6 +2,8 @@ package org.phenoscape.owl.util
 
 import info.aduna.iteration.Iteration
 
+import scala.language.implicitConversions
+
 class SesameIterationIterator[A, B <: Exception](iteration: Iteration[A, B]) extends Iterator[A] {
 
   def hasNext: Boolean = iteration.hasNext

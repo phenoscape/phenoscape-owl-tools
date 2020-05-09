@@ -1,18 +1,18 @@
 package org.phenoscape.owl
 
 import java.io.File
-import scala.collection.JavaConverters._
-import org.semanticweb.owlapi.apibinding.OWLManager
-import org.semanticweb.owlapi.model.IRI
-import org.semanticweb.owlapi.model.OWLClass
-import org.semanticweb.owlapi.model.OWLObjectProperty
-import org.semanticweb.owlapi.model.OWLOntology
-import org.semanticweb.owlapi.model.OWLAxiom
-import org.phenoscape.scowl._
+
 import org.phenoscape.kb.ingest.util.ExpressionUtil
+import org.phenoscape.scowl._
+import org.semanticweb.owlapi.apibinding.OWLManager
+import org.semanticweb.owlapi.model._
+import org.semanticweb.owlapi.model.parameters.Imports
 
-object NamedRestrictionGenerator extends OWLTask {
+import scala.collection.JavaConverters._
 
+object NamedRestrictionGenerator {
+
+  val factory = OWLManager.getOWLDataFactory
   val manager = OWLManager.createOWLOntologyManager
 
   def main(args: Array[String]): Unit = {
@@ -25,7 +25,7 @@ object NamedRestrictionGenerator extends OWLTask {
   def generateRestrictions(ontology: OWLOntology, property: OWLObjectProperty): OWLOntology = {
     val newIRI = property.getIRI.toString + "_some_" + ontology.getOntologyID.getOntologyIRI.toString
     val newAxioms = for {
-      ontClass <- ontology.getClassesInSignature(false).asScala
+      ontClass <- ontology.getClassesInSignature(Imports.EXCLUDED).asScala
       axiom <- createRestriction(property, ontClass)
     } yield axiom
     manager.createOntology(newAxioms.asJava, IRI.create(newIRI))
@@ -34,7 +34,7 @@ object NamedRestrictionGenerator extends OWLTask {
   def createRestriction(property: OWLObjectProperty, ontClass: OWLClass): Set[OWLAxiom] = {
     val annotationProperty = factory.getOWLAnnotationProperty(getClassRelationIRI(property.getIRI))
     val (namedRestriction, axioms) = ExpressionUtil.nameForExpressionWithAxioms(property some ontClass)
-    val annotation = namedRestriction Annotation (annotationProperty, ontClass.getIRI())
+    val annotation = namedRestriction Annotation (annotationProperty, ontClass.getIRI)
     axioms + (namedRestriction Annotation (annotationProperty, ontClass.getIRI))
   }
 

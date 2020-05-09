@@ -1,17 +1,14 @@
 package org.phenoscape.owl
 
+import org.apache.jena.query.Query
 import org.openrdf.model.Statement
-import org.openrdf.model.impl.StatementImpl
-import org.openrdf.model.impl.URIImpl
+import org.openrdf.model.impl.{StatementImpl, URIImpl}
 import org.openrdf.model.vocabulary.RDF
 import org.openrdf.query.QueryLanguage
 import org.openrdf.repository.sail.SailRepositoryConnection
 import org.phenoscape.owl.Vocab._
 import org.phenoscape.owl.util.SesameIterationIterator.iterationToIterator
 import org.phenoscape.owlet.SPARQLComposer._
-import org.phenoscape.scowl._
-import org.semanticweb.owlapi.model.OWLClass
-import org.apache.jena.query.Query
 
 object GeneProfiles {
 

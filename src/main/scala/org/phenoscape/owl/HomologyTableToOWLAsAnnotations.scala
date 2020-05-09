@@ -2,21 +2,20 @@ package org.phenoscape.owl
 
 import java.io.File
 import java.util.UUID
+
+import org.phenoscape.kb.ingest.util.OBOUtil
+import org.phenoscape.owl.Vocab._
+import org.phenoscape.scowl._
+import org.semanticweb.owlapi.apibinding.OWLManager
+import org.semanticweb.owlapi.model._
+import org.semanticweb.owlapi.vocab.DublinCoreVocabulary
+
 import scala.collection.JavaConverters._
 import scala.io.Source
-import org.phenoscape.scowl._
-import org.phenoscape.kb.ingest.util.OBOUtil
-import org.semanticweb.owlapi.model.AddImport
-import org.semanticweb.owlapi.model.AddOntologyAnnotation
-import org.semanticweb.owlapi.model.IRI
-import org.semanticweb.owlapi.model.OWLAxiom
-import org.semanticweb.owlapi.model.OWLOntology
-import org.semanticweb.owlapi.vocab.DublinCoreVocabulary
-import org.semanticweb.owlapi.apibinding.OWLManager
-import Vocab._
 
-object HomologyTableToOWLAsAnnotations extends OWLTask {
+object HomologyTableToOWLAsAnnotations {
 
+  val factory = OWLManager.getOWLDataFactory
   val manager = OWLManager.createOWLOntologyManager
   val source = factory.getOWLAnnotationProperty(DublinCoreVocabulary.SOURCE.getIRI)
   val description = factory.getOWLAnnotationProperty(DublinCoreVocabulary.DESCRIPTION.getIRI)

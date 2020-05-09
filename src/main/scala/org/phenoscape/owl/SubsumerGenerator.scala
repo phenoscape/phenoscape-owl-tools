@@ -1,16 +1,13 @@
 package org.phenoscape.owl
 
-import scala.annotation.tailrec
-import scala.collection.JavaConverters._
-
 import org.phenoscape.owl.Vocab.inheres_in
 import org.phenoscape.scowl._
-import org.semanticweb.owlapi.model.OWLAxiom
-import org.semanticweb.owlapi.model.OWLClass
-import org.semanticweb.owlapi.model.OWLEquivalentClassesAxiom
-import org.semanticweb.owlapi.model.OWLOntology
+import org.semanticweb.owlapi.model.{OWLAxiom, OWLClass, OWLEquivalentClassesAxiom, OWLOntology}
 import org.semanticweb.owlapi.reasoner.OWLReasonerFactory
 import org.semanticweb.owlapi.search.EntitySearcher
+
+import scala.annotation.tailrec
+import scala.collection.JavaConverters._
 
 class SubsumerGenerator(ont: OWLOntology, reasonerFactory: OWLReasonerFactory) {
 

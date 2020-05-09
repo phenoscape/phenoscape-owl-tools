@@ -1,20 +1,19 @@
 package org.phenoscape.owl
 
 import java.io.File
-import scala.collection.JavaConverters._
-import scala.collection.Set
-import scala.collection.mutable
-import org.semanticweb.owlapi.model.IRI
-import org.semanticweb.owlapi.model.OWLAxiom
-import org.semanticweb.owlapi.model.OWLClass
-import org.semanticweb.owlapi.model.OWLSubClassOfAxiom
-import org.semanticweb.owlapi.reasoner.OWLReasoner
-import org.semanticweb.owlapi.model.OWLOntology
+
 import org.semanticweb.elk.owlapi.ElkReasonerFactory
 import org.semanticweb.owlapi.apibinding.OWLManager
+import org.semanticweb.owlapi.model._
+import org.semanticweb.owlapi.model.parameters.Imports
+import org.semanticweb.owlapi.reasoner.OWLReasoner
 
-object MaterializeSubClassOfClosure extends OWLTask {
+import scala.collection.JavaConverters._
+import scala.collection.{mutable, Set}
 
+object MaterializeSubClassOfClosure {
+
+  val factory = OWLManager.getOWLDataFactory
   val manager = OWLManager.createOWLOntologyManager
 
   def main(args: Array[String]): Unit = {
@@ -34,24 +33,24 @@ object MaterializeSubClassOfClosure extends OWLTask {
 
   def oldMethod(source: OWLOntology): OWLOntology = {
     val reasoner = new ElkReasonerFactory().createReasoner(source)
-    val allClasses = source.getClassesInSignature(true)
+    val allClasses = source.getClassesInSignature(Imports.INCLUDED)
     val axioms = for {
       ontClass <- allClasses.asScala
       axiom <- createSubClassOfAxioms(ontClass, reasoner)
     } yield axiom
     reasoner.dispose()
     val target = manager.createOntology(axioms.toSet[OWLAxiom].asJava)
-    return target
+    target
   }
 
   def newMethod(source: OWLOntology): OWLOntology = {
     val reasoner = new ElkReasonerFactory().createReasoner(source)
-    val allClasses = source.getClassesInSignature(true)
+    val allClasses = source.getClassesInSignature(Imports.INCLUDED)
     val doneClasses = mutable.Set[OWLClass]()
-    val axioms: Set[OWLAxiom] = createSubClassOfAxioms(factory.getOWLThing(), Set[OWLClass](), reasoner, doneClasses)
+    val axioms: Set[OWLAxiom] = createSubClassOfAxioms(factory.getOWLThing, Set[OWLClass](), reasoner, doneClasses)
     reasoner.dispose()
     val target = manager.createOntology(axioms.asJava)
-    return target
+    target
   }
 
   def createSubClassOfAxioms(
@@ -68,7 +67,7 @@ object MaterializeSubClassOfClosure extends OWLTask {
       val newSuperClasses = mutable.Set[OWLClass]()
       newSuperClasses.asJava.addAll(superClasses.asJava)
       newSuperClasses.add(owlClass)
-      val directSubClasses = reasoner.getSubClasses(owlClass, true).getFlattened()
+      val directSubClasses = reasoner.getSubClasses(owlClass, true).getFlattened
       for (subclass <- directSubClasses.asScala)
         axioms.asJava.addAll(newSuperClasses.map(factory.getOWLSubClassOfAxiom(subclass, _)).asJava)
       val recursiveAxioms: Set[OWLAxiom] =

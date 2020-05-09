@@ -1,16 +1,13 @@
 package org.phenoscape.owl.build
 
-import com.bigdata.rdf.sail.BigdataSail
-import com.bigdata.rdf.sail.BigdataSailRepository
-import com.bigdata.journal.Options
-import java.io.File
+import java.io.{File, FileReader}
 import java.util.Properties
-import java.io.FileReader
+
+import com.bigdata.journal.Options
+import com.bigdata.rdf.sail.{BigdataSail, BigdataSailRepository}
 import org.openrdf.query.QueryLanguage
+
 import scala.io.Source
-import java.io.FileOutputStream
-import org.openrdf.query.resultio.text.tsv.SPARQLResultsTSVWriter
-import java.io.BufferedOutputStream
 
 object RunSPARQLUpdate extends App {
 

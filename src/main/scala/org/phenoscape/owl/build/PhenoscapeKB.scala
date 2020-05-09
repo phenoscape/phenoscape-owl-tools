@@ -12,9 +12,6 @@ import scala.io.Source
 import scala.language.postfixOps
 
 import org.apache.commons.io.FileUtils
-import org.apache.log4j.BasicConfigurator
-import org.apache.log4j.Level
-import org.apache.log4j.Logger
 import org.openrdf.model.impl.URIImpl
 import org.openrdf.query.QueryLanguage
 import org.openrdf.rio.RDFFormat
@@ -31,7 +28,6 @@ import org.phenoscape.kb.ingest.zfin.ZFINGeneticMarkersToOWL
 import org.phenoscape.kb.ingest.zfin.ZFINPhenotypesToOWL
 import org.phenoscape.kb.ingest.zfin.ZFINPreviousGeneNamesToOWL
 import org.phenoscape.owl.AbsenceClassGenerator
-import org.phenoscape.owl.EvolutionaryProfiles
 import org.phenoscape.owl.GeneProfiles
 import org.phenoscape.owl.KnowledgeBaseBuilder
 import org.phenoscape.owl.MaterializeInferences
@@ -43,7 +39,6 @@ import org.phenoscape.owl.PropertyNormalizer
 import org.phenoscape.owl.ReverseDevelopsFromRuleGenerator
 import org.phenoscape.owl.SimilarityTemplates
 import org.phenoscape.owl.SourcedAxioms
-import org.phenoscape.owl.TaxonNode
 import org.phenoscape.owl.Vocab
 import org.phenoscape.owl.Vocab._
 import org.phenoscape.owl.util.Conversions.BetterFileOps
@@ -69,9 +64,6 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
 
   val targetDir = File(args(0))
   val BIGDATA_PROPERTIES = new JFile(args(1))
-
-  BasicConfigurator.configure()
-  Logger.getRootLogger().setLevel(Level.ERROR)
 
   val manager = getManager
   val rdfsSubClassOf = ObjectProperty(OWLRDFVocabulary.RDFS_SUBCLASS_OF.getIRI)
