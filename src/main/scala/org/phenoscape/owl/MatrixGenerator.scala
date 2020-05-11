@@ -14,23 +14,23 @@ import scala.collection.Set
 
 object MatrixGenerator {
 
-  val factory = OWLManager.getOWLDataFactory
-  val manager = OWLManager.createOWLOntologyManager()
-  val limbFin = Class(Vocab.LIMB_FIN)
-  val entityTerm = factory.getOWLAnnotationProperty(IRI.create("http://example.org/entity_term"))
-  val qualityTerm = factory.getOWLAnnotationProperty(IRI.create("http://example.org/quality_term"))
+  val factory       = OWLManager.getOWLDataFactory
+  val manager       = OWLManager.createOWLOntologyManager()
+  val limbFin       = Class(Vocab.LIMB_FIN)
+  val entityTerm    = factory.getOWLAnnotationProperty(IRI.create("http://example.org/entity_term"))
+  val qualityTerm   = factory.getOWLAnnotationProperty(IRI.create("http://example.org/quality_term"))
   val dcDescription = factory.getOWLAnnotationProperty(DublinCoreVocabulary.DESCRIPTION.getIRI)
 
   def main(args: Array[String]): Unit = {
-    val dataIRI = IRI.create(new File(args(0)))
-    val dataOntology = manager.loadOntology(dataIRI)
-    val attributesSlim = manager.loadOntologyFromOntologyDocument(new File("character_slims.obo"))
+    val dataIRI          = IRI.create(new File(args(0)))
+    val dataOntology     = manager.loadOntology(dataIRI)
+    val attributesSlim   = manager.loadOntologyFromOntologyDocument(new File("character_slims.obo"))
     println("Getting entities")
-    val ro = manager.loadOntologyFromOntologyDocument(new File("ro-slim.owl"))
-    val pato = manager.loadOntologyFromOntologyDocument(new File("pato.owl"))
+    val ro               = manager.loadOntologyFromOntologyDocument(new File("ro-slim.owl"))
+    val pato             = manager.loadOntologyFromOntologyDocument(new File("pato.owl"))
     manager.loadOntologyFromOntologyDocument(new File("references.owl"))
     manager.loadOntologyFromOntologyDocument(new File("merged.owl"))
-    val uberon = manager.loadOntologyFromOntologyDocument(new File("ext.owl"))
+    val uberon           = manager.loadOntologyFromOntologyDocument(new File("ext.owl"))
     manager.applyChange(
       new AddImport(dataOntology, factory.getOWLImportsDeclaration(ro.getOntologyID.getOntologyIRI.get))
     )
@@ -43,25 +43,25 @@ object MatrixGenerator {
     //val partOfLimbFin = Class(IRI.create("http://example.org/partOfLimbFin"))
     val anatomicalEntity = Class(Vocab.ANATOMICAL_ENTITY)
     //manager.addAxiom(uberon, (partOfLimbFin EquivalentTo (partOf some limbFin)))
-    val uberonReasoner = new ElkReasonerFactory().createReasoner(uberon)
-    val entities = uberonReasoner.getSubClasses(anatomicalEntity, false).getFlattened
+    val uberonReasoner   = new ElkReasonerFactory().createReasoner(uberon)
+    val entities         = uberonReasoner.getSubClasses(anatomicalEntity, false).getFlattened
     uberonReasoner.dispose()
-    val attributes = attributesSlim.getClassesInSignature()
+    val attributes       = attributesSlim.getClassesInSignature()
     println("Creating phenotype classes")
-    val newAxioms = (for {
-      entity <- entities.asScala
+    val newAxioms        = (for {
+      entity  <- entities.asScala
       quality <- attributes.asScala
     } yield composeEntityAndQuality(entity, quality)).flatten
     val characterClasses = for {
-      entity <- entities.asScala
+      entity  <- entities.asScala
       quality <- attributes.asScala
     } yield Class(compositionIRI(entity, quality))
     manager.addAxioms(dataOntology, newAxioms.asJava)
-    val dataReasoner = new ElkReasonerFactory().createReasoner(dataOntology)
-    val newManager = OWLManager.createOWLOntologyManager()
-    val resultOntology = newManager.createOntology()
+    val dataReasoner     = new ElkReasonerFactory().createReasoner(dataOntology)
+    val newManager       = OWLManager.createOWLOntologyManager()
+    val resultOntology   = newManager.createOntology()
     println("Creating class assertions with reasoner")
-    val classAssertions = characterClasses.flatMap { charClass =>
+    val classAssertions  = characterClasses.flatMap { charClass =>
       dataReasoner
         .getInstances(charClass, true)
         .getFlattened
@@ -82,8 +82,8 @@ object MatrixGenerator {
       .toSet[OWLAxiom] + composeEntityAndQualityInvolves(entity, quality)
 
   def annotateComposedEntityAndQuality(entity: OWLClass, quality: OWLClass): Set[OWLAnnotationAssertionAxiom] = {
-    val subject = compositionIRI(entity, quality)
-    val entityAxiom = factory.getOWLAnnotationAssertionAxiom(entityTerm, subject, entity.getIRI)
+    val subject      = compositionIRI(entity, quality)
+    val entityAxiom  = factory.getOWLAnnotationAssertionAxiom(entityTerm, subject, entity.getIRI)
     val qualityAxiom = factory.getOWLAnnotationAssertionAxiom(qualityTerm, subject, quality.getIRI)
     Set(entityAxiom, qualityAxiom)
   }

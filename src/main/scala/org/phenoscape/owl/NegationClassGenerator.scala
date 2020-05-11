@@ -12,7 +12,7 @@ object NegationClassGenerator {
   def generateNegationClasses(classes: Set[OWLClass]): Set[OWLAxiom] =
     for {
       ontClass <- classes
-      axiom <- createNegationClassAxioms(ontClass)
+      axiom    <- createNegationClassAxioms(ontClass)
     } yield axiom
 
   def createNegationClassAxioms(ontClass: OWLClass): Set[OWLAxiom] = {

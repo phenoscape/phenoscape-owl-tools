@@ -15,19 +15,19 @@ object PhenoXMLUtil {
   case class EQ(entity: OWLClassExpression, quality: OWLClassExpression, relatedEntity: OWLClassExpression)
 
   def translatePhenotypeCharacter(phenotype: Element): EQ = {
-    val bearer = phenotype.getChild("bearer", phenoNS)
-    val entityClass = if (bearer != null) {
+    val bearer             = phenotype.getChild("bearer", phenoNS)
+    val entityClass        = if (bearer != null) {
       val bearerType = bearer.getChild("typeref", phenoNS)
       if (bearerType != null) classFromTyperef(bearerType)
       else null
     } else null
-    val quality = phenotype.getChild("quality", phenoNS)
-    val qualityClass = if (quality != null) {
+    val quality            = phenotype.getChild("quality", phenoNS)
+    val qualityClass       = if (quality != null) {
       val qualityType = quality.getChild("typeref", phenoNS)
       if (qualityType != null) classFromTyperef(qualityType)
       else null
     } else null
-    val relatedEntity =
+    val relatedEntity      =
       if (quality != null) quality.getChild("related_entity", phenoNS)
       else null
     val relatedEntityClass = if (relatedEntity != null) {
@@ -39,9 +39,9 @@ object PhenoXMLUtil {
   }
 
   def classFromTyperef(typeref: Element): OWLClassExpression = {
-    val genusID = typeref.getAttributeValue("about")
+    val genusID    = typeref.getAttributeValue("about")
     val qualifiers = typeref.getChildren("qualifier", phenoNS)
-    val genus = factory.getOWLClass(OBOUtil.iriForTermID(genusID))
+    val genus      = factory.getOWLClass(OBOUtil.iriForTermID(genusID))
     if (qualifiers.isEmpty) genus
     else {
 //      val operands: mutable.Set[OWLClassExpression] = mutable.Set(genus)
@@ -52,8 +52,8 @@ object PhenoXMLUtil {
 
   def restrictionFromQualifier(qualifier: Element): OWLObjectSomeValuesFrom = {
     val propertyIRI = OBOUtil.iriForTermID(qualifier.getAttributeValue("relation"))
-    val property = factory.getOWLObjectProperty(propertyIRI)
-    val filler = classFromTyperef(qualifier.getChild("holds_in_relation_to", phenoNS).getChild("typeref", phenoNS))
+    val property    = factory.getOWLObjectProperty(propertyIRI)
+    val filler      = classFromTyperef(qualifier.getChild("holds_in_relation_to", phenoNS).getChild("typeref", phenoNS))
     factory.getOWLObjectSomeValuesFrom(property, filler)
   }
 
