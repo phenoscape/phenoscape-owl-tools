@@ -10,7 +10,7 @@ import scala.collection.JavaConverters._
 object ExtractNamedClassHierarchy {
 
   def extractHierarchy(ontology: OWLOntology): OWLOntology = {
-    val manager = ontology.getOWLOntologyManager
+    val manager          = ontology.getOWLOntologyManager
     val namedClassAxioms = for {
       axiom <- ontology.getAxioms(AxiomType.SUBCLASS_OF, Imports.INCLUDED).asScala
       if !axiom.getSubClass.isAnonymous

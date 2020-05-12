@@ -48,16 +48,16 @@ class KnowledgeBaseBuilder extends App {
     new ElkReasonerFactory().createReasoner(OWLManager.createOWLOntologyManager().createOntology(axioms.asJava))
 
   def loadNormalized(location: File): OWLOntology = {
-    val ont = globalManager.loadOntologyFromOntologyDocument(location)
+    val ont             = globalManager.loadOntologyFromOntologyDocument(location)
     val definedByAxioms = ont.getClassesInSignature().asScala.flatMap(OBOUtil.createDefinedByAnnotation)
     globalManager.addAxioms(ont, definedByAxioms.asJava)
     PropertyNormalizer.normalize(ont)
   }
 
   def loadFromWeb(iri: IRI, excludeImports: Boolean): SourcedAxioms = {
-    val manager = OWLManager.createOWLOntologyManager()
+    val manager         = OWLManager.createOWLOntologyManager()
     // Even if we are excluding axioms from imports, we want to initially include imports in case property types rely on declarations there
-    val ont = manager.loadOntology(iri)
+    val ont             = manager.loadOntology(iri)
     if (!excludeImports) {
       val importsAxioms = ont.getImports.asScala.flatMap(_.getAxioms().asScala)
       manager.addAxioms(ont, importsAxioms.asJava)
@@ -79,11 +79,11 @@ class KnowledgeBaseBuilder extends App {
   def isTboxAxiom(axiom: OWLAxiom): Boolean = axiom.isOfType(AxiomType.TBoxAxiomTypes)
 
   def addTriples(ontology: OWLOntology, db: SailRepositoryConnection, graph: URI): Unit = {
-    val manager = ontology.getOWLOntologyManager
+    val manager   = ontology.getOWLOntologyManager
     val outStream = new ByteArrayOutputStream()
     manager.saveOntology(ontology, new RioRDFXMLDocumentFormat(), outStream)
     outStream.close()
-    val inStream = new ByteArrayInputStream(outStream.toByteArray)
+    val inStream  = new ByteArrayInputStream(outStream.toByteArray)
     db.add(inStream, "", RDFFormat.RDFXML, graph)
     inStream.close()
   }
@@ -98,7 +98,7 @@ class KnowledgeBaseBuilder extends App {
     ontID: OWLOntologyID = new OWLOntologyID()
   ): Unit = {
     val manager = OWLManager.createOWLOntologyManager()
-    val ont = manager.createOntology(ontID)
+    val ont     = manager.createOntology(ontID)
     manager.addAxioms(ont, axioms.toSet[OWLAxiom].asJava)
     addTriples(ont, db, graph)
   }

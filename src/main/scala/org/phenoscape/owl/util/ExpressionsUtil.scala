@@ -68,14 +68,14 @@ object ExpressionsUtil {
       .map(_.getValue)
       .collect({ case literal: OWLLiteral => literal.getLiteral })
 
-  def labelFor(obj: OWLEntity, ont: OWLOntology): Option[String] =
+  def labelFor(obj: OWLEntity, ont: OWLOntology): Option[String]                                          =
     annotationsFor(obj, factory.getRDFSLabel, ont).headOption
 
   def labelFor(obj: OWLEntity, onts: Iterable[OWLOntology]): Option[String] =
     (onts flatMap (labelFor(obj, _))).headOption
 
   private class OntologyProvider(ont: OWLOntology) extends OWLOntologySetProvider {
-    val onts = Set(ont).asJava
+    val onts                     = Set(ont).asJava
     override def getOntologies() = onts
   }
 
@@ -86,7 +86,7 @@ object ExpressionsUtil {
       new OntologyProvider(ont)
     )
     entity => {
-      val writer = new StringWriter()
+      val writer   = new StringWriter()
       val renderer = new ManchesterOWLSyntaxObjectRenderer(writer, shortFormProvider)
       entity.accept(renderer)
       writer.close()
@@ -116,7 +116,7 @@ object ExpressionsUtil {
 
   def permute(expression: OWLObjectIntersectionOf)(implicit reasoner: OWLReasoner): Set[OWLObjectIntersectionOf] = {
     val permutedOperands = expression.getOperands.asScala.toSet[OWLClassExpression].map(permute)
-    val combinations = allCombinations(permutedOperands)
+    val combinations     = allCombinations(permutedOperands)
     combinations.map(set => factory.getOWLObjectIntersectionOf(set.asJava)) + expression
   }
 
@@ -124,7 +124,7 @@ object ExpressionsUtil {
     def combine(combinations: Set[Set[T]], itemsToCombine: Set[T]): Set[Set[T]] =
       for {
         combination <- combinations
-        item <- itemsToCombine
+        item        <- itemsToCombine
       } yield combination + item
     sets.foldLeft(Set[Set[T]]())(combine)
   }

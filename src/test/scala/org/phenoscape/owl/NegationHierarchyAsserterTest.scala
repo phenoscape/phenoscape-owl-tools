@@ -10,9 +10,9 @@ object NegationHierarchyAsserterTest extends TestSuite {
 
   val tests = Tests {
 
-    val base = "http://owl.phenoscape.org/NegationHierarchyAsserterTest"
-    val manager = OWLManager.createOWLOntologyManager()
-    val input = getClass().getClassLoader().getResourceAsStream("NegationHierarchyAsserterTest.ofn")
+    val base     = "http://owl.phenoscape.org/NegationHierarchyAsserterTest"
+    val manager  = OWLManager.createOWLOntologyManager()
+    val input    = getClass().getClassLoader().getResourceAsStream("NegationHierarchyAsserterTest.ofn")
     val ontology = manager.loadOntologyFromOntologyDocument(input)
     input.close()
 
