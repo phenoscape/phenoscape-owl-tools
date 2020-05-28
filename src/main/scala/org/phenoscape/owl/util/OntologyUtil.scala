@@ -11,7 +11,7 @@ object OntologyUtil {
 
   def ontologyWithoutDisjointAxioms(ontology: OWLOntology): OWLOntology = {
     val manager = OWLManager.createOWLOntologyManager
-    val axioms  = filterDisjointAxioms(ontology.getAxioms().asScala.toSet)
+    val axioms = filterDisjointAxioms(ontology.getAxioms().asScala.toSet)
     manager.createOntology(axioms.asJava)
   }
 
@@ -23,7 +23,7 @@ object OntologyUtil {
           axiom.getNamedClasses.contains(factory.getOWLNothing) || axiom.getClassExpressions.contains(
             factory.getOWLNothing
           )
-        case _                                => false
+        case _ => false
       }
 
   def optionWithSet[T, S](in: Option[(T, Set[S])]): (Option[T], Set[S]) =
@@ -35,11 +35,11 @@ object OntologyUtil {
   def reduceOntologyToHierarchy(ontology: OWLOntology): OWLOntology = {
     val manager = OWLManager.createOWLOntologyManager
     val factory = OWLManager.getOWLDataFactory
-    val axioms  = ontology.getAxioms().asScala.collect {
+    val axioms = ontology.getAxioms().asScala.collect {
       case subClassOf: OWLSubClassOfAxiom
           if !subClassOf.getSubClass.isAnonymous && !subClassOf.getSuperClass.isAnonymous =>
         subClassOf
-      case equiv: OWLEquivalentClassesAxiom if equiv.getNamedClasses.size > 1             =>
+      case equiv: OWLEquivalentClassesAxiom if equiv.getNamedClasses.size > 1 =>
         factory.getOWLEquivalentClassesAxiom(equiv.getNamedClasses)
     }
     manager.createOntology(axioms.toSet[OWLAxiom].asJava)
