@@ -11,8 +11,8 @@ object DevelopsFromRuleGenerator {
 
   def generateDevelopsFromRules(ontology: OWLOntology): OWLOntology = {
     val manager = ontology.getOWLOntologyManager
-    val newIRI  = ontology.getOntologyID.getOntologyIRI.toString + "/develops_from_rules.owl"
-    val rules   = ontology.getClassesInSignature(Imports.EXCLUDED).asScala map createRule
+    val newIRI = ontology.getOntologyID.getOntologyIRI.toString + "/develops_from_rules.owl"
+    val rules = ontology.getClassesInSignature(Imports.EXCLUDED).asScala map createRule
     manager.createOntology(rules.toSet[OWLAxiom].asJava, IRI.create(newIRI))
   }
 

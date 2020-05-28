@@ -8,18 +8,18 @@ import org.semanticweb.owlapi.vocab.DublinCoreVocabulary
 
 object EQCharactersGenerator {
 
-  val factory              = OWLManager.getOWLDataFactory
-  val manager              = OWLManager.createOWLOntologyManager()
-  val entityTerm           = factory.getOWLAnnotationProperty(IRI.create("http://example.org/entity_term"))  //FIXME better ID
-  val qualityTerm          = factory.getOWLAnnotationProperty(IRI.create("http://example.org/quality_term")) //FIXME better ID
+  val factory = OWLManager.getOWLDataFactory
+  val manager = OWLManager.createOWLOntologyManager()
+  val entityTerm = factory.getOWLAnnotationProperty(IRI.create("http://example.org/entity_term")) //FIXME better ID
+  val qualityTerm = factory.getOWLAnnotationProperty(IRI.create("http://example.org/quality_term")) //FIXME better ID
   val anatomicalProjection = Class("http://purl.obolibrary.org/obo/UBERON_0004529")
-  val dcDescription        = factory.getOWLAnnotationProperty(DublinCoreVocabulary.DESCRIPTION.getIRI)
+  val dcDescription = factory.getOWLAnnotationProperty(DublinCoreVocabulary.DESCRIPTION.getIRI)
 
   def generateEQCharacters(entities: Iterable[OWLClass], qualities: Iterable[OWLClass]): Set[OWLAxiom] = {
     val axioms = for {
-      entity  <- entities
+      entity <- entities
       quality <- qualities
-      axiom   <- composeEntityAndQuality(entity, quality)
+      axiom <- composeEntityAndQuality(entity, quality)
     } yield axiom
     axioms.toSet
   }

@@ -10,11 +10,11 @@ import scala.collection.JavaConverters._
 
 object PrintTaxonAndGeneProfileSizes extends App {
 
-  val ontfile      = new File(args(0))
+  val ontfile = new File(args(0))
   val profilesFile = new File(args(1))
-  val outFile      = new File(args(2))
+  val outFile = new File(args(2))
 
-  val manager  = OWLManager.createOWLOntologyManager()
+  val manager = OWLManager.createOWLOntologyManager()
   val ontology = manager.loadOntologyFromOntologyDocument(ontfile)
   val profiles = manager.loadOntologyFromOntologyDocument(profilesFile)
 
@@ -22,7 +22,7 @@ object PrintTaxonAndGeneProfileSizes extends App {
     manager.createOntology((ontology.getAxioms().asScala ++ profiles.getAxioms().asScala).asJava, OntUtil.nextIRI)
 
   val owlSim = new OWLsim(combined, ind => ind.getIRI.toString.contains("VTO_"))
-  val bw     = new BufferedWriter(new FileWriter(outFile))
+  val bw = new BufferedWriter(new FileWriter(outFile))
   owlSim.directAssociationsByIndividual.foreach {
     case (profile, annotations) =>
       bw.write(s"${profile.getIRI.toString}\t${annotations.size}\n")

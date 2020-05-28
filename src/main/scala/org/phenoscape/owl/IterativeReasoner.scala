@@ -10,9 +10,9 @@ import scala.Array.canBuildFrom
 object IterativeReasoner {
 
   def main(args: Array[String]): Unit = {
-    val mainManager      = OWLManager.createOWLOntologyManager()
+    val mainManager = OWLManager.createOWLOntologyManager()
     //val targetManager = this.getOWLOntologyManager()
-    val mainOntology     = mainManager.loadOntologyFromOntologyDocument(new File(args(0)))
+    val mainOntology = mainManager.loadOntologyFromOntologyDocument(new File(args(0)))
     val targetOntologies = args
       .slice(1, args.length)
       .map(file => OWLManager.createOWLOntologyManager().loadOntologyFromOntologyDocument(new File(file)))
@@ -21,14 +21,14 @@ object IterativeReasoner {
   }
 
   def computeInferences(mainOntology: OWLOntology, targetOntologies: Seq[OWLOntology]): Unit = {
-    val manager                 = mainOntology.getOWLOntologyManager
+    val manager = mainOntology.getOWLOntologyManager
     val aggregateTargetOntology = manager.createOntology()
     targetOntologies.foreach(target => manager.addAxioms(aggregateTargetOntology, target.getAxioms()))
     computeInferences(mainOntology, aggregateTargetOntology)
   }
 
   def computeInferences(mainOntology: OWLOntology, targetOntology: OWLOntology): Unit = {
-    val manager       = mainOntology.getOWLOntologyManager
+    val manager = mainOntology.getOWLOntologyManager
     var oldAxiomCount = 0
     var newAxiomCount = 1
     while (newAxiomCount > oldAxiomCount) {

@@ -62,16 +62,16 @@ import org.openrdf.model.vocabulary.DCTERMS
 
 object PhenoscapeKB extends KnowledgeBaseBuilder {
 
-  val targetDir          = File(args(0))
+  val targetDir = File(args(0))
   val BIGDATA_PROPERTIES = new JFile(args(1))
 
-  val manager                  = getManager
-  val rdfsSubClassOf           = ObjectProperty(OWLRDFVocabulary.RDFS_SUBCLASS_OF.getIRI)
+  val manager = getManager
+  val rdfsSubClassOf = ObjectProperty(OWLRDFVocabulary.RDFS_SUBCLASS_OF.getIRI)
   val implies_presence_of_some = NamedRestrictionGenerator.getClassRelationIRI(Vocab.IMPLIES_PRESENCE_OF.getIRI)
 
-  val SOURCES         = targetDir / "sources"
-  val NEXML           = SOURCES / "nexml"
-  val KB              = targetDir / "kb"
+  val SOURCES = targetDir / "sources"
+  val NEXML = SOURCES / "nexml"
+  val KB = targetDir / "kb"
   val BIGDATA_JOURNAL = targetDir / "blazegraph.jnl"
   KB.createIfNotExists(true, true)
 
@@ -79,13 +79,13 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
   val bigdataProperties = new Properties()
   bigdataProperties.load(new FileReader(BIGDATA_PROPERTIES))
   bigdataProperties.setProperty(Options.FILE, BIGDATA_JOURNAL.pathAsString)
-  val sail              = new BigdataSail(bigdataProperties)
-  val repository        = new BigdataSailRepository(sail)
+  val sail = new BigdataSail(bigdataProperties)
+  val repository = new BigdataSailRepository(sail)
   repository.initialize()
-  val baseURI           = ""
-  val graphURI          = new URIImpl("http://kb.phenoscape.org/")
-  val bigdata           = repository.getUnisolatedConnection()
-  val valueFactory      = bigdata.getValueFactory
+  val baseURI = ""
+  val graphURI = new URIImpl("http://kb.phenoscape.org/")
+  val bigdata = repository.getUnisolatedConnection()
+  val valueFactory = bigdata.getValueFactory
   bigdata.begin()
   bigdata.add(graphURI, DCTERMS.CREATED, valueFactory.createLiteral(new Date()), graphURI)
   bigdata.commit()
@@ -95,56 +95,56 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     step("Loading ontologies")
     val phenoscapeVocab = loadFromWeb(IRI.create("http://purl.org/phenoscape/vocab.owl"), false)
     addTriples(phenoscapeVocab, bigdata, graphURI)
-    val attributes      =
+    val attributes =
       loadFromWeb(IRI.create("http://svn.code.sf.net/p/phenoscape/code/trunk/vocab/character_slims.obo"), false)
     addTriples(attributes, bigdata, graphURI)
-    val uberon          = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/uberon/ext.owl"), true)
+    val uberon = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/uberon/ext.owl"), true)
     addTriples(uberon, bigdata, graphURI)
-    val cl              = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/cl.owl"), true)
+    val cl = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/cl.owl"), true)
     addTriples(cl, bigdata, graphURI)
-    val homology        = loadFromWeb(IRI.create("http://purl.org/phenoscape/demo/phenoscape_homology.owl"), true)
+    val homology = loadFromWeb(IRI.create("http://purl.org/phenoscape/demo/phenoscape_homology.owl"), true)
     addTriples(homology, bigdata, graphURI)
-    val vtoToNCBI       = loadFromWeb(IRI.create("http://purl.org/phenoscape/demo/vto_ncbi.owl"), true)
+    val vtoToNCBI = loadFromWeb(IRI.create("http://purl.org/phenoscape/demo/vto_ncbi.owl"), true)
     addTriples(vtoToNCBI, bigdata, graphURI)
-    val pato            = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/pato.owl"), true)
+    val pato = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/pato.owl"), true)
     addTriples(pato, bigdata, graphURI)
-    val bspo            = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/bspo.owl"), true)
+    val bspo = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/bspo.owl"), true)
     addTriples(bspo, bigdata, graphURI)
-    val go              = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/go.owl"), true)
+    val go = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/go.owl"), true)
     addTriples(go, bigdata, graphURI)
-    val taxrank         = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/taxrank.owl"), true)
+    val taxrank = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/taxrank.owl"), true)
     addTriples(taxrank, bigdata, graphURI)
-    val vto             = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/vto.owl"), true)
+    val vto = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/vto.owl"), true)
     addTriples(vto, bigdata, graphURI)
-    val collections     = loadFromWeb(
+    val collections = loadFromWeb(
       IRI.create("http://svn.code.sf.net/p/phenoscape/code/trunk/vocab/fish_collection_abbreviation.obo"),
       true
     )
     addTriples(collections, bigdata, graphURI)
-    val zfa             = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/upheno/imports/zfa_import.owl"), true)
+    val zfa = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/upheno/imports/zfa_import.owl"), true)
     addTriples(zfa, bigdata, graphURI)
-    val xao             = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/xao.owl"), true)
+    val xao = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/xao.owl"), true)
     addTriples(xao, bigdata, graphURI)
-    val hp              = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/hp.owl"), true)
+    val hp = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/hp.owl"), true)
     addTriples(hp, bigdata, graphURI)
-    val mp              = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/mp.owl"), true)
+    val mp = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/mp.owl"), true)
     addTriples(mp, bigdata, graphURI)
-    val ro              =
+    val ro =
       loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/ro.owl"), false) //.axioms.filter(_.isAnnotationAxiom)
     addTriples(ro, bigdata, graphURI)
     val eco = loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/eco/eco-base.owl"), false)
     addTriples(eco, bigdata, graphURI)
 
-    val caroToUberon  =
+    val caroToUberon =
       loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/uberon/bridge/uberon-bridge-to-caro.owl"), true)
     addTriples(caroToUberon, bigdata, graphURI)
-    val zfaToUberon   =
+    val zfaToUberon =
       loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/uberon/bridge/uberon-bridge-to-zfa.owl"), true)
     addTriples(zfaToUberon, bigdata, graphURI)
-    val xaoToUberon   =
+    val xaoToUberon =
       loadFromWeb(IRI.create("http://purl.obolibrary.org/obo/uberon/bridge/uberon-bridge-to-xao.owl"), true)
     addTriples(xaoToUberon, bigdata, graphURI)
-    val mgiToEMAPA    = SourcedAxioms(loadNormalized((SOURCES / "mgi_anatomy.owl").toJava))
+    val mgiToEMAPA = SourcedAxioms(loadNormalized((SOURCES / "mgi_anatomy.owl").toJava))
     addTriples(mgiToEMAPA, bigdata, graphURI)
     //val emapa = loadFromWebWithImports(IRI.create("http://purl.obolibrary.org/obo/emapa.owl"))
     //addTriples(emapa, bigdata, graphURI)
@@ -153,7 +153,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     addTriples(emapaToUberon, bigdata, graphURI)
 
     step("Querying entities and qualities")
-    val coreReasoner       = reasoner(Set(uberon, cl, pato, bspo, phenoscapeVocab).flatMap(_.axioms))
+    val coreReasoner = reasoner(Set(uberon, cl, pato, bspo, phenoscapeVocab).flatMap(_.axioms))
     val anatomicalEntities = coreReasoner
       .getSubClasses(Class(Vocab.ANATOMICAL_ENTITY), false)
       .getFlattened
@@ -163,7 +163,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
       .getFlattened
       .asScala
       .filterNot(_.isOWLThing) + Class(Vocab.ANATOMICAL_ENTITY)
-    val qualities          = coreReasoner
+    val qualities = coreReasoner
       .getSubClasses(Class(Vocab.QUALITY), false)
       .getFlattened
       .asScala
@@ -171,8 +171,8 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     coreReasoner.dispose()
 
     step("Converting NeXML to OWL")
-    val vocabForNeXML                          = combine(uberon, pato, bspo, phenoscapeVocab)
-    val filesToConvert                         = (FileUtils.listFiles((NEXML / "completed-phenex-files").toJava, Array("xml"), true).asScala ++
+    val vocabForNeXML = combine(uberon, pato, bspo, phenoscapeVocab)
+    val filesToConvert = (FileUtils.listFiles((NEXML / "completed-phenex-files").toJava, Array("xml"), true).asScala ++
       FileUtils.listFiles((NEXML / "fin_limb-incomplete-files").toJava, Array("xml"), true).asScala ++
       FileUtils.listFiles((NEXML / "Jackson_Dissertation_Files").toJava, Array("xml"), true).asScala ++
       FileUtils
@@ -195,7 +195,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     }
 
     step("Converting ZFIN data")
-    val zfinGenes             = PropertyNormalizer.normalize(
+    val zfinGenes = PropertyNormalizer.normalize(
       ZFINGeneticMarkersToOWL.convert((SOURCES / "zfin_genetic_markers.txt").toSource("ISO-8859-1"))
     )
     addTriples(zfinGenes, bigdata, graphURI)
@@ -203,28 +203,28 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
       ZFINPreviousGeneNamesToOWL.convert((SOURCES / "zfin_aliases.txt").toSource("ISO-8859-1"))
     )
     addTriples(zfinPreviousGeneNames, bigdata, graphURI)
-    val zfinExpressionData    = PropertyNormalizer.normalize(
+    val zfinExpressionData = PropertyNormalizer.normalize(
       ZFINExpressionToOWL.convert((SOURCES / "zfin_wildtype_expression.txt").toSource("ISO-8859-1"))
     )
     addTriples(zfinExpressionData, bigdata, graphURI)
-    val zfinPhenotypeData     = PropertyNormalizer.normalize(
+    val zfinPhenotypeData = PropertyNormalizer.normalize(
       ZFINPhenotypesToOWL.convert((SOURCES / "zfin_phenotypes.txt").toSource("ISO-8859-1"))
     )
     addTriples(zfinPhenotypeData, bigdata, graphURI)
 
     step("Converting MGI data")
-    val mgiGenes          =
+    val mgiGenes =
       PropertyNormalizer.normalize(MGIGeneticMarkersToOWL.convert((SOURCES / "mgi_genes.txt").toSource("utf-8")))
     addTriples(mgiGenes, bigdata, graphURI)
     val mgiExpressionData =
       PropertyNormalizer.normalize(MGIExpressionToOWL.convert((SOURCES / "mgi_expression_data.txt").toSource("utf-8")))
     addTriples(mgiExpressionData, bigdata, graphURI)
-    val mgiPhenotypeData  =
+    val mgiPhenotypeData =
       PropertyNormalizer.normalize(MGIPhenotypesToOWL.convert((SOURCES / "mgi_phenotypes.txt").toSource("utf-8")))
     addTriples(mgiPhenotypeData, bigdata, graphURI)
 
     step("Converting Xenbase data")
-    val xenbaseGenes          =
+    val xenbaseGenes =
       PropertyNormalizer.normalize(XenbaseGenesToOWL.convert((SOURCES / "xenbase_genes.txt").toSource("utf-8")))
     addTriples(xenbaseGenes, bigdata, graphURI)
     val xenbaseExpressionData = PropertyNormalizer.normalize(
@@ -236,7 +236,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     )
     addTriples(xenbaseExpressionData, bigdata, graphURI)
     val xenbasePhenotypeFiles = FileUtils.listFiles((SOURCES / "xenbase-phenotypes").toJava, Array("txt"), true)
-    val xenbasePhenotypeData  = PropertyNormalizer.normalize(
+    val xenbasePhenotypeData = PropertyNormalizer.normalize(
       xenbasePhenotypeFiles.asScala.flatMap(f => XenbasePhenotypesToOWL.convertToAxioms(Source.fromFile(f))).toSet
     )
     addTriples(xenbasePhenotypeData, bigdata, graphURI)
@@ -261,22 +261,22 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
         humanPhenotypeData.filter(isTboxAxiom) ++
         nexmlTBoxAxioms
 
-    val parts                       = anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(part_of, _))
+    val parts = anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(part_of, _))
     addTriples(parts, bigdata, graphURI)
-    val hasParts                    = (anatomicalEntities ++ qualities).flatMap(NamedRestrictionGenerator.createRestriction(has_part, _))
+    val hasParts = (anatomicalEntities ++ qualities).flatMap(NamedRestrictionGenerator.createRestriction(has_part, _))
     addTriples(hasParts, bigdata, graphURI)
-    val presences                   =
+    val presences =
       anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(Vocab.IMPLIES_PRESENCE_OF, _))
     addTriples(presences, bigdata, graphURI)
-    val hasPartsInheringIns         =
+    val hasPartsInheringIns =
       anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(has_part_inhering_in, _))
     addTriples(hasPartsInheringIns, bigdata, graphURI)
-    val phenotypeOfs                = anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(phenotype_of, _))
-    val phenotypeOfPartOfs          =
+    val phenotypeOfs = anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(phenotype_of, _))
+    val phenotypeOfPartOfs =
       anatomicalEntities.flatMap(NamedRestrictionGenerator.createRestriction(phenotype_of_part_of, _))
-    val absences                    = anatomicalEntities.flatMap(AbsenceClassGenerator.createAbsenceClass)
+    val absences = anatomicalEntities.flatMap(AbsenceClassGenerator.createAbsenceClass)
     addTriples(absences, bigdata, graphURI)
-    val namedHasPartClasses         = anatomicalEntities
+    val namedHasPartClasses = anatomicalEntities
       .map(_.getIRI)
       .map(NamedRestrictionGenerator.getRestrictionIRI(has_part.getIRI, _))
       .map(Class(_))
@@ -288,11 +288,11 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
 
     step("Generating additional semantic similarity subsumers")
     val attributeQualities = attributes.axioms.flatMap(_.getClassesInSignature.asScala) + HasNumberOf
-    val subsumers          = for {
-      entity                                <- anatomicalEntities
-      (partsTerm, entityPartsAxioms)         = SimilarityTemplates.partsOfEntity(entity)
+    val subsumers = for {
+      entity <- anatomicalEntities
+      (partsTerm, entityPartsAxioms) = SimilarityTemplates.partsOfEntity(entity)
       (developsFromTerm, developsFromAxioms) = SimilarityTemplates.developsFromEntity(entity)
-      axiom                                 <- (entityPartsAxioms ++ developsFromAxioms)
+      axiom <- (entityPartsAxioms ++ developsFromAxioms)
     } yield axiom
     addTriples(subsumers, bigdata, graphURI)
 
@@ -301,13 +301,13 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
         caroToUberon.axioms ++ zfaToUberon.axioms ++ xaoToUberon.axioms ++ mgiToEMAPA.axioms ++ emapaToUberon.axioms ++ eco.axioms ++
         parts ++ hasParts ++ hasPartsInheringIns ++ phenotypeOfs ++ phenotypeOfPartOfs ++ presences ++ absences ++ absenceNegationEquivalences ++ developsFromRulesForAbsence ++ subsumers ++ tboxFromData ++ phenoscapeVocab.axioms
 
-    val coreTBox                 =
+    val coreTBox =
       ro.axioms ++ uberon.axioms ++ homology.axioms ++ pato.axioms ++ bspo.axioms ++ vto.axioms ++ vtoToNCBI.axioms ++ zfa.axioms ++ xao.axioms ++ hp.axioms ++ mp.axioms ++
         caroToUberon.axioms ++ zfaToUberon.axioms ++ xaoToUberon.axioms ++ mgiToEMAPA.axioms ++ emapaToUberon.axioms ++ eco.axioms ++
         developsFromRulesForAbsence ++ tboxFromData ++ phenoscapeVocab.axioms
     println("tbox class count: " + allTBox.flatMap(_.getClassesInSignature.asScala).size)
     println("tbox logical axiom count: " + allTBox.filter(_.isLogicalAxiom).size)
-    val tBoxWithoutDisjoints     = OntologyUtil.filterDisjointAxioms(allTBox)
+    val tBoxWithoutDisjoints = OntologyUtil.filterDisjointAxioms(allTBox)
     val coreTBoxWithoutDisjoints = OntologyUtil.filterDisjointAxioms(coreTBox)
 
     step("Check satisfiability with disjoints")
@@ -321,7 +321,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     disjointReasoner.dispose()
 
     step("Materializing tbox classification")
-    val tboxReasoner   = reasoner(tBoxWithoutDisjoints)
+    val tboxReasoner = reasoner(tBoxWithoutDisjoints)
     val inferredAxioms = manager.createOntology()
     MaterializeInferences.materializeInferences(inferredAxioms, tboxReasoner)
     tboxReasoner.dispose()
@@ -332,7 +332,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
     coreTboxReasoner.dispose()
 
     step("Asserting reverse negation hierarchy")
-    val hierarchyAxioms           =
+    val hierarchyAxioms =
       NegationHierarchyAsserter.assertNegationHierarchy(tBoxWithoutDisjoints ++ inferredAxioms.getAxioms().asScala)
     step("Adding negation hierarchy axioms")
     manager.addAxioms(inferredAxioms, hierarchyAxioms.asJava)
@@ -404,13 +404,13 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
   System.gc()
 
   step("Exporting presence assertions")
-  val presencesFile   = (KB / "presences.ttl").toJava
+  val presencesFile = (KB / "presences.ttl").toJava
   val presencesOutput = new BufferedOutputStream(new FileOutputStream(presencesFile))
   bigdata.prepareGraphQuery(QueryLanguage.SPARQL, presencesQuery.toString).evaluate(new TurtleWriter(presencesOutput))
   presencesOutput.close()
 
   step("Exporting absence assertions")
-  val absencesFile   = (KB / "absences.ttl").toJava
+  val absencesFile = (KB / "absences.ttl").toJava
   val absencesOutput = new BufferedOutputStream(new FileOutputStream(absencesFile))
   bigdata.prepareGraphQuery(QueryLanguage.SPARQL, absencesQuery.toString).evaluate(new TurtleWriter(absencesOutput))
   absencesOutput.close()
@@ -422,7 +422,7 @@ object PhenoscapeKB extends KnowledgeBaseBuilder {
   bigdata.commit()
 
   step("Exporting all triples to turtle file")
-  val triplesQuery  = bigdata.prepareGraphQuery(QueryLanguage.SPARQL, """
+  val triplesQuery = bigdata.prepareGraphQuery(QueryLanguage.SPARQL, """
   CONSTRUCT {
    ?s ?p ?o .
   }
