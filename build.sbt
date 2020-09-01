@@ -4,7 +4,7 @@ organization := "org.phenoscape"
 
 name := "kb-owl-tools"
 
-version := "1.11"
+version := "1.12"
 
 mainClass in Compile := Some("org.phenoscape.owl.build.Command")
 
