@@ -1,15 +1,14 @@
 package org.phenoscape.owl
 
-import java.io.File
-
 import org.semanticweb.elk.owlapi.ElkReasonerFactory
 import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model._
 import org.semanticweb.owlapi.model.parameters.Imports
 import org.semanticweb.owlapi.reasoner.OWLReasoner
 
-import scala.collection.JavaConverters._
+import java.io.File
 import scala.collection.{mutable, Set}
+import scala.jdk.CollectionConverters._
 
 object MaterializeSubClassOfClosure {
 

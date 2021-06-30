@@ -1,8 +1,5 @@
 package org.phenoscape.owl
 
-import java.io.File
-import java.util.UUID
-
 import org.phenoscape.kb.ingest.util.OBOUtil
 import org.phenoscape.owl.Vocab._
 import org.phenoscape.scowl._
@@ -10,8 +7,10 @@ import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model._
 import org.semanticweb.owlapi.vocab.DublinCoreVocabulary
 
-import scala.collection.JavaConverters._
+import java.io.File
+import java.util.UUID
 import scala.io.Source
+import scala.jdk.CollectionConverters._
 
 object HomologyTableToOWLWithAncestralStructure {
 

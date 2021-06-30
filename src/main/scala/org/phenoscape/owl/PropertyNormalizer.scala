@@ -4,7 +4,7 @@ import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model.{IRI, OWLAxiom, OWLOntology}
 import org.semanticweb.owlapi.util.OWLEntityRenamer
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 object PropertyNormalizer {
 

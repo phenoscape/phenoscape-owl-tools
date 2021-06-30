@@ -6,7 +6,7 @@ import java.io.FileOutputStream
 import java.io.FileReader
 import java.util.Properties
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.collection.mutable
 import scala.io.Source
 import scala.language.postfixOps

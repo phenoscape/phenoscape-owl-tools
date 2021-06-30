@@ -1,9 +1,5 @@
 package org.phenoscape.owl
 
-import java.io.{BufferedOutputStream, File, FileOutputStream}
-import java.util.Date
-import java.util.zip.GZIPOutputStream
-
 import org.phenoscape.owl.Vocab._
 import org.phenoscape.scowl._
 import org.semanticweb.elk.owlapi.ElkReasonerFactory
@@ -12,7 +8,10 @@ import org.semanticweb.owlapi.model.parameters.Imports
 import org.semanticweb.owlapi.model.{AddImport, IRI, OWLAxiom, OWLClass}
 import org.semanticweb.owlapi.reasoner.InferenceType
 
-import scala.collection.JavaConverters._
+import java.io.{BufferedOutputStream, File, FileOutputStream}
+import java.util.Date
+import java.util.zip.GZIPOutputStream
+import scala.jdk.CollectionConverters._
 
 //takes at least 200 GB memory
 object EQCreator {

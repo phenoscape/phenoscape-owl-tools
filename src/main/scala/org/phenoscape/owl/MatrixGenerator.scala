@@ -1,7 +1,5 @@
 package org.phenoscape.owl
 
-import java.io.File
-
 import org.phenoscape.owl.Vocab._
 import org.phenoscape.scowl._
 import org.semanticweb.elk.owlapi.ElkReasonerFactory
@@ -9,8 +7,9 @@ import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model._
 import org.semanticweb.owlapi.vocab.DublinCoreVocabulary
 
-import scala.collection.JavaConverters._
+import java.io.File
 import scala.collection.Set
+import scala.jdk.CollectionConverters._
 
 object MatrixGenerator {
 

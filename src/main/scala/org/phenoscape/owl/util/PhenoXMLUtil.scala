@@ -5,7 +5,7 @@ import org.phenoscape.kb.ingest.util.OBOUtil
 import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model.{OWLClassExpression, OWLObjectSomeValuesFrom}
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 object PhenoXMLUtil {
 

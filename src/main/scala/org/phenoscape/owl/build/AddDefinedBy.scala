@@ -1,11 +1,10 @@
 package org.phenoscape.owl.build
 
-import java.io.File
-
 import org.phenoscape.kb.ingest.util.OBOUtil
 import org.semanticweb.owlapi.apibinding.OWLManager
 
-import scala.collection.JavaConverters._
+import java.io.File
+import scala.jdk.CollectionConverters._
 
 object AddDefinedBy extends App {
 

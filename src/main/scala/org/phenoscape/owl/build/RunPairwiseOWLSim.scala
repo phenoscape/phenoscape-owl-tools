@@ -1,14 +1,13 @@
 package org.phenoscape.owl.build
 
-import java.io.File
-import java.util.Date
-
 import org.phenoscape.kb.ingest.util.OntUtil
 import org.phenoscape.owl.sim.OWLsim
 import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model.OWLNamedIndividual
 
-import scala.collection.JavaConverters._
+import java.io.File
+import java.util.Date
+import scala.jdk.CollectionConverters._
 
 object RunPairwiseOWLSim extends App {
 

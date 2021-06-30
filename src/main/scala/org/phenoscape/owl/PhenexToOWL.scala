@@ -1,7 +1,5 @@
 package org.phenoscape.owl
 
-import java.io.File
-
 import org.apache.commons.lang3.StringUtils
 import org.jdom2.filter.ElementFilter
 import org.jdom2.input.SAXBuilder
@@ -15,8 +13,9 @@ import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model._
 import org.semanticweb.owlapi.vocab.DublinCoreVocabulary
 
-import scala.collection.JavaConverters._
+import java.io.File
 import scala.collection.mutable
+import scala.jdk.CollectionConverters._
 
 object PhenexToOWL {
 

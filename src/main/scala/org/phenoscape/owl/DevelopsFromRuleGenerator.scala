@@ -5,7 +5,7 @@ import org.phenoscape.scowl._
 import org.semanticweb.owlapi.model._
 import org.semanticweb.owlapi.model.parameters.Imports
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 object DevelopsFromRuleGenerator {
 
