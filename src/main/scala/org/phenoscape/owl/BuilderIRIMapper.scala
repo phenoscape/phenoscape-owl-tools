@@ -1,9 +1,9 @@
 package org.phenoscape.owl
 
+import org.semanticweb.owlapi.model.{IRI, OWLOntologyIRIMapper}
+
 import java.io.File
 import java.net.URLEncoder
-
-import org.semanticweb.owlapi.model.{IRI, OWLOntologyIRIMapper}
 
 class BuilderIRIMapper(folder: File) extends OWLOntologyIRIMapper {
 

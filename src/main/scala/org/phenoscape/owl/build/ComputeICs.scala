@@ -1,14 +1,13 @@
 package org.phenoscape.owl.build
 
-import java.io.{BufferedOutputStream, File, FileOutputStream}
-
 import org.openrdf.rio.{RDFFormat, Rio}
 import org.phenoscape.kb.ingest.util.OntUtil
 import org.phenoscape.owl.sim.OWLsim
 import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model.OWLNamedIndividual
 
-import scala.collection.JavaConverters._
+import java.io.{BufferedOutputStream, File, FileOutputStream}
+import scala.jdk.CollectionConverters._
 
 object ComputeICs extends App {
 

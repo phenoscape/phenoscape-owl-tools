@@ -1,16 +1,15 @@
 package org.phenoscape.owl
 
-import java.io.File
-import java.util.UUID
-
 import org.phenoscape.owl.Vocab._
 import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model._
 import org.semanticweb.owlapi.model.parameters.Imports
 import org.semanticweb.owlapi.search.EntitySearcher
 
-import scala.collection.JavaConverters._
+import java.io.File
+import java.util.UUID
 import scala.collection.Set
+import scala.jdk.CollectionConverters._
 
 object TaxonomyConverter {
 

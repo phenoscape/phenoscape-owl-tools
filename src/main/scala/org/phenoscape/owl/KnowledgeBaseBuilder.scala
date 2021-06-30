@@ -1,8 +1,5 @@
 package org.phenoscape.owl
 
-import java.io.{ByteArrayInputStream, ByteArrayOutputStream, File}
-import java.util.Date
-
 import org.openrdf.model.URI
 import org.openrdf.repository.sail.SailRepositoryConnection
 import org.openrdf.rio.RDFFormat
@@ -16,7 +13,9 @@ import org.semanticweb.owlapi.model._
 import org.semanticweb.owlapi.model.parameters.Imports
 import org.semanticweb.owlapi.reasoner.OWLReasoner
 
-import scala.collection.JavaConverters._
+import java.io.{ByteArrayInputStream, ByteArrayOutputStream, File}
+import java.util.Date
+import scala.jdk.CollectionConverters._
 
 class KnowledgeBaseBuilder extends App {
 

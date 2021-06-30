@@ -1,7 +1,5 @@
 package org.phenoscape.owl.sim
 
-import java.io.{File, FileOutputStream, PrintWriter}
-
 import monix.eval.Task
 import monix.reactive.Observable
 import org.apache.jena.datatypes.TypeMapper
@@ -20,10 +18,11 @@ import org.semanticweb.owlapi.model.parameters.Imports
 import org.semanticweb.owlapi.model.{OWLClass, OWLNamedIndividual, OWLOntology}
 import org.semanticweb.owlapi.reasoner.{OWLReasoner, Node => ReasonerNode}
 
-import scala.collection.JavaConverters._
+import java.io.{File, FileOutputStream, PrintWriter}
 import scala.collection.mutable
 import scala.collection.parallel._
 import scala.concurrent.duration.Duration
+import scala.jdk.CollectionConverters._
 import scala.util.hashing.MurmurHash3
 
 class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
@@ -109,7 +108,7 @@ class OWLsim(ontology: OWLOntology, inCorpus: OWLNamedIndividual => Boolean) {
     val tsvWriter = new PrintWriter(tsvOutfile, "utf-8")
     tsvWriter.println("?match\t?score\t?query\t?corpusprofile")
     val outputStream = new FileOutputStream(triplesOutfile)
-    val rdfWriter = StreamRDFWriter.getWriterStream(outputStream, RDFFormat.TURTLE_FLAT)
+    val rdfWriter = StreamRDFWriter.getWriterStream(outputStream, RDFFormat.TURTLE_FLAT.getLang)
     rdfWriter.start()
     val comparisons = for {
       inputProfile <- Observable.fromIterable(inputs)

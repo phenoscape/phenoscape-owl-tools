@@ -1,13 +1,12 @@
 package org.phenoscape.owl.report
 
-import java.io.File
-
-import org.jdom2.{Element, Namespace}
 import org.jdom2.filter.ElementFilter
 import org.jdom2.input.SAXBuilder
+import org.jdom2.{Element, Namespace}
 
-import scala.collection.JavaConverters._
+import java.io.File
 import scala.collection.mutable
+import scala.jdk.CollectionConverters._
 
 object AnnotationStatus {
 

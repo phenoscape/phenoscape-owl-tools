@@ -7,7 +7,8 @@ import org.semanticweb.owlapi.reasoner.OWLReasonerFactory
 import org.semanticweb.owlapi.search.EntitySearcher
 
 import scala.annotation.tailrec
-import scala.collection.JavaConverters._
+import scala.collection.parallel.CollectionConverters._
+import scala.jdk.CollectionConverters._
 
 class SubsumerGenerator(ont: OWLOntology, reasonerFactory: OWLReasonerFactory) {
 

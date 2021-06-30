@@ -1,12 +1,12 @@
 package org.phenoscape.owl.build
 
-import java.io.{File, FileReader}
-import java.util.Properties
-
 import com.bigdata.journal.Options
 import com.bigdata.rdf.sail.BigdataSail
 import com.bigdata.rdf.store.DataLoader
 import org.openrdf.rio.RDFFormat
+
+import java.io.{File, FileReader}
+import java.util.Properties
 
 object LoadTriples extends App {
 

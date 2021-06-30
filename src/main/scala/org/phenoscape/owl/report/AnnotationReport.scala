@@ -1,7 +1,5 @@
 package org.phenoscape.owl.report
 
-import java.io._
-
 import org.apache.commons.lang3.StringUtils
 import org.jdom2.filter.ElementFilter
 import org.jdom2.input.SAXBuilder
@@ -13,8 +11,9 @@ import org.semanticweb.owlapi.manchestersyntax.renderer.ManchesterOWLSyntaxObjec
 import org.semanticweb.owlapi.model.{OWLAnnotationProperty, OWLClassExpression, OWLObject, OWLObjectProperty}
 import org.semanticweb.owlapi.util.{AnnotationValueShortFormProvider, DefaultPrefixManager, SimpleShortFormProvider}
 
-import scala.collection.JavaConverters._
+import java.io._
 import scala.collection.{mutable, Map}
+import scala.jdk.CollectionConverters._
 
 trait ObjectRenderer {
 

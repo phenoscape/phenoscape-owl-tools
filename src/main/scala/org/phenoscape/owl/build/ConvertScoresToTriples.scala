@@ -1,12 +1,11 @@
 package org.phenoscape.owl.build
 
-import java.io.{BufferedOutputStream, File, FileOutputStream}
-
 import org.openrdf.model.Statement
 import org.openrdf.model.impl.{NumericLiteralImpl, StatementImpl, URIImpl}
 import org.openrdf.rio.{RDFFormat, Rio}
 import org.phenoscape.owl.Vocab
 
+import java.io.{BufferedOutputStream, File, FileOutputStream}
 import scala.io.Source
 
 object ConvertScoresToTriples extends App {

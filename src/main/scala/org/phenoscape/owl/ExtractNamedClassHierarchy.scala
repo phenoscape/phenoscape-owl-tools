@@ -1,11 +1,10 @@
 package org.phenoscape.owl
 
-import java.util.UUID
-
 import org.semanticweb.owlapi.model.parameters.Imports
 import org.semanticweb.owlapi.model.{AxiomType, IRI, OWLAxiom, OWLOntology}
 
-import scala.collection.JavaConverters._
+import java.util.UUID
+import scala.jdk.CollectionConverters._
 
 object ExtractNamedClassHierarchy {
 

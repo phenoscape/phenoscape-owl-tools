@@ -1,33 +1,21 @@
 package org.phenoscape.owl.util
 
-import java.io.StringWriter
-import java.net.URI
-
-import scala.collection.JavaConverters._
 import org.apache.http.client.utils.URLEncodedUtils
 import org.phenoscape.kb.ingest.util.OntUtil
 import org.phenoscape.owlet.ManchesterSyntaxClassExpressionParser
 import org.phenoscape.scowl._
 import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.manchestersyntax.renderer.ManchesterOWLSyntaxObjectRenderer
-import org.semanticweb.owlapi.model.OWLAnnotationProperty
-import org.semanticweb.owlapi.model.OWLAxiom
-import org.semanticweb.owlapi.model.OWLClass
-import org.semanticweb.owlapi.model.OWLClassExpression
-import org.semanticweb.owlapi.model.OWLEntity
-import org.semanticweb.owlapi.model.OWLIndividual
-import org.semanticweb.owlapi.model.OWLLiteral
-import org.semanticweb.owlapi.model.OWLObject
-import org.semanticweb.owlapi.model.OWLObjectIntersectionOf
-import org.semanticweb.owlapi.model.OWLObjectSomeValuesFrom
-import org.semanticweb.owlapi.model.OWLOntology
-import org.semanticweb.owlapi.model.OWLOntologySetProvider
+import org.semanticweb.owlapi.model._
 import org.semanticweb.owlapi.reasoner.OWLReasoner
 import org.semanticweb.owlapi.search.EntitySearcher
 import org.semanticweb.owlapi.util.AnnotationValueShortFormProvider
 import scalaz._
 
+import java.io.StringWriter
+import java.net.URI
 import scala.annotation.tailrec
+import scala.jdk.CollectionConverters._
 
 object ExpressionsUtil {
 

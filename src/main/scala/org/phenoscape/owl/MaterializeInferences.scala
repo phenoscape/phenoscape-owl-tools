@@ -1,14 +1,13 @@
 package org.phenoscape.owl
 
-import java.io.File
-
 import org.semanticweb.elk.owlapi.{ElkReasoner, ElkReasonerFactory}
 import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model.{IRI, OWLAxiom, OWLOntology}
 import org.semanticweb.owlapi.reasoner.{InferenceType, OWLReasoner}
 import org.semanticweb.owlapi.util._
 
-import scala.collection.JavaConverters._
+import java.io.File
+import scala.jdk.CollectionConverters._
 
 object MaterializeInferences {
 

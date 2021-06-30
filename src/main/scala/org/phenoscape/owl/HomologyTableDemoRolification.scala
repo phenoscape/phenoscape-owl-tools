@@ -1,7 +1,5 @@
 package org.phenoscape.owl
 
-import java.io.{File, FileOutputStream}
-
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.lang3.StringUtils
 import org.phenoscape.kb.ingest.util.{OBOUtil, PostCompositionParser}
@@ -12,8 +10,9 @@ import org.semanticweb.owlapi.formats.FunctionalSyntaxDocumentFormat
 import org.semanticweb.owlapi.model.{AddOntologyAnnotation, IRI, OWLAxiom, OWLOntology}
 import org.semanticweb.owlapi.vocab.DublinCoreVocabulary
 
-import scala.collection.JavaConverters._
+import java.io.{File, FileOutputStream}
 import scala.io.Source
+import scala.jdk.CollectionConverters._
 
 object HomologyTableDemoRolification extends App {
 

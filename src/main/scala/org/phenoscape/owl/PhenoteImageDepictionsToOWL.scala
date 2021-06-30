@@ -1,7 +1,5 @@
 package org.phenoscape.owl
 
-import java.io.File
-
 import org.apache.commons.lang3.StringUtils
 import org.phenoscape.kb.ingest.util.OBOUtil
 import org.phenoscape.owl.Vocab._
@@ -9,6 +7,7 @@ import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model.IRI
 import org.semanticweb.owlapi.vocab.DublinCoreVocabulary
 
+import java.io.File
 import scala.io.Source
 
 object PhenoteImageDepictionsToOWL {

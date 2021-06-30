@@ -1,11 +1,11 @@
 package org.phenoscape.owl.build
 
-import java.io.{File, FileOutputStream}
-
 import org.phenoscape.owl.{PhenexToOWL, PropertyNormalizer}
 import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.formats.FunctionalSyntaxDocumentFormat
 import org.semanticweb.owlapi.model.IRI
+
+import java.io.{File, FileOutputStream}
 
 object ConvertNeXML extends App {
 

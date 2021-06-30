@@ -1,7 +1,5 @@
 package org.phenoscape.owl.scripts
 
-import java.io.{File, FileOutputStream, OutputStreamWriter}
-
 import org.phenoscape.owl.Vocab._
 import org.phenoscape.owl.util.OntologyUtil
 import org.phenoscape.owl.{MaterializeInferences, PropertyNormalizer, SimilarityTemplates}
@@ -11,8 +9,9 @@ import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model.{IRI, OWLAxiom, OWLClass}
 import org.semanticweb.owlapi.reasoner.OWLReasoner
 
-import scala.collection.JavaConverters._
+import java.io.{File, FileOutputStream, OutputStreamWriter}
 import scala.collection.immutable.Set
+import scala.jdk.CollectionConverters._
 
 object GenerateTboxesForSimilarityAnalysis extends App {
 

@@ -1,7 +1,5 @@
 package org.phenoscape.owl
 
-import java.io.{File, FileOutputStream}
-
 import org.apache.jena.query.{QueryExecutionFactory, QuerySolution}
 import org.apache.jena.rdf.model._
 import org.phenoscape.owl.Vocab._
@@ -10,8 +8,10 @@ import org.phenoscape.sparql.SPARQLInterpolation._
 import org.semanticweb.owlapi.apibinding.OWLManager
 import org.semanticweb.owlapi.model._
 
-import scala.collection.GenMap
-import scala.collection.JavaConverters._
+import java.io.{File, FileOutputStream}
+import scala.collection.parallel.CollectionConverters._
+import scala.collection.parallel.ParMap
+import scala.jdk.CollectionConverters._
 import scala.language.implicitConversions
 
 object EvolutionaryProfiles {
@@ -23,7 +23,7 @@ object EvolutionaryProfiles {
   val ExhibitsState = ResourceFactory.createProperty(exhibits_state.getIRI.toString)
   val DescribesPhenotype = ResourceFactory.createProperty(describes_phenotype.getIRI.toString)
 
-  type StateAssociations = GenMap[TaxonNode, GenMap[Character, Set[State]]]
+  type StateAssociations = ParMap[TaxonNode, ParMap[Character, Set[State]]]
 
   def main(args: Array[String]): Unit = {
 
@@ -44,7 +44,7 @@ object EvolutionaryProfiles {
     model.read(inFile)
 
     val observedAssociations = queryAssociations(model)
-    val (associations, profiles) = postorder(rootTaxon, model, index(observedAssociations), Map.empty)
+    val (associations, profiles) = postorder(rootTaxon, model, index(observedAssociations), ParMap.empty)
     profilesToRDF(profiles, model)
   }
 
@@ -56,17 +56,23 @@ object EvolutionaryProfiles {
       val taxonLabel = ExpressionsUtil.labelFor(taxon, taxonomy).getOrElse("unlabeled")
       println(s"$taxonLabel")
       for { (character, states) <- profile } println(s"\t${character.label}: ${states.map(_.label).mkString("\t")}")
-      println
+      println()
     }
 
-  def index(associations: Set[StateAssociation]): Map[TaxonNode, Map[Character, Set[State]]] =
-    associations.groupBy(_.taxon).map {
-      case (taxon, assocs) =>
-        taxon -> assocs.groupBy(_.character).map {
-          case (character, assocs) =>
-            character -> assocs.map(_.state)
-        }
-    }
+  def index(associations: Set[StateAssociation]): ParMap[TaxonNode, ParMap[Character, Set[State]]] =
+    associations
+      .groupBy(_.taxon)
+      .map {
+        case (taxon, assocs) =>
+          taxon -> assocs
+            .groupBy(_.character)
+            .map {
+              case (character, assocs) =>
+                character -> assocs.map(_.state)
+            }
+            .par
+      }
+      .par
 
   def profilesToRDF(profiles: StateAssociations, model: Model): Set[Statement] = {
     val statePhenotypes: Map[State, Set[Phenotype]] = queryStatePhenotypes(model)
@@ -116,9 +122,9 @@ object EvolutionaryProfiles {
       if !term.isAnon
       if term.getURI.startsWith("http://purl.obolibrary.org/obo/VTO_")
     } yield TaxonNode(IRI.create(term.getURI))).toSet
-    val nodeStates = startingAssociations.getOrElse(node, Map.empty[Character, Set[State]])
+    val nodeStates = startingAssociations.getOrElse(node, ParMap.empty[Character, Set[State]])
     if (children.isEmpty)
-      (Map(node -> nodeStates), Map.empty)
+      (ParMap(node -> nodeStates), ParMap.empty)
     else {
       val (subtreeAssociationsGroups, subtreeProfilesGroups) =
         children.par.map(postorder(_, model, startingAssociations, startingProfiles)).unzip
@@ -186,7 +192,7 @@ object EvolutionaryProfiles {
           Phenotype(IRI.create(bindings.getResource("phenotype").getURI))
         )
       }
-      .toIterable
+      .to(Iterable)
       .groupBy {
         case (state, phenotype) => state
       }
