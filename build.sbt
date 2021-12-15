@@ -30,7 +30,7 @@ libraryDependencies ++= {
     "org.phenoscape" %% "scowl" % "1.3.4",
     "org.phenoscape" %% "owlet" % "1.8.1",
     "org.phenoscape" %% "phenoscape-kb-ingest" % "1.6.2",
-    "com.outr" %% "scribe-slf4j" % "3.5.4",
+    "com.typesafe.scala-logging" %% "scala-logging" % "3.9.4",
     "org.apache.directory.studio" % "org.apache.commons.codec" % "1.8",
     "com.github.pathikrit" %% "better-files" % "3.8.0",
     "com.lihaoyi" %% "utest" % "0.7.4" % Test,

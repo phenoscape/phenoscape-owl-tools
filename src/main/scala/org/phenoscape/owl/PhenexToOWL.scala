@@ -1,5 +1,6 @@
 package org.phenoscape.owl
 
+import com.typesafe.scalalogging.LazyLogging
 import org.apache.commons.lang3.StringUtils
 import org.jdom2.filter.ElementFilter
 import org.jdom2.input.SAXBuilder
@@ -17,7 +18,7 @@ import java.io.File
 import scala.collection.mutable
 import scala.jdk.CollectionConverters._
 
-object PhenexToOWL {
+object PhenexToOWL extends LazyLogging {
 
   val factory = OWLManager.getOWLDataFactory
   val dcTermsNS = Namespace.getNamespace("http://purl.org/dc/terms/")
@@ -326,7 +327,7 @@ object PhenexToOWL {
           qualityLabel = "present"
           Option(has_part some (Present and (inheres_in some entity)))
         case (Some(entity), None, Some(_)) =>
-          scribe.warn("Related entity with no quality. Shouldn't be possible.")
+          logger.warn("Related entity with no quality. Shouldn't be possible.")
           qualityLabel = "present"
           Option(has_part some (Present and (inheres_in some entity)))
         case (Some(entity), Some(Absent), None) =>
