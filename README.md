@@ -17,7 +17,7 @@ Valid commands are:
 - output-evolutionary-profiles
 - homology-table-to-owl
 
-Consult the [source code] (https://github.com/phenoscape/phenoscape-owl-tools/blob/master/src/main/scala/org/phenoscape/owl/build/Command.scala) for required parameters.
+Consult the [source code](https://github.com/phenoscape/phenoscape-owl-tools/blob/master/src/main/scala/org/phenoscape/owl/build/Command.scala) for required parameters.
 
 ## Using Eclipse
 
